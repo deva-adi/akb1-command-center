@@ -10,6 +10,7 @@ import { DeliveryHealth } from "@/pages/DeliveryHealth";
 import { KpiStudio } from "@/pages/KpiStudio";
 import { MarginEvm } from "@/pages/MarginEvm";
 import { NotFound } from "@/pages/NotFound";
+import { Reports } from "@/pages/Reports";
 import { RiskAudit } from "@/pages/RiskAudit";
 import { SmartOps } from "@/pages/SmartOps";
 import { VelocityFlow } from "@/pages/VelocityFlow";
@@ -28,6 +29,7 @@ const router = createBrowserRouter([
       { path: "ai", element: <AiGovernance /> },
       { path: "smart-ops", element: <SmartOps /> },
       { path: "raid", element: <RiskAudit /> },
+      { path: "reports", element: <Reports /> },
       { path: "data-hub", element: <DataHub /> },
       { path: "*", element: <NotFound /> },
     ],
