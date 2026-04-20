@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.logging_config import get_logger
 from app.models import (
     AppSetting,
+    CommercialScenario,
     CurrencyRate,
     CustomerAction,
     CustomerExpectation,
@@ -15,12 +16,25 @@ from app.models import (
     FlowMetrics,
     KpiDefinition,
     KpiSnapshot,
+    LossExposure,
     Milestone,
     Program,
     Project,
     ProjectPhase,
+    RateCard,
     Risk,
+    ScopeCreepLog,
     SprintData,
+    SprintVelocityBlendRule,
+    SprintVelocityDual,
+)
+from app.seed.commercial_data import (
+    BLEND_RULES,
+    CHANGE_REQUESTS,
+    COMMERCIAL_SCENARIOS,
+    LOSS_EXPOSURE,
+    RATE_CARDS,
+    SPRINT_VELOCITY_DUAL,
 )
 from app.seed.data import (
     APP_SETTINGS_DEFAULTS,
@@ -70,6 +84,12 @@ async def seed_demo_data(session: AsyncSession, *, force: bool = False) -> bool:
     await _seed_project_phases(session, project_ids)
     await _seed_evm_snapshots(session, program_ids, project_ids)
     await _seed_milestones(session, program_ids, project_ids)
+    await _seed_sprint_velocity_dual(session, program_ids, project_ids)
+    await _seed_blend_rules(session, program_ids)
+    await _seed_commercial_scenarios(session, program_ids)
+    await _seed_loss_exposure(session, program_ids)
+    await _seed_rate_cards(session, program_ids)
+    await _seed_change_requests(session, program_ids, project_ids)
 
     await session.commit()
     log.info(
@@ -85,6 +105,12 @@ async def seed_demo_data(session: AsyncSession, *, force: bool = False) -> bool:
         phases=len(PROJECT_PHASES),
         evm_rows=len(EVM_SNAPSHOTS),
         milestones=len(MILESTONES),
+        dual_velocity=len(SPRINT_VELOCITY_DUAL),
+        blend_rules=len(BLEND_RULES),
+        commercial=len(COMMERCIAL_SCENARIOS),
+        losses=len(LOSS_EXPOSURE),
+        rate_cards=len(RATE_CARDS),
+        change_requests=len(CHANGE_REQUESTS),
     )
     return True
 
@@ -322,4 +348,89 @@ async def _seed_milestones(
             continue
         session.add(
             Milestone(program_id=program_id, project_id=project_id, **payload)
+        )
+
+
+async def _seed_sprint_velocity_dual(
+    session: AsyncSession,
+    program_ids: dict[str, int],
+    project_ids: dict[str, int],
+) -> None:
+    for data in SPRINT_VELOCITY_DUAL:
+        payload = dict(data)
+        project_code = payload.pop("project_code")
+        program_id, project_id = _program_for_project(
+            project_code, project_ids, program_ids
+        )
+        if project_id is None:
+            continue
+        session.add(
+            SprintVelocityDual(
+                program_id=program_id, project_id=project_id, **payload
+            )
+        )
+
+
+async def _seed_blend_rules(
+    session: AsyncSession,
+    program_ids: dict[str, int],
+) -> None:
+    for data in BLEND_RULES:
+        payload = dict(data)
+        program_id = program_ids.get(payload.pop("program_code"))
+        if program_id is None:
+            continue
+        session.add(SprintVelocityBlendRule(program_id=program_id, **payload))
+
+
+async def _seed_commercial_scenarios(
+    session: AsyncSession,
+    program_ids: dict[str, int],
+) -> None:
+    for data in COMMERCIAL_SCENARIOS:
+        payload = dict(data)
+        program_id = program_ids.get(payload.pop("program_code"))
+        if program_id is None:
+            continue
+        session.add(CommercialScenario(program_id=program_id, **payload))
+
+
+async def _seed_loss_exposure(
+    session: AsyncSession,
+    program_ids: dict[str, int],
+) -> None:
+    for data in LOSS_EXPOSURE:
+        payload = dict(data)
+        program_id = program_ids.get(payload.pop("program_code"))
+        if program_id is None:
+            continue
+        session.add(LossExposure(program_id=program_id, **payload))
+
+
+async def _seed_rate_cards(
+    session: AsyncSession,
+    program_ids: dict[str, int],
+) -> None:
+    for data in RATE_CARDS:
+        payload = dict(data)
+        program_id = program_ids.get(payload.pop("program_code"))
+        if program_id is None:
+            continue
+        session.add(RateCard(program_id=program_id, **payload))
+
+
+async def _seed_change_requests(
+    session: AsyncSession,
+    program_ids: dict[str, int],
+    project_ids: dict[str, int],
+) -> None:
+    for data in CHANGE_REQUESTS:
+        payload = dict(data)
+        program_id = program_ids.get(payload.pop("program_code"))
+        project_code = payload.pop("project_code", None)
+        project_id = project_ids.get(project_code) if project_code else None
+        if program_id is None:
+            continue
+        session.add(
+            ScopeCreepLog(program_id=program_id, project_id=project_id, **payload)
         )

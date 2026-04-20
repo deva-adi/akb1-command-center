@@ -6,7 +6,9 @@ import { ExecutiveOverview } from "@/pages/ExecutiveOverview";
 import { DataHub } from "@/pages/DataHub";
 import { DeliveryHealth } from "@/pages/DeliveryHealth";
 import { KpiStudio } from "@/pages/KpiStudio";
+import { MarginEvm } from "@/pages/MarginEvm";
 import { NotFound } from "@/pages/NotFound";
+import { VelocityFlow } from "@/pages/VelocityFlow";
 
 const router = createBrowserRouter([
   {
@@ -16,6 +18,8 @@ const router = createBrowserRouter([
       { index: true, element: <ExecutiveOverview /> },
       { path: "kpi", element: <KpiStudio /> },
       { path: "delivery", element: <DeliveryHealth /> },
+      { path: "velocity", element: <VelocityFlow /> },
+      { path: "margin", element: <MarginEvm /> },
       { path: "data-hub", element: <DataHub /> },
       { path: "*", element: <NotFound /> },
     ],
