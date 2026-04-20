@@ -11,6 +11,7 @@ from app.api.v1 import (
     delivery,
     health,
     kpi,
+    ops,
     programmes,
     risks,
     settings,
@@ -42,5 +43,8 @@ api_router.include_router(ai.sdlc_metrics_router)
 api_router.include_router(ai.trust_router)
 api_router.include_router(ai.governance_router)
 api_router.include_router(ai.override_router)
+api_router.include_router(ops.scenarios_router)
+api_router.include_router(ops.resources_router)
+api_router.include_router(ops.audit_router)
 api_router.include_router(settings.router)
 api_router.include_router(data_import.router)

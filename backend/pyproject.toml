@@ -19,6 +19,7 @@ ignore = ["PLR0913", "PLR2004"]
 "app/seed/commercial_data.py" = ["E501"]
 "app/seed/customer_data.py" = ["E501"]
 "app/seed/ai_data.py" = ["E501"]
+"app/seed/ops_data.py" = ["E501"]
 "app/seed/seeder.py" = ["PLR0913"]
 "app/api/**" = ["B008"]        # FastAPI `Depends(...)` in defaults is idiomatic
 "app/database.py" = ["PLW0603"] # module-level engine cache is deliberate

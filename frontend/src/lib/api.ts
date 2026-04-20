@@ -675,6 +675,69 @@ export async function fetchAiOverrides(programId?: number): Promise<AiOverride[]
   return data;
 }
 
+// ---------- Smart Ops + Risk & Audit ----------
+
+export type ScenarioExecution = {
+  id: number;
+  scenario_name: string;
+  execution_date: string | null;
+  triggered_by: string | null;
+  status: string | null;
+  details: string | null;
+  financial_impact: number | null;
+  outcome_notes: string | null;
+};
+
+export type ResourceRow = {
+  id: number;
+  name: string;
+  role: string | null;
+  role_tier: string | null;
+  skill_set: string | null;
+  current_program_id: number | null;
+  current_project_id: number | null;
+  utilization_pct: number | null;
+  bench_days: number;
+  loaded_cost_annual: number | null;
+  status: string;
+};
+
+export type AuditEntry = {
+  id: number;
+  action: string | null;
+  table_name: string | null;
+  record_id: number | null;
+  old_value: string | null;
+  new_value: string | null;
+  user_action: string | null;
+  timestamp: string;
+};
+
+export async function fetchScenarios(status?: string): Promise<ScenarioExecution[]> {
+  const { data } = await api.get<ScenarioExecution[]>(
+    "/api/v1/smart-ops/scenarios",
+    { params: status ? { status } : undefined },
+  );
+  return data;
+}
+
+export async function fetchResources(benchOnly = false): Promise<ResourceRow[]> {
+  const { data } = await api.get<ResourceRow[]>("/api/v1/smart-ops/resources", {
+    params: benchOnly ? { bench_only: true } : undefined,
+  });
+  return data;
+}
+
+export async function fetchAuditLog(
+  tableName?: string,
+  limit = 50,
+): Promise<AuditEntry[]> {
+  const { data } = await api.get<AuditEntry[]>("/api/v1/audit", {
+    params: { table_name: tableName, limit },
+  });
+  return data;
+}
+
 export async function previewCsv(file: File): Promise<{
   filename: string;
   columns: string[];
