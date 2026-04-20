@@ -159,6 +159,145 @@ export async function fetchCurrencyRates(): Promise<CurrencyRate[]> {
   return data;
 }
 
+// ---------- Delivery Health ----------
+
+export type Sprint = {
+  id: number;
+  program_id: number | null;
+  project_id: number | null;
+  sprint_number: number | null;
+  start_date: string | null;
+  end_date: string | null;
+  planned_points: number | null;
+  completed_points: number | null;
+  velocity: number | null;
+  defects_found: number | null;
+  defects_fixed: number | null;
+  rework_hours: number | null;
+  team_size: number | null;
+  ai_assisted_points: number;
+  iteration_type: string;
+  estimation_unit: string;
+};
+
+export type EvmSnapshot = {
+  id: number;
+  program_id: number | null;
+  project_id: number | null;
+  snapshot_date: string;
+  planned_value: number;
+  earned_value: number;
+  actual_cost: number;
+  percent_complete: number | null;
+  bac: number | null;
+  cpi: number | null;
+  spi: number | null;
+  eac: number | null;
+  tcpi: number | null;
+  vac: number | null;
+  notes: string | null;
+};
+
+export type FlowMetric = {
+  id: number;
+  project_id: number | null;
+  period_start: string | null;
+  period_end: string | null;
+  throughput_items: number | null;
+  wip_avg: number | null;
+  wip_limit: number | null;
+  cycle_time_p50: number | null;
+  cycle_time_p85: number | null;
+  cycle_time_p95: number | null;
+  lead_time_avg: number | null;
+  blocked_time_hours: number | null;
+};
+
+export type ProjectPhase = {
+  id: number;
+  project_id: number | null;
+  phase_name: string;
+  phase_sequence: number | null;
+  planned_start: string | null;
+  planned_end: string | null;
+  actual_start: string | null;
+  actual_end: string | null;
+  percent_complete: number | null;
+  gate_status: string | null;
+  gate_approver: string | null;
+  gate_date: string | null;
+  notes: string | null;
+};
+
+export type Milestone = {
+  id: number;
+  program_id: number | null;
+  project_id: number | null;
+  name: string;
+  planned_date: string;
+  actual_date: string | null;
+  status: string;
+  owner: string | null;
+  notes: string | null;
+};
+
+export type ProjectListItem = {
+  id: number;
+  program_id: number | null;
+  name: string;
+  code: string;
+  delivery_methodology: string;
+  is_ai_augmented: boolean;
+  ai_augmentation_level: string | null;
+  start_date: string | null;
+  end_date: string | null;
+  status: string;
+};
+
+export async function fetchProjectsForProgramme(
+  programId: number,
+): Promise<ProjectListItem[]> {
+  const { data } = await api.get<ProjectListItem[]>(
+    `/api/v1/programmes/${programId}/projects`,
+  );
+  return data;
+}
+
+export async function fetchSprints(projectId: number): Promise<Sprint[]> {
+  const { data } = await api.get<Sprint[]>("/api/v1/sprints", {
+    params: { project_id: projectId },
+  });
+  return data;
+}
+
+export async function fetchEvm(projectId: number): Promise<EvmSnapshot[]> {
+  const { data } = await api.get<EvmSnapshot[]>("/api/v1/evm", {
+    params: { project_id: projectId },
+  });
+  return data;
+}
+
+export async function fetchFlow(projectId: number): Promise<FlowMetric[]> {
+  const { data } = await api.get<FlowMetric[]>("/api/v1/flow", {
+    params: { project_id: projectId },
+  });
+  return data;
+}
+
+export async function fetchPhases(projectId: number): Promise<ProjectPhase[]> {
+  const { data } = await api.get<ProjectPhase[]>("/api/v1/phases", {
+    params: { project_id: projectId },
+  });
+  return data;
+}
+
+export async function fetchMilestones(projectId: number): Promise<Milestone[]> {
+  const { data } = await api.get<Milestone[]>("/api/v1/milestones", {
+    params: { project_id: projectId },
+  });
+  return data;
+}
+
 export async function previewCsv(file: File): Promise<{
   filename: string;
   columns: string[];

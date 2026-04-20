@@ -11,11 +11,16 @@ from app.models import (
     CurrencyRate,
     CustomerAction,
     CustomerExpectation,
+    EvmSnapshot,
+    FlowMetrics,
     KpiDefinition,
     KpiSnapshot,
+    Milestone,
     Program,
     Project,
+    ProjectPhase,
     Risk,
+    SprintData,
 )
 from app.seed.data import (
     APP_SETTINGS_DEFAULTS,
@@ -28,6 +33,13 @@ from app.seed.data import (
     PROGRAMMES,
     PROJECTS,
     RISKS,
+)
+from app.seed.delivery_data import (
+    EVM_SNAPSHOTS,
+    FLOW_METRICS,
+    MILESTONES,
+    PROJECT_PHASES,
+    SPRINTS,
 )
 
 log = get_logger(__name__)
@@ -47,21 +59,32 @@ async def seed_demo_data(session: AsyncSession, *, force: bool = False) -> bool:
     await _seed_app_settings(session)
     await _seed_currency_rates(session)
     program_ids = await _seed_programmes(session)
-    await _seed_projects(session, program_ids)
+    project_ids = await _seed_projects(session, program_ids)
     kpi_ids = await _seed_kpi_definitions(session)
     await _seed_kpi_snapshots(session, program_ids, kpi_ids)
     await _seed_risks(session, program_ids)
     await _seed_customer_expectations(session, program_ids)
     await _seed_customer_actions(session, program_ids)
+    await _seed_sprints(session, program_ids, project_ids)
+    await _seed_flow_metrics(session, project_ids)
+    await _seed_project_phases(session, project_ids)
+    await _seed_evm_snapshots(session, program_ids, project_ids)
+    await _seed_milestones(session, program_ids, project_ids)
 
     await session.commit()
     log.info(
         "seed.done",
         programmes=len(program_ids),
+        projects=len(project_ids),
         kpis=len(kpi_ids),
         risks=len(RISKS),
         expectations=len(CUSTOMER_EXPECTATIONS),
         actions=len(CUSTOMER_ACTIONS),
+        sprints=len(SPRINTS),
+        flow_rows=len(FLOW_METRICS),
+        phases=len(PROJECT_PHASES),
+        evm_rows=len(EVM_SNAPSHOTS),
+        milestones=len(MILESTONES),
     )
     return True
 
@@ -100,7 +123,8 @@ async def _seed_programmes(session: AsyncSession) -> dict[str, int]:
 async def _seed_projects(
     session: AsyncSession,
     program_ids: dict[str, int],
-) -> None:
+) -> dict[str, int]:
+    project_ids: dict[str, int] = {}
     for data in PROJECTS:
         payload = dict(data)
         program_code = payload.pop("program_code")
@@ -109,6 +133,9 @@ async def _seed_projects(
             continue
         project = Project(program_id=program_id, **payload)
         session.add(project)
+        await session.flush()
+        project_ids[project.code] = project.id
+    return project_ids
 
 
 async def _seed_kpi_definitions(session: AsyncSession) -> dict[str, int]:
@@ -191,3 +218,108 @@ async def _seed_customer_actions(
         if program_id is None:
             continue
         session.add(CustomerAction(program_id=program_id, **payload))
+
+
+def _program_for_project(
+    project_code: str,
+    project_ids: dict[str, int],
+    program_ids: dict[str, int],
+) -> tuple[int | None, int | None]:
+    """Return (program_id, project_id) for a project code; None if unknown."""
+    project_id = project_ids.get(project_code)
+    if project_id is None:
+        return None, None
+    # Reverse-map project_code → program_code via the PROJECTS source table.
+    for seed in PROJECTS:
+        if seed["code"] == project_code:
+            return program_ids.get(seed["program_code"]), project_id
+    return None, project_id
+
+
+async def _seed_sprints(
+    session: AsyncSession,
+    program_ids: dict[str, int],
+    project_ids: dict[str, int],
+) -> None:
+    for data in SPRINTS:
+        payload = dict(data)
+        project_code = payload.pop("project_code")
+        program_id, project_id = _program_for_project(
+            project_code, project_ids, program_ids
+        )
+        if project_id is None:
+            continue
+        session.add(
+            SprintData(program_id=program_id, project_id=project_id, **payload)
+        )
+
+
+async def _seed_flow_metrics(
+    session: AsyncSession,
+    project_ids: dict[str, int],
+) -> None:
+    for data in FLOW_METRICS:
+        payload = dict(data)
+        project_id = project_ids.get(payload.pop("project_code"))
+        if project_id is None:
+            continue
+        session.add(FlowMetrics(project_id=project_id, **payload))
+
+
+async def _seed_project_phases(
+    session: AsyncSession,
+    project_ids: dict[str, int],
+) -> None:
+    for data in PROJECT_PHASES:
+        payload = dict(data)
+        project_id = project_ids.get(payload.pop("project_code"))
+        if project_id is None:
+            continue
+        session.add(ProjectPhase(project_id=project_id, **payload))
+
+
+async def _seed_evm_snapshots(
+    session: AsyncSession,
+    program_ids: dict[str, int],
+    project_ids: dict[str, int],
+) -> None:
+    for data in EVM_SNAPSHOTS:
+        payload = dict(data)
+        project_code = payload.pop("project_code")
+        program_id, project_id = _program_for_project(
+            project_code, project_ids, program_ids
+        )
+        if project_id is None:
+            continue
+        pv = payload["planned_value"]
+        ev = payload["earned_value"]
+        ac = payload["actual_cost"]
+        bac = payload["bac"]
+        payload["cpi"] = round(ev / ac, 4) if ac else None
+        payload["spi"] = round(ev / pv, 4) if pv else None
+        payload["eac"] = round(bac / payload["cpi"], 2) if payload["cpi"] else None
+        payload["tcpi"] = (
+            round((bac - ev) / (bac - ac), 4) if (bac - ac) > 0 else None
+        )
+        payload["vac"] = round(bac - payload["eac"], 2) if payload["eac"] else None
+        session.add(
+            EvmSnapshot(program_id=program_id, project_id=project_id, **payload)
+        )
+
+
+async def _seed_milestones(
+    session: AsyncSession,
+    program_ids: dict[str, int],
+    project_ids: dict[str, int],
+) -> None:
+    for data in MILESTONES:
+        payload = dict(data)
+        project_code = payload.pop("project_code")
+        program_id, project_id = _program_for_project(
+            project_code, project_ids, program_ids
+        )
+        if project_id is None:
+            continue
+        session.add(
+            Milestone(program_id=program_id, project_id=project_id, **payload)
+        )

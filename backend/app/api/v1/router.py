@@ -6,6 +6,7 @@ from app.api.v1 import (
     currency,
     customer,
     data_import,
+    delivery,
     health,
     kpi,
     programmes,
@@ -20,5 +21,10 @@ api_router.include_router(kpi.router)
 api_router.include_router(risks.router)
 api_router.include_router(customer.router)
 api_router.include_router(currency.router)
+api_router.include_router(delivery.sprints_router)
+api_router.include_router(delivery.evm_router)
+api_router.include_router(delivery.flow_router)
+api_router.include_router(delivery.phases_router)
+api_router.include_router(delivery.milestones_router)
 api_router.include_router(settings.router)
 api_router.include_router(data_import.router)

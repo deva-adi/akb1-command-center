@@ -1,4 +1,5 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   CartesianGrid,
   Legend,
@@ -9,7 +10,8 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { FileDown, Sparkles } from "lucide-react";
+import { ChevronRight, FileDown, Home, Sparkles } from "lucide-react";
+import { Breadcrumb } from "@/components/Breadcrumb";
 import { Card, CardHeader } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { KpiTile } from "@/components/ui/KpiTile";
@@ -48,6 +50,7 @@ function deriveBucket(margin: number | null, status: string): RagBucket {
 }
 
 export function ExecutiveOverview() {
+  const navigate = useNavigate();
   const programmes = useProgrammes();
   const margin = useMarginSnapshots();
   const cpi = useCpiSnapshots();
@@ -110,6 +113,13 @@ export function ExecutiveOverview() {
     [buckets, totals, rows, currency.baseCurrency],
   );
 
+  const [ragFilter, setRagFilter] = useState<RagBucket | null>(null);
+
+  const visibleRows = useMemo(() => {
+    if (ragFilter === null) return rows;
+    return rows.filter((r) => deriveBucket(r.latestMargin, r.status) === ragFilter);
+  }, [rows, ragFilter]);
+
   const loading =
     programmes.isLoading || margin.isLoading || cpi.isLoading;
   const error = programmes.error ?? margin.error ?? cpi.error;
@@ -136,6 +146,15 @@ export function ExecutiveOverview() {
 
   return (
     <div className="flex flex-col gap-6">
+      <Breadcrumb
+        items={[
+          {
+            label: "Portfolio",
+            icon: <Home className="size-3" aria-hidden="true" />,
+          },
+          { label: "Executive Summary" },
+        ]}
+      />
       <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold text-navy">Executive Summary</h1>
@@ -151,11 +170,32 @@ export function ExecutiveOverview() {
 
       <section className="grid grid-cols-1 gap-4 md:grid-cols-3">
         <Card>
-          <CardHeader title="Portfolio Health" subtitle="RAG roll-up across programmes" />
+          <CardHeader
+            title="Portfolio Health"
+            subtitle="Click a bucket to filter the table below"
+          />
           <div className="flex items-center justify-around gap-3 pt-1 text-center">
-            <RagStat count={buckets.green} label="Green" tone="green" />
-            <RagStat count={buckets.amber} label="Amber" tone="amber" />
-            <RagStat count={buckets.red} label="Red" tone="red" />
+            <RagStat
+              count={buckets.green}
+              label="Green"
+              tone="green"
+              active={ragFilter === "green"}
+              onClick={() => setRagFilter(ragFilter === "green" ? null : "green")}
+            />
+            <RagStat
+              count={buckets.amber}
+              label="Amber"
+              tone="amber"
+              active={ragFilter === "amber"}
+              onClick={() => setRagFilter(ragFilter === "amber" ? null : "amber")}
+            />
+            <RagStat
+              count={buckets.red}
+              label="Red"
+              tone="red"
+              active={ragFilter === "red"}
+              onClick={() => setRagFilter(ragFilter === "red" ? null : "red")}
+            />
           </div>
           <p className="mt-4 text-xs text-navy/60">
             Derived from programme status and the latest monthly margin KPI.
@@ -267,7 +307,22 @@ export function ExecutiveOverview() {
 
       <section className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <Card className="lg:col-span-2">
-          <CardHeader title="Programme status" subtitle="Margin and CPI by programme" />
+          <CardHeader
+            title="Programme status"
+            subtitle="Click any row to drill into Delivery Health for that programme"
+            action={
+              ragFilter ? (
+                <button
+                  type="button"
+                  onClick={() => setRagFilter(null)}
+                  className="inline-flex items-center gap-1 rounded-full border border-navy/30 px-2 py-0.5 text-xs text-navy hover:bg-ice-50"
+                >
+                  {ragFilter} only
+                  <span aria-hidden="true">×</span>
+                </button>
+              ) : null
+            }
+          />
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
@@ -277,13 +332,34 @@ export function ExecutiveOverview() {
                   <th className="text-right">Revenue</th>
                   <th className="text-right">Margin</th>
                   <th className="text-right">CPI</th>
+                  <th aria-hidden="true" />
                 </tr>
               </thead>
               <tbody>
-                {rows.map((r) => {
+                {visibleRows.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="py-6 text-center text-xs text-navy/60">
+                      No programmes match the {ragFilter} filter.
+                    </td>
+                  </tr>
+                ) : null}
+                {visibleRows.map((r) => {
                   const tone = deriveBucket(r.latestMargin, r.status);
                   return (
-                    <tr key={r.code} className="border-t border-ice-100">
+                    <tr
+                      key={r.code}
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => navigate(`/delivery?programme=${r.code}`)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          navigate(`/delivery?programme=${r.code}`);
+                        }
+                      }}
+                      className="cursor-pointer border-t border-ice-100 transition hover:bg-ice-50 focus-visible:bg-ice-50"
+                      aria-label={`Drill into ${r.name}`}
+                    >
                       <td className="py-2 font-medium">{r.name}</td>
                       <td>
                         <Badge tone={tone}>{r.status}</Badge>
@@ -296,6 +372,9 @@ export function ExecutiveOverview() {
                       </td>
                       <td className="text-right font-mono">
                         {formatRatio(r.latestCpi)}
+                      </td>
+                      <td className="pr-2 text-right text-navy/40">
+                        <ChevronRight className="inline size-4" aria-hidden="true" />
                       </td>
                     </tr>
                   );
@@ -322,14 +401,34 @@ export function ExecutiveOverview() {
   );
 }
 
-function RagStat({ count, label, tone }: { count: number; label: string; tone: RagBucket }) {
+function RagStat({
+  count,
+  label,
+  tone,
+  active,
+  onClick,
+}: {
+  count: number;
+  label: string;
+  tone: RagBucket;
+  active?: boolean;
+  onClick?: () => void;
+}) {
   return (
-    <div className="flex flex-col items-center gap-1">
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={active}
+      aria-label={`Filter to ${count} ${label} programmes`}
+      className={`flex flex-col items-center gap-1 rounded-lg px-2 py-1 transition ${
+        active ? "bg-navy/5 ring-2 ring-navy/40" : "hover:bg-ice-50"
+      }`}
+    >
       <Badge tone={tone} className="px-3 py-1 text-sm">
         {count}
       </Badge>
       <span className="text-xs text-navy/60">{label}</span>
-    </div>
+    </button>
   );
 }
 

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   CartesianGrid,
@@ -11,7 +12,8 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { BookOpen, Pencil, Save, X } from "lucide-react";
+import { BookOpen, ChevronRight, Home, Pencil, Save, X } from "lucide-react";
+import { Breadcrumb } from "@/components/Breadcrumb";
 import { Card, CardHeader } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import {
@@ -50,6 +52,9 @@ function formatValue(value: number, kpi: KpiDefinition): string {
 
 export function KpiStudio() {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const programmeFilter = searchParams.get("programme");
   const [selectedKpiId, setSelectedKpiId] = useState<number | null>(null);
   const [formulaOpen, setFormulaOpen] = useState(false);
   const [editingWeight, setEditingWeight] = useState<{ id: number; value: string } | null>(null);
@@ -75,14 +80,35 @@ export function KpiStudio() {
     }
   }, [definitions.data, selectedKpi]);
 
+  // When a programme filter is set, pass it through to the snapshot query so
+  // the chart + table focus on a single programme for drill-down.
+  const filteredProgramme = useMemo(
+    () => programmes.data?.find((p) => p.code === programmeFilter) ?? null,
+    [programmes.data, programmeFilter],
+  );
+
   const snapshots = useQuery({
-    queryKey: ["kpi-snapshots", "studio", selectedKpi?.code ?? null],
+    queryKey: [
+      "kpi-snapshots",
+      "studio",
+      selectedKpi?.code ?? null,
+      filteredProgramme?.id ?? null,
+    ],
     queryFn: () =>
       selectedKpi
-        ? fetchKpiSnapshots({ kpiCode: selectedKpi.code })
+        ? fetchKpiSnapshots({
+            kpiCode: selectedKpi.code,
+            programId: filteredProgramme?.id,
+          })
         : Promise.resolve([]),
     enabled: selectedKpi !== null,
   });
+
+  const clearProgrammeFilter = () => {
+    const next = new URLSearchParams(searchParams);
+    next.delete("programme");
+    setSearchParams(next);
+  };
 
   const weightMutation = useMutation({
     mutationFn: ({ id, weight }: { id: number; weight: number }) =>
@@ -145,8 +171,46 @@ export function KpiStudio() {
     return <p className="text-sm text-danger-600">{(definitions.error as Error).message}</p>;
   }
 
+  const breadcrumbItems = [
+    { label: "Portfolio", to: "/", icon: <Home className="size-3" aria-hidden="true" /> },
+    { label: "KPI Studio", to: filteredProgramme || selectedKpi ? "/kpi" : undefined },
+    ...(filteredProgramme
+      ? [
+          {
+            label: filteredProgramme.name,
+            to: selectedKpi ? `/kpi?programme=${filteredProgramme.code}` : undefined,
+          },
+        ]
+      : []),
+    ...(selectedKpi ? [{ label: selectedKpi.name }] : []),
+  ];
+
   return (
-    <div className="grid grid-cols-1 gap-6 lg:grid-cols-[280px_1fr]">
+    <div className="flex flex-col gap-4">
+      <Breadcrumb items={breadcrumbItems} />
+
+      {filteredProgramme ? (
+        <div className="inline-flex items-center gap-2 self-start rounded-full border border-navy/30 bg-navy/5 px-3 py-1 text-xs text-navy">
+          Focused on <strong>{filteredProgramme.name}</strong>
+          <button
+            type="button"
+            onClick={clearProgrammeFilter}
+            className="inline-flex items-center rounded-full bg-navy/10 px-1.5 py-0.5 transition hover:bg-navy/20"
+            aria-label="Clear programme filter (drill up)"
+          >
+            <X className="size-3" /> clear
+          </button>
+          <Link
+            to={`/delivery?programme=${filteredProgramme.code}`}
+            className="ml-1 inline-flex items-center gap-1 text-navy hover:underline"
+          >
+            View in Delivery Health
+            <ChevronRight className="size-3" />
+          </Link>
+        </div>
+      ) : null}
+
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[280px_1fr]">
       <aside className="flex flex-col gap-4">
         <Card>
           <CardHeader
@@ -372,7 +436,10 @@ export function KpiStudio() {
             </Card>
 
             <Card>
-              <CardHeader title="Latest values" subtitle="Most recent snapshot per programme" />
+              <CardHeader
+                title="Latest values"
+                subtitle="Click any programme to drill into Delivery Health"
+              />
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
@@ -380,6 +447,7 @@ export function KpiStudio() {
                       <th className="py-2">Programme</th>
                       <th className="text-right">Latest</th>
                       <th className="text-right">Status</th>
+                      <th aria-hidden="true" />
                     </tr>
                   </thead>
                   <tbody>
@@ -388,13 +456,29 @@ export function KpiStudio() {
                       if (latest === null) return null;
                       const tone = thresholdTone(latest, selectedKpi);
                       return (
-                        <tr key={p.id} className="border-t border-ice-100">
+                        <tr
+                          key={p.id}
+                          role="button"
+                          tabIndex={0}
+                          onClick={() => navigate(`/delivery?programme=${p.code}`)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                              e.preventDefault();
+                              navigate(`/delivery?programme=${p.code}`);
+                            }
+                          }}
+                          className="cursor-pointer border-t border-ice-100 transition hover:bg-ice-50 focus-visible:bg-ice-50"
+                          aria-label={`Drill into ${p.name}`}
+                        >
                           <td className="py-2 font-medium">{p.code}</td>
                           <td className="text-right font-mono">
                             {formatValue(latest, selectedKpi)}
                           </td>
                           <td className="text-right">
                             <Badge tone={tone}>{tone}</Badge>
+                          </td>
+                          <td className="pr-2 text-right text-navy/40">
+                            <ChevronRight className="inline size-4" aria-hidden="true" />
                           </td>
                         </tr>
                       );
@@ -414,6 +498,7 @@ export function KpiStudio() {
       {formulaOpen && selectedKpi ? (
         <FormulaModal kpi={selectedKpi} onClose={() => setFormulaOpen(false)} />
       ) : null}
+      </div>
     </div>
   );
 }
