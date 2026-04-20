@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from functools import lru_cache
 
-from pydantic import Field, field_validator
+from pydantic import Field, computed_field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -23,7 +23,11 @@ class Settings(BaseSettings):
 
     seed_demo_data: bool = Field(default=True)
 
-    cors_origins: list[str] = Field(default_factory=lambda: ["http://localhost:9000"])
+    # Stored as comma-separated string so env parsing never tries JSON.
+    cors_origins_raw: str = Field(
+        default="http://localhost:9000",
+        alias="CORS_ORIGINS",
+    )
 
     log_level: str = Field(default="info")
 
@@ -36,12 +40,10 @@ class Settings(BaseSettings):
 
     base_currency: str = Field(default="INR")
 
-    @field_validator("cors_origins", mode="before")
-    @classmethod
-    def split_cors_origins(cls, v: object) -> object:
-        if isinstance(v, str):
-            return [origin.strip() for origin in v.split(",") if origin.strip()]
-        return v
+    @computed_field  # type: ignore[prop-decorator]
+    @property
+    def cors_origins(self) -> list[str]:
+        return [origin.strip() for origin in self.cors_origins_raw.split(",") if origin.strip()]
 
 
 @lru_cache

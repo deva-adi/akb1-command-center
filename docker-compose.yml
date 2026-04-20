@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   backend:
     build:
@@ -9,11 +7,13 @@ services:
     volumes:
       - akb1-data:/data
     environment:
-      - DATABASE_URL=sqlite:///data/akb1.db
+      # Four slashes = absolute path to the mounted /data volume inside the container
+      - DATABASE_URL=${DATABASE_URL:-sqlite+aiosqlite:////data/akb1.db}
+      - DATABASE_SYNC_URL=${DATABASE_SYNC_URL:-sqlite:////data/akb1.db}
       - SEED_DEMO_DATA=${SEED_DEMO_DATA:-true}
       - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost:9000}
       - LOG_LEVEL=${LOG_LEVEL:-info}
-      - API_KEY_ENABLED=${API_KEY_ENABLED:-true}
+      - API_KEY_ENABLED=${API_KEY_ENABLED:-false}
       - RATE_LIMIT_READ=${RATE_LIMIT_READ:-60/minute}
       - RATE_LIMIT_WRITE=${RATE_LIMIT_WRITE:-10/minute}
     ports:
