@@ -2,6 +2,7 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Layout } from "@/components/Layout";
 import { queryClient } from "@/lib/queryClient";
+import { CustomerIntelligence } from "@/pages/CustomerIntelligence";
 import { ExecutiveOverview } from "@/pages/ExecutiveOverview";
 import { DataHub } from "@/pages/DataHub";
 import { DeliveryHealth } from "@/pages/DeliveryHealth";
@@ -20,6 +21,7 @@ const router = createBrowserRouter([
       { path: "delivery", element: <DeliveryHealth /> },
       { path: "velocity", element: <VelocityFlow /> },
       { path: "margin", element: <MarginEvm /> },
+      { path: "customer", element: <CustomerIntelligence /> },
       { path: "data-hub", element: <DataHub /> },
       { path: "*", element: <NotFound /> },
     ],

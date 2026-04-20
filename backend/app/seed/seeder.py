@@ -12,6 +12,7 @@ from app.models import (
     CurrencyRate,
     CustomerAction,
     CustomerExpectation,
+    CustomerSatisfaction,
     EvmSnapshot,
     FlowMetrics,
     KpiDefinition,
@@ -24,6 +25,7 @@ from app.models import (
     RateCard,
     Risk,
     ScopeCreepLog,
+    SlaIncident,
     SprintData,
     SprintVelocityBlendRule,
     SprintVelocityDual,
@@ -36,6 +38,7 @@ from app.seed.commercial_data import (
     RATE_CARDS,
     SPRINT_VELOCITY_DUAL,
 )
+from app.seed.customer_data import CUSTOMER_SATISFACTION, SLA_INCIDENTS
 from app.seed.data import (
     APP_SETTINGS_DEFAULTS,
     CURRENCY_RATES,
@@ -90,6 +93,8 @@ async def seed_demo_data(session: AsyncSession, *, force: bool = False) -> bool:
     await _seed_loss_exposure(session, program_ids)
     await _seed_rate_cards(session, program_ids)
     await _seed_change_requests(session, program_ids, project_ids)
+    await _seed_customer_satisfaction(session, program_ids)
+    await _seed_sla_incidents(session, program_ids)
 
     await session.commit()
     log.info(
@@ -111,6 +116,8 @@ async def seed_demo_data(session: AsyncSession, *, force: bool = False) -> bool:
         losses=len(LOSS_EXPOSURE),
         rate_cards=len(RATE_CARDS),
         change_requests=len(CHANGE_REQUESTS),
+        customer_satisfaction=len(CUSTOMER_SATISFACTION),
+        sla_incidents=len(SLA_INCIDENTS),
     )
     return True
 
@@ -434,3 +441,27 @@ async def _seed_change_requests(
         session.add(
             ScopeCreepLog(program_id=program_id, project_id=project_id, **payload)
         )
+
+
+async def _seed_customer_satisfaction(
+    session: AsyncSession,
+    program_ids: dict[str, int],
+) -> None:
+    for data in CUSTOMER_SATISFACTION:
+        payload = dict(data)
+        program_id = program_ids.get(payload.pop("program_code"))
+        if program_id is None:
+            continue
+        session.add(CustomerSatisfaction(program_id=program_id, **payload))
+
+
+async def _seed_sla_incidents(
+    session: AsyncSession,
+    program_ids: dict[str, int],
+) -> None:
+    for data in SLA_INCIDENTS:
+        payload = dict(data)
+        program_id = program_ids.get(payload.pop("program_code"))
+        if program_id is None:
+            continue
+        session.add(SlaIncident(program_id=program_id, **payload))
