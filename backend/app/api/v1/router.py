@@ -3,6 +3,7 @@ from __future__ import annotations
 from fastapi import APIRouter
 
 from app.api.v1 import (
+    ai,
     commercial,
     currency,
     customer,
@@ -33,5 +34,13 @@ api_router.include_router(commercial.commercial_router)
 api_router.include_router(commercial.losses_router)
 api_router.include_router(commercial.rate_cards_router)
 api_router.include_router(commercial.change_requests_router)
+api_router.include_router(ai.tools_router)
+api_router.include_router(ai.assignments_router)
+api_router.include_router(ai.usage_router)
+api_router.include_router(ai.code_metrics_router)
+api_router.include_router(ai.sdlc_metrics_router)
+api_router.include_router(ai.trust_router)
+api_router.include_router(ai.governance_router)
+api_router.include_router(ai.override_router)
 api_router.include_router(settings.router)
 api_router.include_router(data_import.router)
