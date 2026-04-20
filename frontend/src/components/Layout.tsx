@@ -4,7 +4,7 @@ import { cn } from "@/lib/cn";
 
 const tabs = [
   { to: "/", label: "Executive", num: "01" },
-  { to: "/portfolio", label: "Portfolio", num: "02", disabled: true },
+  { to: "/kpi", label: "KPI Studio", num: "02" },
   { to: "/delivery", label: "Delivery", num: "03", disabled: true },
   { to: "/velocity", label: "Velocity & Flow", num: "04", disabled: true },
   { to: "/margin", label: "Margin & EVM", num: "05", disabled: true },

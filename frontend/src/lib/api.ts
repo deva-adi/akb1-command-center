@@ -37,6 +37,7 @@ export type KpiDefinition = {
   name: string;
   code: string;
   formula: string;
+  description: string | null;
   unit: string | null;
   green_threshold: number | null;
   amber_threshold: number | null;
@@ -97,8 +98,21 @@ export async function fetchProgrammes(): Promise<Programme[]> {
   return data;
 }
 
-export async function fetchKpiDefinitions(): Promise<KpiDefinition[]> {
-  const { data } = await api.get<KpiDefinition[]>("/api/v1/kpi/definitions");
+export async function fetchKpiDefinitions(category?: string): Promise<KpiDefinition[]> {
+  const { data } = await api.get<KpiDefinition[]>("/api/v1/kpi/definitions", {
+    params: category ? { category } : undefined,
+  });
+  return data;
+}
+
+export async function updateKpiWeight(
+  kpiId: number,
+  weight: number,
+): Promise<KpiDefinition> {
+  const { data } = await api.put<KpiDefinition>(
+    `/api/v1/kpi/definitions/${kpiId}/weight`,
+    { weight },
+  );
   return data;
 }
 

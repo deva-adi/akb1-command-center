@@ -2,7 +2,11 @@ from __future__ import annotations
 
 from datetime import date
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
+
+
+class KpiWeightUpdate(BaseModel):
+    weight: float = Field(ge=0.0, le=10.0)
 
 
 class KpiDefinitionOut(BaseModel):
