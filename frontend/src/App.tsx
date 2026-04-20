@@ -4,6 +4,7 @@ import { Layout } from "@/components/Layout";
 import { queryClient } from "@/lib/queryClient";
 import { ExecutiveOverview } from "@/pages/ExecutiveOverview";
 import { DataHub } from "@/pages/DataHub";
+import { DeliveryHealth } from "@/pages/DeliveryHealth";
 import { KpiStudio } from "@/pages/KpiStudio";
 import { NotFound } from "@/pages/NotFound";
 
@@ -14,6 +15,7 @@ const router = createBrowserRouter([
     children: [
       { index: true, element: <ExecutiveOverview /> },
       { path: "kpi", element: <KpiStudio /> },
+      { path: "delivery", element: <DeliveryHealth /> },
       { path: "data-hub", element: <DataHub /> },
       { path: "*", element: <NotFound /> },
     ],
