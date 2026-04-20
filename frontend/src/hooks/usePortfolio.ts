@@ -4,6 +4,7 @@ import {
   fetchKpiDefinitions,
   fetchKpiSnapshots,
   fetchProgrammes,
+  fetchTopRisks,
 } from "@/lib/api";
 
 export function useHealth() {
@@ -29,5 +30,12 @@ export function useCpiSnapshots() {
   return useQuery({
     queryKey: ["kpi-snapshots", "CPI"],
     queryFn: () => fetchKpiSnapshots({ kpiCode: "CPI" }),
+  });
+}
+
+export function useTopRisks(limit = 5) {
+  return useQuery({
+    queryKey: ["risks", "top", limit],
+    queryFn: () => fetchTopRisks(limit),
   });
 }

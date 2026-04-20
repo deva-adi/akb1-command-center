@@ -1,14 +1,17 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.config import get_settings
 from app.database import get_session
 from app.models import AppSetting
+from app.rate_limit import limiter
 from app.schemas.settings import AppSettingOut, AppSettingUpdate
 
 router = APIRouter(prefix="/settings", tags=["settings"])
+_write_limit = get_settings().rate_limit_write
 
 
 @router.get("", response_model=list[AppSettingOut])
@@ -28,7 +31,9 @@ async def get_setting(key: str, session: AsyncSession = Depends(get_session)) ->
 
 
 @router.put("/{key}", response_model=AppSettingOut)
+@limiter.limit(_write_limit)
 async def update_setting(
+    request: Request,
     key: str,
     payload: AppSettingUpdate,
     session: AsyncSession = Depends(get_session),

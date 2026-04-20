@@ -13,6 +13,7 @@ import { FileDown, Sparkles } from "lucide-react";
 import { Card, CardHeader } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { KpiTile } from "@/components/ui/KpiTile";
+import { TopRisksCard } from "@/components/TopRisksCard";
 import {
   useCpiSnapshots,
   useMarginSnapshots,
@@ -247,8 +248,8 @@ export function ExecutiveOverview() {
         </div>
       </Card>
 
-      <section className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <Card>
+      <section className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+        <Card className="lg:col-span-2">
           <CardHeader title="Programme status" subtitle="Margin and CPI by programme" />
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
@@ -287,17 +288,19 @@ export function ExecutiveOverview() {
           </div>
         </Card>
 
-        <Card>
-          <CardHeader
-            title="Narrative"
-            subtitle="Template-driven commentary (Iteration 2 upgrades to LLM-optional)"
-            action={<Sparkles className="size-4 text-amber-500" aria-hidden="true" />}
-          />
-          <p className="whitespace-pre-line text-sm leading-relaxed text-navy/80">
-            {narrative}
-          </p>
-        </Card>
+        <TopRisksCard limit={5} />
       </section>
+
+      <Card>
+        <CardHeader
+          title="Narrative"
+          subtitle="Template-driven commentary (Iteration 2 upgrades to LLM-optional)"
+          action={<Sparkles className="size-4 text-amber-500" aria-hidden="true" />}
+        />
+        <p className="whitespace-pre-line text-sm leading-relaxed text-navy/80">
+          {narrative}
+        </p>
+      </Card>
     </div>
   );
 }

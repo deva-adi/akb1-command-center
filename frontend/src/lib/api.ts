@@ -62,6 +62,22 @@ export type AppSetting = {
   value: string | null;
 };
 
+export type Risk = {
+  id: number;
+  program_id: number | null;
+  project_id: number | null;
+  title: string;
+  description: string | null;
+  category: string | null;
+  probability: number | null;
+  impact: number | null;
+  severity: string | null;
+  status: string;
+  owner: string | null;
+  mitigation_plan: string | null;
+  escalated_to_programme: boolean;
+};
+
 export type DataImportLog = {
   id: number;
   file_name: string | null;
@@ -95,6 +111,13 @@ export async function fetchKpiSnapshots(params: {
       kpi_code: params.kpiCode,
       program_id: params.programId,
     },
+  });
+  return data;
+}
+
+export async function fetchTopRisks(limit = 5): Promise<Risk[]> {
+  const { data } = await api.get<Risk[]>("/api/v1/risks", {
+    params: { sort_by: "impact", limit },
   });
   return data;
 }

@@ -1,12 +1,14 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.config import get_settings
 from app.database import get_session
 from app.models import Program, Project
+from app.rate_limit import limiter
 from app.schemas.core import (
     ProgrammeCreate,
     ProgrammeOut,
@@ -16,6 +18,7 @@ from app.schemas.core import (
 )
 
 router = APIRouter(prefix="/programmes", tags=["programmes"])
+_write_limit = get_settings().rate_limit_write
 
 
 @router.get("", response_model=list[ProgrammeOut])
@@ -25,7 +28,9 @@ async def list_programmes(session: AsyncSession = Depends(get_session)) -> list[
 
 
 @router.post("", response_model=ProgrammeOut, status_code=status.HTTP_201_CREATED)
+@limiter.limit(_write_limit)
 async def create_programme(
+    request: Request,
     payload: ProgrammeCreate,
     session: AsyncSession = Depends(get_session),
 ) -> Program:
@@ -75,7 +80,9 @@ async def list_programme_projects(
     response_model=ProjectOut,
     status_code=status.HTTP_201_CREATED,
 )
+@limiter.limit(_write_limit)
 async def create_project(
+    request: Request,
     programme_id: int,
     payload: ProjectCreate,
     session: AsyncSession = Depends(get_session),

@@ -4,17 +4,20 @@ import csv
 import io
 from typing import Any
 
-from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
+from fastapi import APIRouter, Depends, File, HTTPException, Request, UploadFile, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.config import get_settings
 from app.database import get_session
 from app.models import DataImport
+from app.rate_limit import limiter
 from app.schemas.settings import DataImportLogOut
 
 router = APIRouter(prefix="/import", tags=["import"])
 
 MAX_UPLOAD_BYTES = 10 * 1024 * 1024  # 10 MiB
+_upload_limit = get_settings().rate_limit_upload
 
 
 @router.get("/log", response_model=list[DataImportLogOut])
@@ -26,7 +29,9 @@ async def list_import_log(session: AsyncSession = Depends(get_session)) -> list[
 
 
 @router.post("/csv/preview", status_code=status.HTTP_200_OK)
+@limiter.limit(_upload_limit)
 async def preview_csv(
+    request: Request,
     file: UploadFile = File(...),
     session: AsyncSession = Depends(get_session),
 ) -> dict[str, Any]:

@@ -885,7 +885,7 @@ Database (SQLite — /data/akb1.db in Docker volume)
 
 ### 13.2 Database Schema Summary
 
-44 tables across 9 groups:
+44 tables across 10 groups:
 
 | Group | Tables | Purpose |
 |-------|--------|---------|
@@ -896,6 +896,9 @@ Database (SQLite — /data/akb1.db in Docker volume)
 | Financial (3) | bench_tracking, scope_creep_log, loss_exposure | Loss tracking |
 | Dual Velocity (2) | sprint_velocity_dual, sprint_velocity_blend_rules | AI velocity |
 | System (3) | data_imports, app_settings, audit_log | Configuration |
+| Customer Intelligence (2) | customer_expectations, customer_actions | Tab 10 expectation gap + action tracker |
+| v5.2 Additions (5) | flow_metrics, project_phases, currency_rates, data_import_snapshots, schema_version | Kanban / Waterfall / multi-currency / rollback / Alembic |
+| Security Stubs (2) | users, user_roles | Tier 3 RBAC scaffolding (populated when auth is enabled) |
 
 Full SQL schemas with all columns, types, and relationships are in ARCHITECTURE.md Section 5.
 
