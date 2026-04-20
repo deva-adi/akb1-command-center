@@ -7,6 +7,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.logging_config import get_logger
 from app.models import (
+    AiCodeMetrics,
+    AiGovernanceConfig,
+    AiOverrideLog,
+    AiSdlcMetrics,
+    AiTool,
+    AiToolAssignment,
+    AiTrustScore,
+    AiUsageMetrics,
     AppSetting,
     CommercialScenario,
     CurrencyRate,
@@ -29,6 +37,16 @@ from app.models import (
     SprintData,
     SprintVelocityBlendRule,
     SprintVelocityDual,
+)
+from app.seed.ai_data import (
+    AI_CODE_METRICS,
+    AI_GOVERNANCE_CONFIG,
+    AI_OVERRIDE_LOG,
+    AI_SDLC_METRICS,
+    AI_TOOL_ASSIGNMENTS,
+    AI_TOOLS,
+    AI_TRUST_SCORES,
+    AI_USAGE_METRICS,
 )
 from app.seed.commercial_data import (
     BLEND_RULES,
@@ -95,6 +113,14 @@ async def seed_demo_data(session: AsyncSession, *, force: bool = False) -> bool:
     await _seed_change_requests(session, program_ids, project_ids)
     await _seed_customer_satisfaction(session, program_ids)
     await _seed_sla_incidents(session, program_ids)
+    ai_tool_ids = await _seed_ai_tools(session)
+    await _seed_ai_tool_assignments(session, program_ids, ai_tool_ids)
+    await _seed_ai_usage_metrics(session, program_ids, ai_tool_ids)
+    await _seed_ai_code_metrics(session, program_ids, project_ids)
+    await _seed_ai_sdlc_metrics(session, program_ids)
+    await _seed_ai_trust_scores(session, program_ids, ai_tool_ids)
+    await _seed_ai_governance_config(session, program_ids)
+    await _seed_ai_override_log(session, program_ids, project_ids, ai_tool_ids)
 
     await session.commit()
     log.info(
@@ -118,6 +144,14 @@ async def seed_demo_data(session: AsyncSession, *, force: bool = False) -> bool:
         change_requests=len(CHANGE_REQUESTS),
         customer_satisfaction=len(CUSTOMER_SATISFACTION),
         sla_incidents=len(SLA_INCIDENTS),
+        ai_tools=len(AI_TOOLS),
+        ai_assignments=len(AI_TOOL_ASSIGNMENTS),
+        ai_usage_rows=len(AI_USAGE_METRICS),
+        ai_code_rows=len(AI_CODE_METRICS),
+        ai_sdlc_rows=len(AI_SDLC_METRICS),
+        ai_trust_rows=len(AI_TRUST_SCORES),
+        ai_governance_rows=len(AI_GOVERNANCE_CONFIG),
+        ai_overrides=len(AI_OVERRIDE_LOG),
     )
     return True
 
@@ -465,3 +499,130 @@ async def _seed_sla_incidents(
         if program_id is None:
             continue
         session.add(SlaIncident(program_id=program_id, **payload))
+
+
+async def _seed_ai_tools(session: AsyncSession) -> dict[str, int]:
+    tool_ids: dict[str, int] = {}
+    for data in AI_TOOLS:
+        tool = AiTool(**data)
+        session.add(tool)
+        await session.flush()
+        tool_ids[tool.name] = tool.id
+    return tool_ids
+
+
+async def _seed_ai_tool_assignments(
+    session: AsyncSession,
+    program_ids: dict[str, int],
+    tool_ids: dict[str, int],
+) -> None:
+    for data in AI_TOOL_ASSIGNMENTS:
+        payload = dict(data)
+        tool_id = tool_ids.get(payload.pop("tool_name"))
+        program_id = program_ids.get(payload.pop("program_code"))
+        if tool_id is None or program_id is None:
+            continue
+        session.add(
+            AiToolAssignment(
+                ai_tool_id=tool_id, program_id=program_id, **payload
+            )
+        )
+
+
+async def _seed_ai_usage_metrics(
+    session: AsyncSession,
+    program_ids: dict[str, int],
+    tool_ids: dict[str, int],
+) -> None:
+    for data in AI_USAGE_METRICS:
+        payload = dict(data)
+        tool_id = tool_ids.get(payload.pop("tool_name"))
+        program_id = program_ids.get(payload.pop("program_code"))
+        if tool_id is None or program_id is None:
+            continue
+        session.add(
+            AiUsageMetrics(
+                ai_tool_id=tool_id, program_id=program_id, **payload
+            )
+        )
+
+
+async def _seed_ai_code_metrics(
+    session: AsyncSession,
+    program_ids: dict[str, int],
+    project_ids: dict[str, int],
+) -> None:
+    for data in AI_CODE_METRICS:
+        payload = dict(data)
+        program_id = program_ids.get(payload.pop("program_code"))
+        project_id = project_ids.get(payload.pop("project_code"))
+        if program_id is None or project_id is None:
+            continue
+        session.add(
+            AiCodeMetrics(
+                program_id=program_id, project_id=project_id, **payload
+            )
+        )
+
+
+async def _seed_ai_sdlc_metrics(
+    session: AsyncSession,
+    program_ids: dict[str, int],
+) -> None:
+    for data in AI_SDLC_METRICS:
+        payload = dict(data)
+        program_id = program_ids.get(payload.pop("program_code"))
+        if program_id is None:
+            continue
+        session.add(AiSdlcMetrics(program_id=program_id, **payload))
+
+
+async def _seed_ai_trust_scores(
+    session: AsyncSession,
+    program_ids: dict[str, int],
+    tool_ids: dict[str, int],
+) -> None:
+    for data in AI_TRUST_SCORES:
+        payload = dict(data)
+        tool_id = tool_ids.get(payload.pop("tool_name"))
+        program_id = program_ids.get(payload.pop("program_code"))
+        if tool_id is None or program_id is None:
+            continue
+        session.add(
+            AiTrustScore(
+                ai_tool_id=tool_id, program_id=program_id, **payload
+            )
+        )
+
+
+async def _seed_ai_governance_config(
+    session: AsyncSession,
+    program_ids: dict[str, int],
+) -> None:
+    for data in AI_GOVERNANCE_CONFIG:
+        payload = dict(data)
+        program_code = payload.pop("program_code", None)
+        program_id = program_ids.get(program_code) if program_code else None
+        session.add(AiGovernanceConfig(program_id=program_id, **payload))
+
+
+async def _seed_ai_override_log(
+    session: AsyncSession,
+    program_ids: dict[str, int],
+    project_ids: dict[str, int],
+    tool_ids: dict[str, int],
+) -> None:
+    for data in AI_OVERRIDE_LOG:
+        payload = dict(data)
+        tool_id = tool_ids.get(payload.pop("tool_name"))
+        program_id = program_ids.get(payload.pop("program_code"))
+        project_code = payload.pop("project_code", None)
+        project_id = project_ids.get(project_code) if project_code else None
+        session.add(
+            AiOverrideLog(
+                ai_tool_id=tool_id,
+                program_id=program_id,
+                project_id=project_id,
+                **payload,
+            )
+        )

@@ -530,6 +530,151 @@ export async function fetchCustomerActions(
   return data;
 }
 
+// ---------- AI Governance ----------
+
+export type AiTool = {
+  id: number;
+  name: string;
+  vendor: string | null;
+  version: string | null;
+  category: string | null;
+  license_type: string | null;
+  cost_per_seat: number | null;
+  status: string;
+};
+
+export type AiUsage = {
+  id: number;
+  ai_tool_id: number | null;
+  program_id: number | null;
+  snapshot_date: string | null;
+  prompts_count: number | null;
+  suggestions_accepted: number | null;
+  suggestions_rejected: number | null;
+  time_saved_hours: number | null;
+  cost: number | null;
+};
+
+export type AiCodeMetric = {
+  id: number;
+  program_id: number | null;
+  project_id: number | null;
+  sprint_number: number | null;
+  ai_lines_generated: number | null;
+  ai_lines_accepted: number | null;
+  ai_defect_count: number | null;
+  ai_test_coverage_pct: number | null;
+  ai_review_rejection_pct: number | null;
+  human_defect_count: number | null;
+  human_test_coverage_pct: number | null;
+  human_review_rejection_pct: number | null;
+  snapshot_date: string | null;
+};
+
+export type AiSdlcMetric = {
+  id: number;
+  program_id: number | null;
+  sprint_number: number | null;
+  estimation_accuracy_with_ai: number | null;
+  estimation_accuracy_without_ai: number | null;
+  code_review_hours_with_ai: number | null;
+  code_review_hours_without_ai: number | null;
+  planning_velocity_with_ai: number | null;
+  planning_velocity_without_ai: number | null;
+  documentation_hours_with_ai: number | null;
+  documentation_hours_without_ai: number | null;
+  snapshot_date: string | null;
+};
+
+export type AiTrustScore = {
+  id: number;
+  ai_tool_id: number | null;
+  program_id: number | null;
+  snapshot_date: string | null;
+  provenance_score: number | null;
+  review_status_score: number | null;
+  test_coverage_score: number | null;
+  drift_check_score: number | null;
+  override_rate_score: number | null;
+  defect_rate_score: number | null;
+  composite_score: number | null;
+  maturity_level: string | null;
+};
+
+export type AiGovernanceConfig = {
+  id: number;
+  config_type: string;
+  name: string;
+  description: string | null;
+  scope: string | null;
+  enforcement_method: string | null;
+  program_id: number | null;
+  status: string;
+  compliance_pct: number | null;
+  last_audit_date: string | null;
+  review_date: string | null;
+  owner: string | null;
+};
+
+export type AiOverride = {
+  id: number;
+  ai_tool_id: number | null;
+  program_id: number | null;
+  project_id: number | null;
+  override_date: string | null;
+  override_type: string | null;
+  reason: string | null;
+  outcome: string | null;
+  approver: string | null;
+};
+
+export async function fetchAiTools(): Promise<AiTool[]> {
+  const { data } = await api.get<AiTool[]>("/api/v1/ai/tools");
+  return data;
+}
+
+export async function fetchAiUsage(programId?: number): Promise<AiUsage[]> {
+  const { data } = await api.get<AiUsage[]>("/api/v1/ai/usage", {
+    params: programId ? { program_id: programId } : undefined,
+  });
+  return data;
+}
+
+export async function fetchAiCodeMetrics(programId?: number): Promise<AiCodeMetric[]> {
+  const { data } = await api.get<AiCodeMetric[]>("/api/v1/ai/code-metrics", {
+    params: programId ? { program_id: programId } : undefined,
+  });
+  return data;
+}
+
+export async function fetchAiSdlcMetrics(programId?: number): Promise<AiSdlcMetric[]> {
+  const { data } = await api.get<AiSdlcMetric[]>("/api/v1/ai/sdlc-metrics", {
+    params: programId ? { program_id: programId } : undefined,
+  });
+  return data;
+}
+
+export async function fetchAiTrustScores(programId?: number): Promise<AiTrustScore[]> {
+  const { data } = await api.get<AiTrustScore[]>("/api/v1/ai/trust-scores", {
+    params: programId ? { program_id: programId } : undefined,
+  });
+  return data;
+}
+
+export async function fetchAiGovernance(programId?: number): Promise<AiGovernanceConfig[]> {
+  const { data } = await api.get<AiGovernanceConfig[]>("/api/v1/ai/governance-config", {
+    params: programId ? { program_id: programId } : undefined,
+  });
+  return data;
+}
+
+export async function fetchAiOverrides(programId?: number): Promise<AiOverride[]> {
+  const { data } = await api.get<AiOverride[]>("/api/v1/ai/override-log", {
+    params: programId ? { program_id: programId } : undefined,
+  });
+  return data;
+}
+
 export async function previewCsv(file: File): Promise<{
   filename: string;
   columns: string[];
