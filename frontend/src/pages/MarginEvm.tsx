@@ -1,5 +1,5 @@
-import { useMemo } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { Fragment, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import {
   Bar,
@@ -12,8 +12,10 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { ChevronRight, Home, X } from "lucide-react";
+import { ChevronDown, ChevronUp, Home } from "lucide-react";
 import { Breadcrumb } from "@/components/Breadcrumb";
+import { ProgrammeFilterBar } from "@/components/ProgrammeFilterBar";
+import { PROGRAMME_CROSS_LINKS } from "@/components/programmeCrossLinks";
 import { Card, CardHeader } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import {
@@ -27,10 +29,11 @@ import { useCurrency } from "@/hooks/useCurrency";
 import { formatPct } from "@/lib/format";
 
 export function MarginEvm() {
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
   const programmeFilter = searchParams.get("programme");
   const programmes = useProgrammes();
   const currency = useCurrency();
+  const [expandedCr, setExpandedCr] = useState<number | null>(null);
 
   const filteredProgramme = useMemo(
     () => programmes.data?.find((p) => p.code === programmeFilter) ?? null,
@@ -55,11 +58,6 @@ export function MarginEvm() {
     queryFn: () => fetchChangeRequests(filteredProgramme?.id),
   });
 
-  const clearProgrammeFilter = () => {
-    const next = new URLSearchParams(searchParams);
-    next.delete("programme");
-    setSearchParams(next);
-  };
 
   // Latest commercial per programme — for the 4-layer margin waterfall.
   const latestCommercial = useMemo(() => {
@@ -130,37 +128,18 @@ export function MarginEvm() {
     <div className="flex flex-col gap-6">
       <Breadcrumb items={breadcrumbItems} />
 
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-semibold text-navy">Margin & EVM</h1>
-          <p className="mt-1 text-sm text-navy/70">
-            Where is margin leaking and by how much? 4-layer margin waterfall
-            plus the 7 delivery-loss categories from ARCHITECTURE.md §6.
-          </p>
-        </div>
-        {filteredProgramme ? (
-          <Link
-            to={`/delivery?programme=${filteredProgramme.code}`}
-            className="btn-ghost"
-          >
-            View Delivery Health <ChevronRight className="size-3" />
-          </Link>
-        ) : null}
+      <div>
+        <h1 className="text-2xl font-semibold text-navy">Margin & EVM</h1>
+        <p className="mt-1 text-sm text-navy/70">
+          Where is margin leaking and by how much? 4-layer margin waterfall
+          plus the 7 delivery-loss categories from ARCHITECTURE.md §6.
+        </p>
       </div>
 
-      {filteredProgramme ? (
-        <div className="inline-flex items-center gap-2 self-start rounded-full border border-navy/30 bg-navy/5 px-3 py-1 text-xs text-navy">
-          Filtered to <strong>{filteredProgramme.name}</strong>
-          <button
-            type="button"
-            onClick={clearProgrammeFilter}
-            className="inline-flex items-center rounded-full bg-navy/10 px-1.5 py-0.5 transition hover:bg-navy/20"
-            aria-label="Clear programme filter (drill up)"
-          >
-            <X className="size-3" /> clear
-          </button>
-        </div>
-      ) : null}
+      <ProgrammeFilterBar
+        currentRoute="/margin"
+        crossLinks={PROGRAMME_CROSS_LINKS}
+      />
 
       <Card>
         <CardHeader
@@ -325,54 +304,109 @@ export function MarginEvm() {
                   <th className="text-right">Value</th>
                   <th className="text-right">Margin Δ</th>
                   <th>Status</th>
+                  <th aria-hidden="true" />
                 </tr>
               </thead>
               <tbody>
-                {(changeRequests.data ?? []).map((cr) => (
-                  <tr key={cr.id} className="border-t border-ice-100">
-                    <td className="py-2 font-mono text-xs">{cr.cr_date}</td>
-                    <td>
-                      <p className="font-medium">{cr.cr_description ?? "—"}</p>
-                      {cr.is_billable === false ? (
-                        <span className="text-xs text-danger-600">non-billable</span>
+                {(changeRequests.data ?? []).map((cr) => {
+                  const isOpen = expandedCr === cr.id;
+                  const cost =
+                    currency.format(cr.processing_cost, sourceCurrency);
+                  return (
+                    <Fragment key={cr.id}>
+                      <tr
+                        role="button"
+                        tabIndex={0}
+                        onClick={() => setExpandedCr(isOpen ? null : cr.id)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            setExpandedCr(isOpen ? null : cr.id);
+                          }
+                        }}
+                        className="cursor-pointer border-t border-ice-100 transition hover:bg-ice-50"
+                        aria-expanded={isOpen}
+                      >
+                        <td className="py-2 font-mono text-xs">{cr.cr_date}</td>
+                        <td>
+                          <p className="font-medium">{cr.cr_description ?? "—"}</p>
+                          {cr.is_billable === false ? (
+                            <span className="text-xs text-danger-600">non-billable</span>
+                          ) : null}
+                        </td>
+                        <td className="text-right font-mono">
+                          {cr.effort_hours ?? "—"}
+                        </td>
+                        <td className="text-right font-mono">
+                          {currency.format(cr.cr_value, sourceCurrency)}
+                        </td>
+                        <td className="text-right font-mono">
+                          <Badge
+                            tone={
+                              cr.margin_impact === null
+                                ? "neutral"
+                                : cr.margin_impact >= 0
+                                  ? "green"
+                                  : cr.margin_impact >= -1
+                                    ? "amber"
+                                    : "red"
+                            }
+                          >
+                            {formatPct(cr.margin_impact === null ? null : cr.margin_impact / 100)}
+                          </Badge>
+                        </td>
+                        <td>
+                          <Badge
+                            tone={
+                              cr.status === "Approved"
+                                ? "green"
+                                : cr.status === "Pending" || cr.status === "In Review"
+                                  ? "amber"
+                                  : "neutral"
+                            }
+                          >
+                            {cr.status ?? "—"}
+                          </Badge>
+                        </td>
+                        <td className="pr-2 text-right text-navy/40">
+                          {isOpen ? (
+                            <ChevronUp className="inline size-4" aria-hidden="true" />
+                          ) : (
+                            <ChevronDown className="inline size-4" aria-hidden="true" />
+                          )}
+                        </td>
+                      </tr>
+                      {isOpen ? (
+                        <tr className="bg-ice-50/40">
+                          <td colSpan={7} className="px-3 py-3 text-xs text-navy/80">
+                            <dl className="grid grid-cols-2 gap-3 md:grid-cols-4">
+                              <Detail label="Processing cost" value={cost} />
+                              <Detail
+                                label="Net impact"
+                                value={currency.format(
+                                  (cr.cr_value ?? 0) - (cr.processing_cost ?? 0),
+                                  sourceCurrency,
+                                )}
+                              />
+                              <Detail
+                                label="Billable"
+                                value={cr.is_billable === false ? "No" : "Yes"}
+                              />
+                              <Detail
+                                label="Programme"
+                                value={
+                                  programmes.data?.find(
+                                    (p) => p.id === cr.program_id,
+                                  )?.code ?? "—"
+                                }
+                              />
+                            </dl>
+                          </td>
+                        </tr>
                       ) : null}
-                    </td>
-                    <td className="text-right font-mono">
-                      {cr.effort_hours ?? "—"}
-                    </td>
-                    <td className="text-right font-mono">
-                      {currency.format(cr.cr_value, sourceCurrency)}
-                    </td>
-                    <td className="text-right font-mono">
-                      <Badge
-                        tone={
-                          cr.margin_impact === null
-                            ? "neutral"
-                            : cr.margin_impact >= 0
-                              ? "green"
-                              : cr.margin_impact >= -1
-                                ? "amber"
-                                : "red"
-                        }
-                      >
-                        {formatPct(cr.margin_impact === null ? null : cr.margin_impact / 100)}
-                      </Badge>
-                    </td>
-                    <td>
-                      <Badge
-                        tone={
-                          cr.status === "Approved"
-                            ? "green"
-                            : cr.status === "Pending" || cr.status === "In Review"
-                              ? "amber"
-                              : "neutral"
-                        }
-                      >
-                        {cr.status ?? "—"}
-                      </Badge>
-                    </td>
-                  </tr>
-                ))}
+                    </Fragment>
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -381,3 +415,13 @@ export function MarginEvm() {
     </div>
   );
 }
+
+function Detail({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex flex-col">
+      <span className="kpi-label">{label}</span>
+      <span className="font-mono text-navy">{value}</span>
+    </div>
+  );
+}
+

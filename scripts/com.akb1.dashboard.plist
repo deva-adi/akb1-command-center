@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  AKB1 Command Center — macOS LaunchAgent
+  Installs as a per-user agent that runs `docker compose up -d` on every login.
+
+  Install:
+    cp scripts/com.akb1.dashboard.plist ~/Library/LaunchAgents/
+    launchctl load -w ~/Library/LaunchAgents/com.akb1.dashboard.plist
+
+  Uninstall:
+    launchctl unload ~/Library/LaunchAgents/com.akb1.dashboard.plist
+    rm ~/Library/LaunchAgents/com.akb1.dashboard.plist
+
+  Logs:
+    /tmp/akb1-launch.log  (stdout + stderr)
+-->
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+  <dict>
+    <key>Label</key>
+    <string>com.akb1.dashboard</string>
+
+    <key>ProgramArguments</key>
+    <array>
+      <string>/bin/bash</string>
+      <string>-c</string>
+      <!--
+        Wait up to 90s for Docker Desktop to come up before running compose.
+        Uses only binaries that exist on a fresh macOS + Homebrew path so the
+        agent works even when the user shell profile hasn't been sourced.
+      -->
+      <string>
+        export PATH="/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin";
+        cd "$HOME/Documents/Claude/Claude_Code/Projects/akb1-command-center" || exit 1;
+        for i in $(seq 1 30); do
+          if docker info &gt; /dev/null 2&gt;&amp;1; then
+            break;
+          fi;
+          sleep 3;
+        done;
+        docker compose up -d
+      </string>
+    </array>
+
+    <!-- Run once at login. -->
+    <key>RunAtLoad</key>
+    <true/>
+
+    <!-- If it fails, retry every 5 minutes for up to 3 attempts. -->
+    <key>KeepAlive</key>
+    <dict>
+      <key>SuccessfulExit</key>
+      <false/>
+    </dict>
+    <key>ThrottleInterval</key>
+    <integer>300</integer>
+
+    <key>StandardOutPath</key>
+    <string>/tmp/akb1-launch.log</string>
+    <key>StandardErrorPath</key>
+    <string>/tmp/akb1-launch.log</string>
+
+    <!-- Inherit the user's HOME correctly. -->
+    <key>EnvironmentVariables</key>
+    <dict>
+      <key>LANG</key>
+      <string>en_US.UTF-8</string>
+    </dict>
+  </dict>
+</plist>

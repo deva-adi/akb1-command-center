@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { Fragment, useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import {
   CartesianGrid,
@@ -16,8 +16,10 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { AlertOctagon, ChevronRight, Home, Sparkles, X } from "lucide-react";
+import { AlertOctagon, ChevronDown, ChevronUp, Home, Sparkles } from "lucide-react";
 import { Breadcrumb } from "@/components/Breadcrumb";
+import { ProgrammeFilterBar } from "@/components/ProgrammeFilterBar";
+import { PROGRAMME_CROSS_LINKS } from "@/components/programmeCrossLinks";
 import { Card, CardHeader } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import {
@@ -59,6 +61,8 @@ export function CustomerIntelligence() {
   const currency = useCurrency();
 
   const [activeProgrammeId, setActiveProgrammeId] = useState<number | null>(null);
+  const [expandedAction, setExpandedAction] = useState<number | null>(null);
+  const [expandedIncident, setExpandedIncident] = useState<number | null>(null);
 
   const filteredProgramme = useMemo(
     () => programmes.data?.find((p) => p.code === programmeFilter) ?? null,
@@ -112,10 +116,21 @@ export function CustomerIntelligence() {
     enabled: activeProgrammeId !== null,
   });
 
-  const clearProgrammeFilter = () => {
-    const next = new URLSearchParams(searchParams);
-    next.delete("programme");
-    setSearchParams(next);
+  const handleProgrammeChange = (next: { id: number } | null) => {
+    setActiveProgrammeId(next?.id ?? null);
+    const params = new URLSearchParams(searchParams);
+    if (next) {
+      const code =
+        programmes.data?.find((p) => p.id === next.id)?.code ?? "";
+      if (code) {
+        params.set("programme", code);
+      } else {
+        params.delete("programme");
+      }
+    } else {
+      params.delete("programme");
+    }
+    setSearchParams(params);
   };
 
   const latest = useMemo(() => {
@@ -173,37 +188,20 @@ export function CustomerIntelligence() {
     <div className="flex flex-col gap-6">
       <Breadcrumb items={breadcrumbItems} />
 
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-semibold text-navy">Customer Intelligence</h1>
-          <p className="mt-1 text-sm text-navy/70">
-            Will this customer renew? Where is their expectation gap widest?
-            What escalations are open?
-          </p>
-        </div>
-        {activeProgramme ? (
-          <Link
-            to={`/delivery?programme=${activeProgramme.code}`}
-            className="btn-ghost"
-          >
-            View Delivery Health <ChevronRight className="size-3" />
-          </Link>
-        ) : null}
+      <div>
+        <h1 className="text-2xl font-semibold text-navy">Customer Intelligence</h1>
+        <p className="mt-1 text-sm text-navy/70">
+          Will this customer renew? Where is their expectation gap widest?
+          What escalations are open?
+        </p>
       </div>
 
-      {filteredProgramme ? (
-        <div className="inline-flex items-center gap-2 self-start rounded-full border border-navy/30 bg-navy/5 px-3 py-1 text-xs text-navy">
-          Filtered to <strong>{filteredProgramme.name}</strong>
-          <button
-            type="button"
-            onClick={clearProgrammeFilter}
-            className="inline-flex items-center rounded-full bg-navy/10 px-1.5 py-0.5 transition hover:bg-navy/20"
-            aria-label="Clear programme filter (drill up)"
-          >
-            <X className="size-3" /> clear
-          </button>
-        </div>
-      ) : null}
+      <ProgrammeFilterBar
+        currentRoute="/customer"
+        activeProgramme={activeProgramme}
+        onSelect={(next) => handleProgrammeChange(next)}
+        crossLinks={PROGRAMME_CROSS_LINKS}
+      />
 
       {!filteredProgramme ? (
         <Card>
@@ -413,42 +411,71 @@ export function CustomerIntelligence() {
           <p className="text-sm text-navy/60">No steering-committee actions recorded.</p>
         ) : (
           <ul className="flex flex-col gap-2 text-sm">
-            {(actions.data ?? []).map((a) => (
-              <li
-                key={a.id}
-                className="flex items-center justify-between gap-3 rounded border border-ice-100 bg-white px-3 py-2"
-              >
-                <div>
-                  <p className="font-medium">{a.description}</p>
-                  <p className="text-xs text-navy/60">
-                    Meeting {formatDate(a.meeting_date)}
-                    {a.owner ? ` · ${a.owner}` : ""}
-                    {a.due_date ? ` · due ${formatDate(a.due_date)}` : ""}
-                  </p>
-                </div>
-                <div className="flex items-center gap-2">
-                  {a.escalated ? (
-                    <Badge tone="red">
-                      <AlertOctagon className="size-3" /> escalated
-                    </Badge>
-                  ) : null}
-                  <Badge tone={a.priority === "P1" ? "red" : a.priority === "P2" ? "amber" : "neutral"}>
-                    {a.priority ?? "—"}
-                  </Badge>
-                  <Badge
-                    tone={
-                      a.status === "Closed"
-                        ? "green"
-                        : a.status === "Open"
-                          ? "amber"
-                          : "neutral"
-                    }
+            {(actions.data ?? []).map((a) => {
+              const isOpen = expandedAction === a.id;
+              return (
+                <li
+                  key={a.id}
+                  className="rounded border border-ice-100 bg-white"
+                >
+                  <button
+                    type="button"
+                    onClick={() => setExpandedAction(isOpen ? null : a.id)}
+                    aria-expanded={isOpen}
+                    className="flex w-full items-center justify-between gap-3 px-3 py-2 text-left transition hover:bg-ice-50"
                   >
-                    {a.status}
-                  </Badge>
-                </div>
-              </li>
-            ))}
+                    <div>
+                      <p className="font-medium">{a.description}</p>
+                      <p className="text-xs text-navy/60">
+                        Meeting {formatDate(a.meeting_date)}
+                        {a.owner ? ` · ${a.owner}` : ""}
+                        {a.due_date ? ` · due ${formatDate(a.due_date)}` : ""}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {a.escalated ? (
+                        <Badge tone="red">
+                          <AlertOctagon className="size-3" /> escalated
+                        </Badge>
+                      ) : null}
+                      <Badge tone={a.priority === "P1" ? "red" : a.priority === "P2" ? "amber" : "neutral"}>
+                        {a.priority ?? "—"}
+                      </Badge>
+                      <Badge
+                        tone={
+                          a.status === "Closed"
+                            ? "green"
+                            : a.status === "Open"
+                              ? "amber"
+                              : "neutral"
+                        }
+                      >
+                        {a.status}
+                      </Badge>
+                      {isOpen ? (
+                        <ChevronUp className="size-4 text-navy/40" aria-hidden="true" />
+                      ) : (
+                        <ChevronDown className="size-4 text-navy/40" aria-hidden="true" />
+                      )}
+                    </div>
+                  </button>
+                  {isOpen ? (
+                    <dl className="grid grid-cols-2 gap-3 px-3 pb-3 text-xs md:grid-cols-4">
+                      <Detail label="Priority" value={a.priority ?? "—"} />
+                      <Detail label="Owner" value={a.owner ?? "—"} />
+                      <Detail label="Due" value={formatDate(a.due_date)} />
+                      <Detail label="Closed" value={formatDate(a.closed_date)} />
+                      {a.resolution_notes ? (
+                        <div className="md:col-span-4">
+                          <span className="kpi-label">Resolution</span>
+                          <p className="text-navy/80 italic">{a.resolution_notes}</p>
+                        </div>
+                      ) : null}
+                    </dl>
+                  ) : null}
+                </li>
+              );
+            })}
           </ul>
         )}
       </Card>
@@ -477,50 +504,105 @@ export function CustomerIntelligence() {
                 </tr>
               </thead>
               <tbody>
-                {(incidents.data ?? []).map((i) => (
-                  <tr key={i.id} className="border-t border-ice-100">
-                    <td className="py-2 font-mono text-xs">{i.incident_id ?? "—"}</td>
-                    <td>
-                      <Badge
-                        tone={
-                          i.priority === "P1"
-                            ? "red"
-                            : i.priority === "P2"
-                              ? "amber"
-                              : "neutral"
-                        }
+                {(incidents.data ?? []).map((i) => {
+                  const isOpen = expandedIncident === i.id;
+                  return (
+                    <Fragment key={i.id}>
+                      <tr
+                        role="button"
+                        tabIndex={0}
+                        onClick={() => setExpandedIncident(isOpen ? null : i.id)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            setExpandedIncident(isOpen ? null : i.id);
+                          }
+                        }}
+                        className="cursor-pointer border-t border-ice-100 transition hover:bg-ice-50"
+                        aria-expanded={isOpen}
                       >
-                        {i.priority}
-                      </Badge>
-                    </td>
-                    <td>
-                      <p className="font-medium">{i.summary ?? "—"}</p>
-                      {i.root_cause ? (
-                        <p className="text-xs text-navy/60">{i.root_cause}</p>
+                        <td className="py-2 font-mono text-xs">{i.incident_id ?? "—"}</td>
+                        <td>
+                          <Badge
+                            tone={
+                              i.priority === "P1"
+                                ? "red"
+                                : i.priority === "P2"
+                                  ? "amber"
+                                  : "neutral"
+                            }
+                          >
+                            {i.priority}
+                          </Badge>
+                        </td>
+                        <td>
+                          <p className="font-medium">{i.summary ?? "—"}</p>
+                          {i.root_cause ? (
+                            <p className="text-xs text-navy/60">{i.root_cause}</p>
+                          ) : null}
+                        </td>
+                        <td className="text-right font-mono">
+                          {i.response_time_minutes === null
+                            ? "—"
+                            : `${i.response_time_minutes.toFixed(0)}m`}
+                        </td>
+                        <td className="text-right font-mono">
+                          {i.resolution_time_minutes === null
+                            ? "—"
+                            : `${(i.resolution_time_minutes / 60).toFixed(1)}h`}
+                        </td>
+                        <td className="text-right font-mono">
+                          {currency.format(i.penalty_amount, sourceCurrency)}
+                        </td>
+                        <td className="text-right">
+                          {i.sla_breached ? (
+                            <Badge tone="red">breach</Badge>
+                          ) : (
+                            <Badge tone="green">met</Badge>
+                          )}
+                        </td>
+                      </tr>
+                      {isOpen ? (
+                        <tr className="bg-ice-50/40">
+                          <td colSpan={7} className="px-3 py-3 text-xs">
+                            <dl className="grid grid-cols-2 gap-3 md:grid-cols-4">
+                              <Detail
+                                label="Reported"
+                                value={new Date(i.reported_at).toLocaleString("en-GB")}
+                              />
+                              <Detail
+                                label="Responded"
+                                value={
+                                  i.responded_at
+                                    ? new Date(i.responded_at).toLocaleString("en-GB")
+                                    : "—"
+                                }
+                              />
+                              <Detail
+                                label="Resolved"
+                                value={
+                                  i.resolved_at
+                                    ? new Date(i.resolved_at).toLocaleString("en-GB")
+                                    : "—"
+                                }
+                              />
+                              <Detail
+                                label="Penalty"
+                                value={currency.format(i.penalty_amount, sourceCurrency)}
+                              />
+                              {i.root_cause ? (
+                                <div className="md:col-span-4">
+                                  <span className="kpi-label">Root cause</span>
+                                  <p className="italic text-navy/80">{i.root_cause}</p>
+                                </div>
+                              ) : null}
+                            </dl>
+                          </td>
+                        </tr>
                       ) : null}
-                    </td>
-                    <td className="text-right font-mono">
-                      {i.response_time_minutes === null
-                        ? "—"
-                        : `${i.response_time_minutes.toFixed(0)}m`}
-                    </td>
-                    <td className="text-right font-mono">
-                      {i.resolution_time_minutes === null
-                        ? "—"
-                        : `${(i.resolution_time_minutes / 60).toFixed(1)}h`}
-                    </td>
-                    <td className="text-right font-mono">
-                      {currency.format(i.penalty_amount, sourceCurrency)}
-                    </td>
-                    <td className="text-right">
-                      {i.sla_breached ? (
-                        <Badge tone="red">breach</Badge>
-                      ) : (
-                        <Badge tone="green">met</Badge>
-                      )}
-                    </td>
-                  </tr>
-                ))}
+                    </Fragment>
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -549,6 +631,15 @@ function Stat({
         {tone !== "neutral" ? <Badge tone={tone}>·</Badge> : null}
       </div>
       {sub ? <p className="text-xs text-navy/60">{sub}</p> : null}
+    </div>
+  );
+}
+
+function Detail({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex flex-col">
+      <span className="kpi-label">{label}</span>
+      <span className="font-mono text-navy">{value}</span>
     </div>
   );
 }
