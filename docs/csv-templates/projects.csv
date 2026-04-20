@@ -1,0 +1,4 @@
+program_code,name,code,start_date,end_date,bac,revenue,team_size,tech_stack,is_ai_augmented,ai_augmentation_level
+PHOE,Core Banking Module,PHOE-CBM,2025-01-15,2025-06-30,4200000,4200000,8,"Java,Spring Boot,PostgreSQL,Kubernetes",0,
+PHOE,Payment Gateway Integration,PHOE-PGI,2025-02-01,2025-07-31,3100000,3100000,6,"Node.js,React,AWS,Stripe API",0,
+PHOE,Regulatory Compliance Module,PHOE-RCM,2025-03-01,2025-08-31,2700000,2700000,5,"Python,Django,SQLite,REST API",0,

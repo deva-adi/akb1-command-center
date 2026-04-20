@@ -1,0 +1,27 @@
+# Core framework
+fastapi>=0.110.0
+uvicorn[standard]>=0.27.0
+pydantic>=2.5.0
+pydantic-settings>=2.1.0
+python-multipart>=0.0.9
+
+# Database & migrations
+aiosqlite>=0.19.0
+sqlalchemy>=2.0.25
+alembic>=1.13.1
+
+# Data processing
+pandas>=2.1.0
+openpyxl>=3.1.2
+
+# Configuration & HTTP
+python-dotenv>=1.0.0
+httpx>=0.26.0
+
+# Logging
+structlog>=24.1.0
+
+# Security & rate limiting
+slowapi>=0.1.9                   # Rate limiting (leaky bucket, per-IP)
+itsdangerous>=2.1.2              # Signed cookies / session tokens
+passlib[bcrypt]>=1.7.4           # Password hashing (Tier 3 auth)

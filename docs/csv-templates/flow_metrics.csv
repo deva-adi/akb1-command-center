@@ -1,0 +1,6 @@
+project_code,period_start,period_end,throughput_items,wip_avg,wip_limit,cycle_time_p50,cycle_time_p85,cycle_time_p95,lead_time_avg,blocked_time_hours
+DATAOPS-001,2026-03-01,2026-03-07,7,14.2,18,3.4,6.4,9.1,9.2,4.5
+DATAOPS-001,2026-03-08,2026-03-14,8,13.8,18,3.1,5.9,8.7,8.8,2.0
+DATAOPS-001,2026-03-15,2026-03-21,6,15.0,18,3.9,7.2,10.4,10.1,6.5
+DATAOPS-001,2026-03-22,2026-03-28,9,13.1,18,2.8,5.4,8.1,8.5,1.5
+DATAOPS-001,2026-03-29,2026-04-04,7,14.0,18,3.3,6.2,9.0,9.0,3.0

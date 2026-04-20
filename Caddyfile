@@ -1,0 +1,74 @@
+# AKB1 Command Center — Caddy Reverse Proxy Configuration
+# Usage: docker compose -f docker-compose.yml -f docker-compose.proxy.yml up -d
+#
+# For localhost: Caddy auto-generates a self-signed certificate
+# For public domain: Caddy auto-provisions Let's Encrypt certificate
+#
+# Replace {$DOMAIN} with your actual domain or use DOMAIN env var
+
+{$DOMAIN:localhost} {
+    # TLS — automatic via Let's Encrypt (public) or self-signed (localhost/LAN)
+    tls {$TLS_EMAIL:internal}
+
+    # Security headers
+    header {
+        Strict-Transport-Security "max-age=63072000; includeSubDomains; preload"
+        X-Frame-Options "SAMEORIGIN"
+        X-Content-Type-Options "nosniff"
+        Referrer-Policy "strict-origin-when-cross-origin"
+        Permissions-Policy "camera=(), microphone=(), geolocation=()"
+        Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'"
+        -Server
+    }
+
+    # Basic Auth (Tier 1)
+    # Generate hash: docker run --rm caddy:2-alpine caddy hash-password --plaintext 'YourPassword'
+    # Uncomment and update the lines below to enable Basic Auth:
+    #
+    # basicauth /* {
+    #     admin $2a$14$REPLACE_WITH_BCRYPT_HASH
+    #     viewer $2a$14$REPLACE_WITH_BCRYPT_HASH
+    # }
+
+    # Rate limiting (optional — application-level slowapi handles this too)
+    # Uncomment for additional perimeter rate limiting:
+    # rate_limit {
+    #     zone static_zone {
+    #         key    {remote_host}
+    #         events 100
+    #         window 1m
+    #     }
+    # }
+
+    # API routes → backend container
+    handle /api/* {
+        reverse_proxy akb1-backend:9001
+    }
+
+    # Swagger docs → backend container
+    handle /docs* {
+        reverse_proxy akb1-backend:9001
+    }
+    handle /openapi.json {
+        reverse_proxy akb1-backend:9001
+    }
+
+    # Health check → backend container
+    handle /health {
+        reverse_proxy akb1-backend:9001
+    }
+
+    # All other routes → frontend container (React SPA)
+    handle {
+        reverse_proxy akb1-frontend:80
+    }
+
+    # Access logging
+    log {
+        output file /data/access.log {
+            roll_size 10mb
+            roll_keep 5
+        }
+        format json
+    }
+}

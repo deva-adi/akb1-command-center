@@ -1,0 +1,9 @@
+program_code,snapshot_date,loss_category,amount,percentage_of_revenue,detection_method,mitigation_status
+PHOENIX,2026-03-01,Bench Tax,765000,7.65,Shadow allocation formula,Monitoring
+PHOENIX,2026-03-01,Rework Due to Quality Issues,284000,2.84,Defect tracking and rework log,Active Remediation
+ATLAS,2026-03-01,Idle Resource Cost,142000,1.82,Utilization dashboard analysis,Escalated for Resolution
+ATLAS,2026-02-01,Scope Creep Unpriced,98000,1.25,Change request vs. billing audit,Change Management Review
+SENTINEL,2026-03-01,Tool License Wastage,45000,0.69,AI tool adoption tracker,Optimization Underway
+ORION,2026-03-01,Bench Tax,418500,8.2,Shadow allocation formula,Elevated Concern
+ORION,2026-03-01,Legacy System Support Overhead,220000,4.31,Cost center attribution,Migration Dependency
+TITAN,2026-03-01,Offshore Rework Cycles,356000,3.18,Defect root cause analysis,Process Improvement Plan

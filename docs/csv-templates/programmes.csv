@@ -1,0 +1,6 @@
+name,code,client,start_date,end_date,status,bac,revenue,team_size,offshore_ratio,delivery_model
+Phoenix Platform Modernization,PHOENIX,GlobalBank Corp,2025-04-01,2027-03-31,Active,6800000,10000000,25,0.65,T&M
+Atlas Cloud Infrastructure,ATLAS,TechRetail Ltd,2024-09-15,2026-12-31,Active,5200000,7800000,18,0.72,Fixed
+Sentinel AI Automation,SENTINEL,InsureFlow Inc,2025-11-01,2027-05-31,Ramp-Up,4100000,6500000,22,0.68,Blended
+Orion Data Analytics,ORION,FinServe Global,2023-06-01,2026-09-30,Sustaining,3400000,5100000,12,0.58,SLA-Based
+Titan Integration Suite,TITAN,MfgWorks India,2025-02-15,2027-01-31,Active,7100000,11200000,28,0.71,T&M

@@ -1,0 +1,70 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: akb1-backend
+    volumes:
+      - akb1-data:/data
+    environment:
+      - DATABASE_URL=sqlite:///data/akb1.db
+      - SEED_DEMO_DATA=${SEED_DEMO_DATA:-true}
+      - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost:9000}
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+      - API_KEY_ENABLED=${API_KEY_ENABLED:-true}
+      - RATE_LIMIT_READ=${RATE_LIMIT_READ:-60/minute}
+      - RATE_LIMIT_WRITE=${RATE_LIMIT_WRITE:-10/minute}
+    ports:
+      - "127.0.0.1:${BACKEND_PORT:-9001}:9001"   # Localhost-only by default (Tier 0 security)
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:9001/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    restart: unless-stopped
+    # Container hardening (CIS Docker Benchmark v1.6)
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp:noexec,nosuid,size=64m
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_BIND_SERVICE
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        - VITE_API_URL=${VITE_API_URL:-http://localhost:9001}
+    container_name: akb1-frontend
+    ports:
+      - "127.0.0.1:${FRONTEND_PORT:-9000}:80"    # Localhost-only by default (Tier 0 security)
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+    # Container hardening
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp:noexec,nosuid,size=64m
+      - /var/cache/nginx:noexec,nosuid,size=32m
+      - /var/run:noexec,nosuid,size=1m
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_BIND_SERVICE
+      - CHOWN
+      - SETGID
+      - SETUID
+
+volumes:
+  akb1-data:
+    driver: local

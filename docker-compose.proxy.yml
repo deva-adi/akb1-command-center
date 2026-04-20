@@ -1,0 +1,56 @@
+# AKB1 Command Center — Caddy Reverse Proxy Overlay
+# Usage: docker compose -f docker-compose.yml -f docker-compose.proxy.yml up -d
+#
+# This overlay adds a Caddy reverse proxy with:
+#   - Automatic HTTPS (Let's Encrypt for public domains, self-signed for localhost)
+#   - Security headers (HSTS, CSP, X-Frame-Options, etc.)
+#   - Optional Basic Auth (uncomment in Caddyfile)
+#   - JSON access logging
+#
+# Environment variables (set in .env or export):
+#   DOMAIN         — Your domain (default: localhost)
+#   TLS_EMAIL      — Email for Let's Encrypt (default: internal = self-signed)
+#   HTTPS_PORT     — External HTTPS port (default: 443)
+#   HTTP_PORT      — External HTTP port for redirect (default: 80)
+
+version: '3.8'
+
+services:
+  # Override frontend to remove direct port exposure
+  frontend:
+    ports: !override
+      - "127.0.0.1:9000:80"    # Only accessible via Caddy or localhost
+
+  # Override backend to remove direct port exposure
+  backend:
+    ports: !override
+      - "127.0.0.1:9001:9001"  # Only accessible via Caddy or localhost
+
+  # Caddy reverse proxy with automatic HTTPS
+  caddy:
+    image: caddy:2-alpine
+    container_name: akb1-caddy
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    ports:
+      - "${HTTPS_PORT:-443}:443"
+      - "${HTTP_PORT:-80}:80"
+    environment:
+      - DOMAIN=${DOMAIN:-localhost}
+      - TLS_EMAIL=${TLS_EMAIL:-internal}
+    depends_on:
+      frontend:
+        condition: service_started
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - default
+
+volumes:
+  caddy-data:
+    driver: local
+  caddy-config:
+    driver: local

@@ -1,0 +1,10 @@
+program_code,cr_date,cr_description,effort_hours,cr_value,processing_cost,status,margin_impact,is_billable
+PHOENIX,2026-02-15,Additional reporting module,75,375000,45000,Approved,-2.1,true
+PHOENIX,2026-03-05,Emergency incident response framework,40,200000,32000,In Review,-3.8,true
+ATLAS,2026-02-28,Cloud storage tier optimization,20,85000,18000,Approved,2.1,false
+ATLAS,2026-03-10,API rate-limiting enhancement,35,140000,28000,Approved,1.5,true
+SENTINEL,2026-03-01,Model retraining pipeline development,120,520000,85000,In Review,-8.2,true
+SENTINEL,2026-02-20,Monitoring dashboard expansion,45,180000,22000,Approved,0.8,true
+ORION,2026-03-08,Database migration prep work,80,320000,56000,Approved,-12.5,true
+TITAN,2026-02-25,Integration testing acceleration,50,250000,40000,Approved,-1.2,true
+TITAN,2026-03-12,AI copilot skill development,95,475000,65000,In Review,-2.8,true

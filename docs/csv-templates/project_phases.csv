@@ -1,0 +1,7 @@
+project_code,phase_name,phase_sequence,planned_start,planned_end,actual_start,actual_end,percent_complete,gate_status,gate_approver,gate_date,notes
+RETAILCO-POS,Requirements,1,2025-06-01,2025-07-31,2025-06-01,2025-07-29,100,passed,J.Wilson,2025-08-01,On time
+RETAILCO-POS,Design,2,2025-08-01,2025-10-31,2025-08-02,2025-11-04,100,passed,J.Wilson,2025-11-08,+4d slip
+RETAILCO-POS,Development,3,2025-11-01,2026-02-28,2025-11-05,2026-02-28,100,passed,J.Wilson,2026-03-03,On time
+RETAILCO-POS,Testing,4,2026-03-01,2026-05-31,2026-03-01,,62,pending,,,+11d slip; UAT blocking
+RETAILCO-POS,UAT,5,2026-06-01,2026-07-31,,,0,pending,,,Not started
+RETAILCO-POS,Deployment,6,2026-08-01,2026-08-15,,,0,pending,,,Not started

@@ -1,0 +1,10 @@
+name,role,skill_set,current_program_code,utilization_pct,bench_days,loaded_cost_annual,status
+Priya Sharma,Senior Engineer,"Java,Spring,AWS",PHOENIX,82,0,780000,Active
+Rajesh Verma,Solution Architect,"Cloud Design,Azure,Terraform",ATLAS,88,0,950000,Active
+Deepak Iyer,AI/ML Engineer,"Python,TensorFlow,LLM Ops",SENTINEL,92,0,1050000,Active
+Vikram Singh,DevOps Engineer,"Kubernetes,CI/CD,AWS",PHOENIX,78,2,720000,Active
+Anjali Desai,QA Lead,"Automation,Test Strategy,Selenium",ATLAS,85,0,650000,Active
+Suresh Murthy,Database Admin,"Oracle,PostgreSQL,DBA",ORION,75,8,680000,Active
+Mehul Gupta,Integration Specialist,"SAP,API Design,Integration Patterns",TITAN,90,0,890000,Active
+Kavya Nair,Frontend Engineer,"React,TypeScript,UI/UX",PHOENIX,80,0,720000,Active
+Rohit Sharma,Backend Engineer,"Node.js,GoLang,Microservices",SENTINEL,88,0,810000,Active

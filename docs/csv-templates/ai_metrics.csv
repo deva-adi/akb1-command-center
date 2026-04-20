@@ -1,0 +1,9 @@
+program_code,sprint_number,snapshot_date,ai_lines_generated,ai_lines_accepted,ai_defect_count,ai_test_coverage_pct,ai_review_rejection_pct,human_defect_count,human_test_coverage_pct,human_review_rejection_pct
+SENTINEL,24,2026-03-15,4500,3800,8,78,12,15,82,8
+SENTINEL,23,2026-03-01,4200,3650,9,76,14,16,81,9
+PHOENIX,24,2026-03-15,3200,2680,6,72,18,12,85,5
+PHOENIX,25,2026-03-29,3400,2890,5,74,16,10,86,4
+ATLAS,19,2026-03-20,2800,2350,7,68,22,14,78,11
+ATLAS,18,2026-03-06,2650,2200,8,66,24,15,76,13
+TITAN,28,2026-03-15,5600,4750,12,80,10,18,88,6
+ORION,32,2026-03-02,1200,950,4,52,35,8,68,18

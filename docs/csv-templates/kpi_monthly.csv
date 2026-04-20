@@ -1,0 +1,14 @@
+program_code,kpi_code,snapshot_date,value,notes
+PHOENIX,CPI,2026-03-01,0.87,CPI declining due to rework on integration module
+PHOENIX,SPI,2026-03-01,0.92,Schedule slippage in UAT phase detected
+PHOENIX,Defect_Density,2026-03-01,8.5,Defects per 1000 LOC; target 6.0
+ATLAS,CPI,2026-03-01,1.02,Cost performance improving with offshore scaling
+ATLAS,Revenue_Variance,2026-03-01,-3.2,Slight revenue shortfall due to scope deferral
+ATLAS,Resource_Utilization,2026-03-01,78.5,Below target; 2 resources on bench allocation
+SENTINEL,CPI,2026-03-01,0.95,AI-driven cost optimization showing benefits
+SENTINEL,AI_Adoption_Rate,2026-03-01,0.68,68% of tasks using AI assistance tools
+SENTINEL,Velocity_Trend,2026-03-01,112,Points delivered increasing with AI tooling
+ORION,Portfolio_Margin_pct,2026-03-01,8.2,Margin compression due to sustaining cost baseline
+ORION,Bench_Cost_pct,2026-03-01,4.1,Bench tax growing; shadow allocation recommended
+TITAN,Revenue_Recognition_pct,2026-03-01,94.8,Strong Q1 realization; 5% contingent holdback
+TITAN,On_Time_Delivery_pct,2026-03-01,96.2,Exceeding 95% target; good schedule discipline

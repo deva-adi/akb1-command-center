@@ -1,0 +1,4 @@
+program_code,project_code,snapshot_date,planned_value,earned_value,actual_cost,bac,percent_complete
+PHOE,PHOE-CBM,2025-01-31,420000,399000,525000,4200000,9.5
+PHOE,PHOE-CBM,2025-02-28,840000,739800,912000,4200000,17.6
+PHOE,PHOE-CBM,2025-03-31,1260000,960000,1260000,4200000,22.9

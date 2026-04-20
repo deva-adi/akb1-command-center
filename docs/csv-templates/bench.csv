@@ -1,0 +1,10 @@
+program_code,snapshot_date,planned_headcount,actual_headcount,bench_headcount,loaded_cost_per_head,shadow_allocation_cost,allocation_method
+PHOENIX,2026-03-01,10,12,2,650000,91000,Revenue-Proportional
+PHOENIX,2026-02-01,10,11,1,650000,45500,Revenue-Proportional
+ATLAS,2026-03-01,8,8,0,680000,0,Fixed Commitment
+ATLAS,2026-02-01,8,7,1,680000,34000,Fixed Commitment
+SENTINEL,2026-03-01,9,9,0,720000,0,FTE Block
+SENTINEL,2026-02-01,9,9,0,720000,0,FTE Block
+ORION,2026-03-01,7,6,1,700000,35000,SLA-Based
+ORION,2026-02-01,7,6,1,700000,35000,SLA-Based
+TITAN,2026-03-01,14,15,1,680000,34000,Revenue-Proportional

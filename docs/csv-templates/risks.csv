@@ -1,0 +1,8 @@
+program_code,title,description,category,probability,impact,severity,status,owner,mitigation_plan
+PHOENIX,Integration vendor delay,Third-party API delivery slipping 2 weeks; impacts go-live,External,0.7,500000,High,Open,Raj Kumar,Backup vendor identified; contract penalty clause invoked
+PHOENIX,Offshore team attrition,3 of 6 offshore resources signaled intent to leave,People,0.6,320000,High,Active,Vikram Singh,Retention bonus approved; knowledge transfer accelerated
+ATLAS,Cloud licensing cost overrun,Compute and storage consumption 15% above forecast,Commercial,0.8,380000,High,Monitoring,Anjali Desai,Cloud cost optimization review scheduled; auto-scaling policy updated
+ATLAS,Client resource availability,Business owner unavailable for UAT reviews; blocking progression,Client,0.5,220000,Medium,Open,Priya Sharma,Steering committee escalation planned
+SENTINEL,Model drift in AI pipeline,Accuracy degrading 3% month-over-month on training data,Technical,0.4,150000,Medium,Monitoring,Deepak Iyer,Retraining pipeline scheduled; monitoring dashboard active
+ORION,Legacy system EOL risk,Database vendor ending support Q4 2026,External,0.9,600000,Critical,Active,Suresh Murthy,Migration RFP released; 6-month buffer maintained
+TITAN,Supply chain delay for hardware,Critical hardware shipment delayed 3 weeks from supplier,External,0.65,450000,High,Open,Mehul Gupta,Alternate supplier sourced; expedited shipping arranged

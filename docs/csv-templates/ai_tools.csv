@@ -1,0 +1,8 @@
+tool_name,vendor,version,category,license_type,cost_per_seat,status,program_code,users_count,assigned_date
+GitHub Copilot,GitHub/Microsoft,4.0,Code Gen,Enterprise,19,Active,SENTINEL,8,2025-06-01
+GitHub Copilot,GitHub/Microsoft,4.0,Code Gen,Enterprise,19,Active,PHOENIX,12,2025-08-15
+Claude for Enterprises,Anthropic,5.2,Analysis & Planning,Enterprise,25,Active,ATLAS,6,2026-01-10
+Claude for Enterprises,Anthropic,5.2,Analysis & Planning,Enterprise,25,Active,TITAN,10,2026-02-20
+ChatGPT Pro,OpenAI,4 Turbo,Brainstorm,Individual,20,Active,ORION,3,2025-11-01
+DeepSeek R1,DeepSeek,1.5,Code Gen & Analysis,Open Source,0,Active,SENTINEL,22,2025-12-15
+Copilot Pro,Microsoft,8.0,Productivity Suite,Individual,15,Active,PHOENIX,5,2026-01-05
