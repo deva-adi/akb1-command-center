@@ -13,15 +13,20 @@ WORKDIR /app
 # Copy installed packages from builder
 COPY --from=builder /install /usr/local
 
-# Copy application code
+# Copy application code and Alembic assets
 COPY app/ ./app/
+COPY alembic/ ./alembic/
+COPY alembic.ini ./alembic.ini
 
-# Create data directory for SQLite volume mount
-RUN mkdir -p /data
+# Create non-root user (UID 1001) and writable data dir — SECURITY_GUIDE.md §10
+RUN addgroup --system --gid 1001 akb1 \
+    && adduser --system --uid 1001 --ingroup akb1 akb1 \
+    && mkdir -p /data \
+    && chown -R akb1:akb1 /data /app
 
-# Health check dependency
-RUN apt-get update && apt-get install -y --no-install-recommends curl && rm -rf /var/lib/apt/lists/*
+USER 1001
 
 EXPOSE 9001
 
+# Health check uses Python stdlib so we do not need curl in the image.
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "9001", "--log-level", "info"]
