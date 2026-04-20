@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react";
+import { Fragment, useMemo, useState } from "react";
+import { Link, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import {
   Bar,
@@ -10,8 +11,17 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { ClipboardList, FileText, Home, ShieldCheck } from "lucide-react";
+import {
+  ChevronDown,
+  ChevronUp,
+  ClipboardList,
+  FileText,
+  Home,
+  ShieldCheck,
+} from "lucide-react";
 import { Breadcrumb } from "@/components/Breadcrumb";
+import { ProgrammeFilterBar } from "@/components/ProgrammeFilterBar";
+import { PROGRAMME_CROSS_LINKS } from "@/components/programmeCrossLinks";
 import { Card, CardHeader } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import {
@@ -31,9 +41,17 @@ function riskSeverityTone(severity: string | null): RagBucket {
 }
 
 export function RiskAudit() {
+  const [searchParams] = useSearchParams();
+  const programmeFilter = searchParams.get("programme");
   const [tableFilter, setTableFilter] = useState<string | null>(null);
+  const [expandedRisk, setExpandedRisk] = useState<number | null>(null);
   const programmes = useProgrammes();
   const currency = useCurrency();
+
+  const filteredProgramme = useMemo(
+    () => programmes.data?.find((p) => p.code === programmeFilter) ?? null,
+    [programmes.data, programmeFilter],
+  );
 
   const risks = useQuery({
     queryKey: ["risks", "all", 50],
@@ -89,12 +107,19 @@ export function RiskAudit() {
     }));
   }, [governance.data]);
 
+  const visibleRisks = useMemo(() => {
+    const all = risks.data ?? [];
+    if (!filteredProgramme) return all;
+    return all.filter((r) => r.program_id === filteredProgramme.id);
+  }, [risks.data, filteredProgramme]);
+
   return (
     <div className="flex flex-col gap-6">
       <Breadcrumb
         items={[
           { label: "Portfolio", to: "/", icon: <Home className="size-3" aria-hidden="true" /> },
-          { label: "Risk & Audit" },
+          { label: "Risk & Audit", to: filteredProgramme ? "/raid" : undefined },
+          ...(filteredProgramme ? [{ label: filteredProgramme.name }] : []),
         ]}
       />
 
@@ -104,10 +129,14 @@ export function RiskAudit() {
           If an auditor walked in today, could we demonstrate governance?
           RAID register, compliance scorecard, data-change trail.
         </p>
+        <ProgrammeFilterBar
+          currentRoute="/raid"
+          crossLinks={PROGRAMME_CROSS_LINKS}
+        />
       </div>
 
       <section className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        <Stat label="Open risks" value={`${risks.data?.length ?? 0}`} />
+        <Stat label="Open risks" value={`${visibleRisks.length}`} />
         <Stat
           label="Controls tracked"
           value={`${governance.data?.length ?? 0}`}
@@ -121,7 +150,7 @@ export function RiskAudit() {
         <Stat
           label="Risk-weighted exposure"
           value={currency.format(
-            (risks.data ?? []).reduce(
+            visibleRisks.reduce(
               (sum, r) => sum + (r.impact ?? 0) * (r.probability ?? 0),
               0,
             ),
@@ -147,30 +176,103 @@ export function RiskAudit() {
                 <th className="text-right">Probability</th>
                 <th className="text-right">Impact</th>
                 <th>Owner</th>
-                <th>Mitigation</th>
+                <th aria-hidden="true" />
               </tr>
             </thead>
             <tbody>
-              {(risks.data ?? []).map((r) => {
+              {visibleRisks.map((r) => {
                 const programmeInfo =
                   r.program_id !== null ? programmeByName.get(r.program_id) : null;
+                const isOpen = expandedRisk === r.id;
                 return (
-                  <tr key={r.id} className="border-t border-ice-100 align-top">
-                    <td className="py-2 font-medium">{r.title}</td>
-                    <td>{programmeInfo?.code ?? "—"}</td>
-                    <td>{r.category ?? "—"}</td>
-                    <td>
-                      <Badge tone={riskSeverityTone(r.severity)}>{r.severity ?? "—"}</Badge>
-                    </td>
-                    <td className="text-right font-mono">
-                      {r.probability === null ? "—" : formatPct(r.probability)}
-                    </td>
-                    <td className="text-right font-mono">
-                      {currency.format(r.impact, programmeInfo?.currency_code ?? "INR")}
-                    </td>
-                    <td>{r.owner ?? "—"}</td>
-                    <td className="text-xs text-navy/70">{r.mitigation_plan ?? "—"}</td>
-                  </tr>
+                  <Fragment key={r.id}>
+                    <tr
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => setExpandedRisk(isOpen ? null : r.id)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          setExpandedRisk(isOpen ? null : r.id);
+                        }
+                      }}
+                      className="cursor-pointer border-t border-ice-100 transition hover:bg-ice-50"
+                      aria-expanded={isOpen}
+                    >
+                      <td className="py-2 font-medium">{r.title}</td>
+                      <td>{programmeInfo?.code ?? "—"}</td>
+                      <td>{r.category ?? "—"}</td>
+                      <td>
+                        <Badge tone={riskSeverityTone(r.severity)}>{r.severity ?? "—"}</Badge>
+                      </td>
+                      <td className="text-right font-mono">
+                        {r.probability === null ? "—" : formatPct(r.probability)}
+                      </td>
+                      <td className="text-right font-mono">
+                        {currency.format(r.impact, programmeInfo?.currency_code ?? "INR")}
+                      </td>
+                      <td>{r.owner ?? "—"}</td>
+                      <td className="pr-2 text-right text-navy/40">
+                        {isOpen ? (
+                          <ChevronUp className="inline size-4" aria-hidden="true" />
+                        ) : (
+                          <ChevronDown className="inline size-4" aria-hidden="true" />
+                        )}
+                      </td>
+                    </tr>
+                    {isOpen ? (
+                      <tr className="bg-ice-50/40">
+                        <td colSpan={8} className="px-3 py-3 text-xs">
+                          <dl className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                            <div className="md:col-span-2">
+                              <span className="kpi-label">Description</span>
+                              <p className="text-navy/80">{r.description ?? "—"}</p>
+                            </div>
+                            <div className="md:col-span-2">
+                              <span className="kpi-label">Mitigation plan</span>
+                              <p className="italic text-navy/80">
+                                {r.mitigation_plan ?? "—"}
+                              </p>
+                            </div>
+                            <Detail
+                              label="Expected loss (impact × prob.)"
+                              value={currency.format(
+                                (r.impact ?? 0) * (r.probability ?? 0),
+                                programmeInfo?.currency_code ?? "INR",
+                              )}
+                            />
+                            <Detail
+                              label="Status"
+                              value={r.status}
+                            />
+                          </dl>
+                          {programmeInfo ? (
+                            <div className="mt-3 flex flex-wrap gap-2 text-xs text-navy/70">
+                              <span className="text-navy/50">Open programme in:</span>
+                              <Link
+                                to={`/delivery?programme=${programmeInfo.code}`}
+                                className="rounded-full border border-ice-100 bg-white px-2 py-0.5 hover:bg-ice-50"
+                              >
+                                Delivery
+                              </Link>
+                              <Link
+                                to={`/kpi?programme=${programmeInfo.code}`}
+                                className="rounded-full border border-ice-100 bg-white px-2 py-0.5 hover:bg-ice-50"
+                              >
+                                KPIs
+                              </Link>
+                              <Link
+                                to={`/customer?programme=${programmeInfo.code}`}
+                                className="rounded-full border border-ice-100 bg-white px-2 py-0.5 hover:bg-ice-50"
+                              >
+                                Customer
+                              </Link>
+                            </div>
+                          ) : null}
+                        </td>
+                      </tr>
+                    ) : null}
+                  </Fragment>
                 );
               })}
             </tbody>
@@ -401,3 +503,13 @@ function Stat({
     </div>
   );
 }
+
+function Detail({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex flex-col">
+      <span className="kpi-label">{label}</span>
+      <span className="font-mono text-sm text-navy">{value}</span>
+    </div>
+  );
+}
+

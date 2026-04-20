@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import {
   Bar,
@@ -16,15 +16,10 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import {
-  AlertOctagon,
-  ChevronRight,
-  Home,
-  ShieldCheck,
-  Sparkles,
-  X,
-} from "lucide-react";
+import { AlertOctagon, Home, ShieldCheck, Sparkles } from "lucide-react";
 import { Breadcrumb } from "@/components/Breadcrumb";
+import { ProgrammeFilterBar } from "@/components/ProgrammeFilterBar";
+import { PROGRAMME_CROSS_LINKS } from "@/components/programmeCrossLinks";
 import { Card, CardHeader } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import {
@@ -54,7 +49,7 @@ const MATURITY_TONE: Record<string, RagBucket> = {
 };
 
 export function AiGovernance() {
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
   const programmeFilter = searchParams.get("programme");
   const programmes = useProgrammes();
 
@@ -85,11 +80,6 @@ export function AiGovernance() {
     queryFn: () => fetchAiOverrides(filteredProgramme?.id),
   });
 
-  const clearProgrammeFilter = () => {
-    const next = new URLSearchParams(searchParams);
-    next.delete("programme");
-    setSearchParams(next);
-  };
 
   const programmeByName = useMemo(
     () =>
@@ -204,38 +194,19 @@ export function AiGovernance() {
     <div className="flex flex-col gap-6">
       <Breadcrumb items={breadcrumbItems} />
 
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-semibold text-navy">AI Governance</h1>
-          <p className="mt-1 text-sm text-navy/70">
-            Are AI tools trustworthy, compliant, and productive? 6-factor
-            composite trust score per programme, plus the productivity-tax
-            with/without AI comparison.
-          </p>
-        </div>
-        {filteredProgramme ? (
-          <Link
-            to={`/delivery?programme=${filteredProgramme.code}`}
-            className="btn-ghost"
-          >
-            View Delivery Health <ChevronRight className="size-3" />
-          </Link>
-        ) : null}
+      <div>
+        <h1 className="text-2xl font-semibold text-navy">AI Governance</h1>
+        <p className="mt-1 text-sm text-navy/70">
+          Are AI tools trustworthy, compliant, and productive? 6-factor
+          composite trust score per programme, plus the productivity-tax
+          with/without AI comparison.
+        </p>
       </div>
 
-      {filteredProgramme ? (
-        <div className="inline-flex items-center gap-2 self-start rounded-full border border-navy/30 bg-navy/5 px-3 py-1 text-xs text-navy">
-          Filtered to <strong>{filteredProgramme.name}</strong>
-          <button
-            type="button"
-            onClick={clearProgrammeFilter}
-            className="inline-flex items-center rounded-full bg-navy/10 px-1.5 py-0.5 transition hover:bg-navy/20"
-            aria-label="Clear programme filter (drill up)"
-          >
-            <X className="size-3" /> clear
-          </button>
-        </div>
-      ) : null}
+      <ProgrammeFilterBar
+        currentRoute="/ai"
+        crossLinks={PROGRAMME_CROSS_LINKS}
+      />
 
       <section className="grid grid-cols-2 gap-3 md:grid-cols-4">
         <Stat
