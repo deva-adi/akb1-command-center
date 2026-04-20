@@ -38,7 +38,7 @@ export function WaterfallView({ project }: { project: ProjectListItem }) {
   const error = phases.error ?? milestones.error;
 
   if (isLoading)
-    return <p className="text-sm text-navy/60">Loading phases + milestones…</p>;
+    return <p className="text-sm text-navy/70">Loading phases + milestones…</p>;
   if (error)
     return (
       <p className="text-sm text-danger-600">{(error as Error).message}</p>
@@ -81,7 +81,7 @@ export function WaterfallView({ project }: { project: ProjectListItem }) {
                 >
                   <div className="flex flex-col gap-1">
                     <div className="flex items-center gap-2">
-                      <span className="font-mono text-xs text-navy/60">
+                      <span className="font-mono text-xs text-navy/70">
                         {phase.phase_sequence ?? "?"}.
                       </span>
                       <span className="font-semibold">{phase.phase_name}</span>
@@ -177,7 +177,7 @@ export function WaterfallView({ project }: { project: ProjectListItem }) {
                 >
                   <div>
                     <p className="font-medium">{m.name}</p>
-                    <p className="text-xs text-navy/60">
+                    <p className="text-xs text-navy/70">
                       Planned {formatDate(m.planned_date)}
                       {m.actual_date
                         ? ` · Actual ${formatDate(m.actual_date)}`

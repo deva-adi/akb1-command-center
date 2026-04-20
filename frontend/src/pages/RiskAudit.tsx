@@ -168,7 +168,7 @@ export function RiskAudit() {
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="text-left text-xs uppercase text-navy/60">
+              <tr className="text-left text-xs uppercase text-navy/70">
                 <th className="py-2">Title</th>
                 <th>Programme</th>
                 <th>Category</th>
@@ -329,7 +329,7 @@ export function RiskAudit() {
             action={<ShieldCheck className="size-4 text-success-600" aria-hidden="true" />}
           />
           {complianceByControl.length === 0 ? (
-            <p className="text-sm text-navy/60">No governance rows loaded yet.</p>
+            <p className="text-sm text-navy/70">No governance rows loaded yet.</p>
           ) : (
             <ul className="flex flex-col gap-2 text-sm">
               {complianceByControl.map((row) => (
@@ -387,7 +387,7 @@ export function RiskAudit() {
           }
         />
         {(audit.data ?? []).length === 0 ? (
-          <p className="text-sm text-navy/60">No audit entries match the filter.</p>
+          <p className="text-sm text-navy/70">No audit entries match the filter.</p>
         ) : (
           <ul className="flex flex-col gap-2 text-sm">
             {(audit.data ?? []).map((a) => (
@@ -395,27 +395,27 @@ export function RiskAudit() {
                 key={a.id}
                 className="flex items-start gap-3 rounded border border-ice-100 bg-white px-3 py-2"
               >
-                <FileText className="mt-0.5 size-3 text-navy/60" aria-hidden="true" />
+                <FileText className="mt-0.5 size-3 text-navy/70" aria-hidden="true" />
                 <div className="flex-1">
                   <div className="flex items-center gap-2">
                     <Badge tone={a.action === "DELETE" ? "red" : a.action === "UPDATE" ? "amber" : "neutral"}>
                       {a.action ?? "—"}
                     </Badge>
                     <span className="font-mono text-xs">{a.table_name ?? "—"}</span>
-                    <span className="text-xs text-navy/60">
+                    <span className="text-xs text-navy/70">
                       #{a.record_id ?? "—"}
                     </span>
                   </div>
                   <p className="text-xs text-navy/70">{a.user_action ?? "—"}</p>
                   {a.old_value || a.new_value ? (
-                    <p className="mt-1 font-mono text-[11px] text-navy/60">
+                    <p className="mt-1 font-mono text-[11px] text-navy/70">
                       {a.old_value ? <span className="text-danger-600">{a.old_value}</span> : null}
                       {a.old_value && a.new_value ? " → " : null}
                       {a.new_value ? <span className="text-success-600">{a.new_value}</span> : null}
                     </p>
                   ) : null}
                 </div>
-                <span className="text-xs text-navy/60">
+                <span className="text-xs text-navy/70">
                   {formatDate(a.timestamp)}
                 </span>
               </li>
@@ -428,12 +428,12 @@ export function RiskAudit() {
         <CardHeader
           title="Audit readiness scorecard"
           subtitle="What the auditor asks · where the evidence lives"
-          action={<ClipboardList className="size-4 text-navy/60" aria-hidden="true" />}
+          action={<ClipboardList className="size-4 text-navy/70" aria-hidden="true" />}
         />
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="text-left text-xs uppercase text-navy/60">
+              <tr className="text-left text-xs uppercase text-navy/70">
                 <th className="py-2">Dimension</th>
                 <th>Auditor asks</th>
                 <th>Evidence source</th>
@@ -499,7 +499,7 @@ function Stat({
         <p className="font-mono text-xl font-semibold text-navy">{value}</p>
         {tone && tone !== "neutral" ? <Badge tone={tone}>·</Badge> : null}
       </div>
-      {sub ? <p className="text-xs text-navy/60">{sub}</p> : null}
+      {sub ? <p className="text-xs text-navy/70">{sub}</p> : null}
     </div>
   );
 }

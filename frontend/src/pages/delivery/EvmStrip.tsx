@@ -79,7 +79,7 @@ function EvmCell({
       <div className="flex items-center gap-2">
         <Badge tone={tone}>{value}</Badge>
       </div>
-      {sub ? <span className="text-xs text-navy/60">{sub}</span> : null}
+      {sub ? <span className="text-xs text-navy/70">{sub}</span> : null}
     </div>
   );
 }

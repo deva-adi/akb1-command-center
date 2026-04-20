@@ -29,7 +29,7 @@ export function Layout() {
           </div>
           <div className="leading-tight">
             <div className="text-sm font-semibold">AKB1 Command Center</div>
-            <div className="text-xs text-white/70">Delivery Intelligence · v5.2</div>
+            <div className="text-xs text-white/80">Delivery Intelligence · v5.2</div>
           </div>
         </div>
         <div className="flex items-center gap-4 text-sm">
@@ -57,7 +57,7 @@ export function Layout() {
               }
             >
               <span>{tab.label}</span>
-              <span className="font-mono text-xs text-navy/50 group-hover:text-navy">
+              <span className="font-mono text-xs text-navy/70 group-hover:text-navy">
                 {tab.num}
               </span>
             </NavLink>
@@ -69,7 +69,7 @@ export function Layout() {
         </main>
       </div>
 
-      <footer className="border-t border-ice-100 bg-white px-6 py-3 text-xs text-navy/60">
+      <footer className="border-t border-ice-100 bg-white px-6 py-3 text-xs text-navy/70">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <span>
             v5.2 ·{" "}

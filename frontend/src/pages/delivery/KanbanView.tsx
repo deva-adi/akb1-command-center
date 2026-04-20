@@ -23,14 +23,14 @@ export function KanbanView({ project }: { project: ProjectListItem }) {
   const cfdOption = useMemo(() => buildCfdOption(sorted), [sorted]);
   const cycleOption = useMemo(() => buildCyclePercentileOption(sorted), [sorted]);
 
-  if (isLoading) return <p className="text-sm text-navy/60">Loading flow metrics…</p>;
+  if (isLoading) return <p className="text-sm text-navy/70">Loading flow metrics…</p>;
   if (error)
     return (
       <p className="text-sm text-danger-600">{(error as Error).message}</p>
     );
   if (sorted.length === 0) {
     return (
-      <p className="text-sm text-navy/60">
+      <p className="text-sm text-navy/70">
         No flow metrics seeded for this project.
       </p>
     );
@@ -81,7 +81,7 @@ export function KanbanView({ project }: { project: ProjectListItem }) {
             notMerge
           />
         </div>
-        <p className="mt-2 text-xs text-navy/60">
+        <p className="mt-2 text-xs text-navy/70">
           CFD = stacked backlog + in-progress + done. Widening bands →
           growing WIP or slowing throughput; look at the In Progress
           layer's thickness vs. Done's slope.
@@ -123,7 +123,7 @@ function FlowStat({
         <p className="font-mono text-xl font-semibold text-navy">{value}</p>
         {tone !== "neutral" ? <Badge tone={tone}>·</Badge> : null}
       </div>
-      {sub ? <p className="text-xs text-navy/60">{sub}</p> : null}
+      {sub ? <p className="text-xs text-navy/70">{sub}</p> : null}
     </div>
   );
 }

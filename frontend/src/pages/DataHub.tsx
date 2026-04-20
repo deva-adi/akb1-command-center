@@ -101,7 +101,7 @@ export function DataHub() {
             <span className="font-medium">
               Drop a CSV here, or click to browse
             </span>
-            <span className="text-xs text-navy/60">
+            <span className="text-xs text-navy/70">
               Max 10 MB · UTF-8 · Headers row required
             </span>
             <input
@@ -118,7 +118,7 @@ export function DataHub() {
           </label>
 
           {uploading ? (
-            <p className="mt-3 text-sm text-navy/60">Parsing upload…</p>
+            <p className="mt-3 text-sm text-navy/70">Parsing upload…</p>
           ) : null}
 
           {previewError ? (
@@ -158,7 +158,7 @@ export function DataHub() {
                   </tbody>
                 </table>
               </div>
-              <p className="text-xs text-navy/60">
+              <p className="text-xs text-navy/70">
                 Commit and rollback land with the{" "}
                 <code>data_import_snapshots</code> pipeline in Iteration 2.
               </p>
@@ -193,9 +193,9 @@ export function DataHub() {
         <Card>
           <CardHeader title="Recent imports" subtitle="Committed to the data_imports ledger" />
           {imports.isLoading ? (
-            <p className="text-sm text-navy/60">Loading…</p>
+            <p className="text-sm text-navy/70">Loading…</p>
           ) : (imports.data ?? []).length === 0 ? (
-            <p className="text-sm text-navy/60">
+            <p className="text-sm text-navy/70">
               No imports yet. Try uploading a CSV from{" "}
               <span className="font-mono">docs/csv-templates/</span>.
             </p>
@@ -208,7 +208,7 @@ export function DataHub() {
                 >
                   <div>
                     <p className="font-medium">{entry.file_name ?? "unknown"}</p>
-                    <p className="text-xs text-navy/60">
+                    <p className="text-xs text-navy/70">
                       {entry.rows_imported ?? 0} rows · source{" "}
                       {entry.source ?? "—"}
                     </p>
@@ -242,7 +242,7 @@ export function DataHub() {
             <SettingRow label="Last sync" value={formatDate(new Date().toISOString())} />
             <SettingRow label="Schema version" value="5.2" />
           </dl>
-          <p className="mt-4 text-xs text-navy/60">
+          <p className="mt-4 text-xs text-navy/70">
             Inline edit lands with the Tab 11 wizard in Iteration 2. API is live —{" "}
             <code>PUT /api/v1/settings/&#123;key&#125;</code>.
           </p>
@@ -266,7 +266,7 @@ export function DataHub() {
                 key={step}
                 className="flex flex-col gap-2 rounded-md border border-ice-100 bg-ice-50/50 p-3"
               >
-                <span className="font-mono text-xs text-navy/60">
+                <span className="font-mono text-xs text-navy/70">
                   Step {idx + 1}
                 </span>
                 <span className="font-medium">{step}</span>

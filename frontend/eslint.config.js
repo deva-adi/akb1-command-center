@@ -6,7 +6,7 @@ import tseslint from "typescript-eslint";
 
 export default [
   {
-    ignores: ["dist", "node_modules"],
+    ignores: ["dist", "node_modules", "playwright-report", "e2e/**/__screenshots__"],
   },
   js.configs.recommended,
   ...tseslint.configs.recommended,
@@ -36,6 +36,16 @@ export default [
     files: ["**/*.test.{ts,tsx}"],
     languageOptions: {
       globals: { ...globals.browser, ...globals.node, ...globals.jest },
+    },
+  },
+  {
+    files: ["e2e/**/*.{ts,tsx}", "playwright.config.ts"],
+    languageOptions: {
+      globals: { ...globals.node },
+    },
+    rules: {
+      "no-console": "off",
+      "react-refresh/only-export-components": "off",
     },
   },
 ];

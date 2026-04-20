@@ -155,7 +155,7 @@ export function VelocityFlow() {
           subtitle="Standard vs AI-raw vs AI-quality-adjusted, per sprint"
         />
         {projectSeries.length === 0 ? (
-          <p className="text-sm text-navy/60">
+          <p className="text-sm text-navy/70">
             No dual-velocity data yet. Only AI-augmented projects contribute —
             try filtering to Phoenix or Sentinel or clear the filter.
           </p>
@@ -178,16 +178,16 @@ export function VelocityFlow() {
           subtitle="AI velocity only counts against the plan when every gate passes"
         />
         {blendRules.isLoading ? (
-          <p className="text-sm text-navy/60">Loading gates…</p>
+          <p className="text-sm text-navy/70">Loading gates…</p>
         ) : (blendRules.data ?? []).length === 0 ? (
-          <p className="text-sm text-navy/60">
+          <p className="text-sm text-navy/70">
             No blend rules configured for the current scope.
           </p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-left text-xs uppercase text-navy/60">
+                <tr className="text-left text-xs uppercase text-navy/70">
                   <th className="py-2">Programme</th>
                   <th>Gate</th>
                   <th className="text-right">Current</th>
@@ -206,7 +206,7 @@ export function VelocityFlow() {
                       <td>
                         <div>{g.gate_name}</div>
                         {g.gate_condition ? (
-                          <div className="text-xs text-navy/60">
+                          <div className="text-xs text-navy/70">
                             <code>{g.gate_condition}</code>
                           </div>
                         ) : null}
@@ -214,7 +214,7 @@ export function VelocityFlow() {
                       <td className="text-right font-mono">
                         {formatRatio(g.current_value)}
                       </td>
-                      <td className="text-right font-mono text-navy/60">
+                      <td className="text-right font-mono text-navy/70">
                         {formatRatio(g.threshold)}
                       </td>
                       <td className="text-right">
@@ -341,7 +341,7 @@ function Stat({
         <p className="font-mono text-xl font-semibold text-navy">{value}</p>
         {tone && tone !== "neutral" ? <Badge tone={tone}>·</Badge> : null}
       </div>
-      {sub ? <p className="text-xs text-navy/60">{sub}</p> : null}
+      {sub ? <p className="text-xs text-navy/70">{sub}</p> : null}
     </div>
   );
 }

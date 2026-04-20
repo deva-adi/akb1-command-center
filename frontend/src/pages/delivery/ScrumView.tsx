@@ -25,14 +25,14 @@ export function ScrumView({ project }: { project: ProjectListItem }) {
     queryFn: () => fetchSprints(project.id),
   });
 
-  if (isLoading) return <p className="text-sm text-navy/60">Loading sprints…</p>;
+  if (isLoading) return <p className="text-sm text-navy/70">Loading sprints…</p>;
   if (error)
     return (
       <p className="text-sm text-danger-600">{(error as Error).message}</p>
     );
   if (!data || data.length === 0) {
     return (
-      <p className="text-sm text-navy/60">
+      <p className="text-sm text-navy/70">
         No sprint data seeded for this project.
       </p>
     );
@@ -161,7 +161,7 @@ export function ScrumView({ project }: { project: ProjectListItem }) {
               </BarChart>
             </ResponsiveContainer>
           </div>
-          <p className="mt-2 text-xs text-navy/60">
+          <p className="mt-2 text-xs text-navy/70">
             Track AI-assisted points alongside standard velocity so trust-score
             and quality-parity dashboards in Tab 7 stay honest.
           </p>
@@ -192,7 +192,7 @@ export function ScrumView({ project }: { project: ProjectListItem }) {
                   aria-expanded={isOpen}
                   className="grid w-full grid-cols-[auto_1fr_auto] items-center gap-3 py-3 text-left text-sm transition hover:bg-ice-50"
                 >
-                  <span className="font-mono text-xs text-navy/60">
+                  <span className="font-mono text-xs text-navy/70">
                     Sprint #{s.sprint_number ?? "?"}
                   </span>
                   <span>
@@ -266,7 +266,7 @@ function SprintStat({
     <div className="rounded border border-ice-100 bg-white px-3 py-2">
       <span className="kpi-label">{label}</span>
       <p className="font-mono text-xl font-semibold text-navy">{value}</p>
-      {sub ? <p className="text-xs text-navy/60">{sub}</p> : null}
+      {sub ? <p className="text-xs text-navy/70">{sub}</p> : null}
     </div>
   );
 }

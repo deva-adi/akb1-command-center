@@ -245,7 +245,7 @@ export function AiGovernance() {
           subtitle="Provenance / Review / Coverage / Drift / Override / Defect, 0–100"
         />
         {programmeCodes.length === 0 ? (
-          <p className="text-sm text-navy/60">
+          <p className="text-sm text-navy/70">
             No trust scores seeded for the current scope.
           </p>
         ) : (
@@ -323,12 +323,12 @@ export function AiGovernance() {
           action={<ShieldCheck className="size-4 text-success-600" aria-hidden="true" />}
         />
         {(governance.data ?? []).length === 0 ? (
-          <p className="text-sm text-navy/60">No governance config rows loaded.</p>
+          <p className="text-sm text-navy/70">No governance config rows loaded.</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-left text-xs uppercase text-navy/60">
+                <tr className="text-left text-xs uppercase text-navy/70">
                   <th className="py-2">Type</th>
                   <th>Name</th>
                   <th>Scope</th>
@@ -348,7 +348,7 @@ export function AiGovernance() {
                     <td>
                       <p className="font-medium">{g.name}</p>
                       {g.description ? (
-                        <p className="text-xs text-navy/60">{g.description}</p>
+                        <p className="text-xs text-navy/70">{g.description}</p>
                       ) : null}
                     </td>
                     <td>
@@ -370,7 +370,7 @@ export function AiGovernance() {
                         {formatPct((g.compliance_pct ?? 0) / 100)}
                       </Badge>
                     </td>
-                    <td className="text-right text-xs text-navy/60">
+                    <td className="text-right text-xs text-navy/70">
                       {formatDate(g.last_audit_date)}
                     </td>
                     <td>{g.owner ?? "—"}</td>
@@ -389,7 +389,7 @@ export function AiGovernance() {
           action={<AlertOctagon className="size-4 text-danger-600" aria-hidden="true" />}
         />
         {(overrides.data ?? []).length === 0 ? (
-          <p className="text-sm text-navy/60">No overrides in the current scope.</p>
+          <p className="text-sm text-navy/70">No overrides in the current scope.</p>
         ) : (
           <ul className="flex flex-col gap-2 text-sm">
             {(overrides.data ?? []).map((o) => {
@@ -404,7 +404,7 @@ export function AiGovernance() {
                 >
                   <div className="flex-1">
                     <p className="font-medium">{o.reason ?? "—"}</p>
-                    <p className="text-xs text-navy/60">
+                    <p className="text-xs text-navy/70">
                       {o.override_date
                         ? new Date(o.override_date).toLocaleString("en-GB")
                         : "—"}{" "}
@@ -433,7 +433,7 @@ export function AiGovernance() {
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="text-left text-xs uppercase text-navy/60">
+              <tr className="text-left text-xs uppercase text-navy/70">
                 <th className="py-2">Tool</th>
                 <th>Vendor</th>
                 <th>Category</th>
@@ -487,7 +487,7 @@ function Stat({
         <p className="font-mono text-xl font-semibold text-navy">{value}</p>
         {tone && tone !== "neutral" ? <Badge tone={tone}>·</Badge> : null}
       </div>
-      {sub ? <p className="text-xs text-navy/60">{sub}</p> : null}
+      {sub ? <p className="text-xs text-navy/70">{sub}</p> : null}
     </div>
   );
 }

@@ -38,13 +38,13 @@ export function TopRisksCard({ limit = 5 }: { limit?: number }) {
         }
       />
       {isLoading ? (
-        <p className="text-sm text-navy/60">Loading…</p>
+        <p className="text-sm text-navy/70">Loading…</p>
       ) : error ? (
         <p className="text-sm text-danger-600">
           {(error as Error).message}
         </p>
       ) : !data || data.length === 0 ? (
-        <p className="text-sm text-navy/60">
+        <p className="text-sm text-navy/70">
           No risks recorded. Seed the NovaTech demo or import{" "}
           <code>risks.csv</code>.
         </p>
@@ -76,12 +76,12 @@ export function TopRisksCard({ limit = 5 }: { limit?: number }) {
                   }
                 >
                   <div className="flex items-start gap-3">
-                    <span className="mt-0.5 font-mono text-xs text-navy/60">
+                    <span className="mt-0.5 font-mono text-xs text-navy/70">
                       {idx + 1}.
                     </span>
                     <div>
                       <p className="font-medium">{risk.title}</p>
-                      <p className="text-xs text-navy/60">
+                      <p className="text-xs text-navy/70">
                         {programmeCode ? `${programmeCode} · ` : ""}
                         {risk.owner ? `Owner: ${risk.owner}` : ""}
                       </p>
