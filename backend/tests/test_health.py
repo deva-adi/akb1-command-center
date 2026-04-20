@@ -10,7 +10,7 @@ async def test_health_endpoint_reports_table_count(app_client: AsyncClient) -> N
     assert response.status_code == 200
     body = response.json()
     assert body["status"] == "healthy"
-    assert body["tables"] == 42
+    assert body["tables"] == 44
     assert body["version"] == "5.2.0"
 
 

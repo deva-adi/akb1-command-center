@@ -132,3 +132,54 @@ class NarrativeCache(Base):
         DateTime, server_default=func.current_timestamp()
     )
     valid_until: Mapped[datetime | None] = mapped_column(DateTime)
+
+
+class CustomerExpectation(Base):
+    """Tab 10 — per-programme, per-dimension Expectation Gap Analysis.
+
+    One row per programme × dimension × snapshot captures what the customer
+    expected vs. what was delivered. The gap feeds the renewal-probability
+    formula in ARCHITECTURE.md §4.10.
+    """
+
+    __tablename__ = "customer_expectations"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    program_id: Mapped[int | None] = mapped_column(ForeignKey("programs.id"))
+    snapshot_date: Mapped[date] = mapped_column(Date, nullable=False)
+    # Allowed values: timeline, quality, communication, innovation, cost,
+    # responsiveness, stability (see ARCHITECTURE.md §4.10 Expectation Framework)
+    dimension: Mapped[str] = mapped_column(String, nullable=False)
+    expected_score: Mapped[float | None] = mapped_column(Float)
+    delivered_score: Mapped[float | None] = mapped_column(Float)
+    gap: Mapped[float | None] = mapped_column(Float)
+    weight: Mapped[float] = mapped_column(Float, default=1.0)
+    evidence_source: Mapped[str | None] = mapped_column(String)
+    owner: Mapped[str | None] = mapped_column(String)
+    notes: Mapped[str | None] = mapped_column(Text)
+
+
+class CustomerAction(Base):
+    """Tab 10 — steering-committee action item tracker.
+
+    Drives the "Customer communication tracker" card: planned vs. held
+    meetings + action items open/closed. Each row is a discrete commitment
+    the delivery team owes the customer.
+    """
+
+    __tablename__ = "customer_actions"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    program_id: Mapped[int | None] = mapped_column(ForeignKey("programs.id"))
+    meeting_date: Mapped[date | None] = mapped_column(Date)
+    description: Mapped[str] = mapped_column(Text, nullable=False)
+    owner: Mapped[str | None] = mapped_column(String)
+    due_date: Mapped[date | None] = mapped_column(Date)
+    status: Mapped[str] = mapped_column(String, default="Open")
+    priority: Mapped[str | None] = mapped_column(String)
+    escalated: Mapped[bool] = mapped_column(Boolean, default=False)
+    resolution_notes: Mapped[str | None] = mapped_column(Text)
+    closed_date: Mapped[date | None] = mapped_column(Date)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, server_default=func.current_timestamp()
+    )

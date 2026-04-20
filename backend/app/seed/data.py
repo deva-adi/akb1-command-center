@@ -428,3 +428,173 @@ CURRENCY_RATES: list[tuple[str, str, float]] = [
     ("GBP", "£", 105.2),
     ("EUR", "€", 89.7),
 ]
+
+
+class CustomerExpectationSeed(TypedDict):
+    program_code: str
+    snapshot_date: date
+    dimension: str
+    expected_score: float
+    delivered_score: float
+    weight: float
+    evidence_source: str
+    owner: str
+    notes: str
+
+
+# Tab 10 §4.10 Expectation Framework — 7 dimensions × the most-exposed programmes.
+# Gaps are computed at seed time (delivered - expected).
+CUSTOMER_EXPECTATIONS: list[CustomerExpectationSeed] = [
+    {
+        "program_code": "PHOENIX",
+        "snapshot_date": date(2026, 3, 31),
+        "dimension": "timeline",
+        "expected_score": 9.0,
+        "delivered_score": 6.5,
+        "weight": 1.2,
+        "evidence_source": "Quarterly survey",
+        "owner": "Priya Sharma",
+        "notes": "Integration vendor slip cascades into go-live",
+    },
+    {
+        "program_code": "PHOENIX",
+        "snapshot_date": date(2026, 3, 31),
+        "dimension": "cost",
+        "expected_score": 8.5,
+        "delivered_score": 6.0,
+        "weight": 1.1,
+        "evidence_source": "Steering committee",
+        "owner": "Raj Kumar",
+        "notes": "Scope creep consuming margin reserve",
+    },
+    {
+        "program_code": "ORION",
+        "snapshot_date": date(2026, 3, 31),
+        "dimension": "quality",
+        "expected_score": 8.0,
+        "delivered_score": 6.8,
+        "weight": 1.0,
+        "evidence_source": "Escalation",
+        "owner": "Meera Iyer",
+        "notes": "Pipeline defect density 1.4× baseline",
+    },
+    {
+        "program_code": "ORION",
+        "snapshot_date": date(2026, 3, 31),
+        "dimension": "stability",
+        "expected_score": 8.0,
+        "delivered_score": 5.5,
+        "weight": 0.9,
+        "evidence_source": "Manual",
+        "owner": "Meera Iyer",
+        "notes": "Bench rotation churning knowledge",
+    },
+    {
+        "program_code": "TITAN",
+        "snapshot_date": date(2026, 3, 31),
+        "dimension": "responsiveness",
+        "expected_score": 9.0,
+        "delivered_score": 5.0,
+        "weight": 1.1,
+        "evidence_source": "Escalation",
+        "owner": "Nisha Rao",
+        "notes": "Two P1 SLA breaches last quarter",
+    },
+    {
+        "program_code": "SENTINEL",
+        "snapshot_date": date(2026, 3, 31),
+        "dimension": "innovation",
+        "expected_score": 7.5,
+        "delivered_score": 9.0,
+        "weight": 0.8,
+        "evidence_source": "Quarterly survey",
+        "owner": "Suresh Menon",
+        "notes": "AI augmentation delivering above plan",
+    },
+    {
+        "program_code": "ATLAS",
+        "snapshot_date": date(2026, 3, 31),
+        "dimension": "communication",
+        "expected_score": 8.0,
+        "delivered_score": 7.5,
+        "weight": 1.0,
+        "evidence_source": "Steering committee",
+        "owner": "Suresh Menon",
+        "notes": "Steering cadence held; minor delay in action-item closure",
+    },
+]
+
+
+class CustomerActionSeed(TypedDict):
+    program_code: str
+    meeting_date: date
+    description: str
+    owner: str
+    due_date: date
+    status: str
+    priority: str
+    escalated: bool
+
+
+CUSTOMER_ACTIONS: list[CustomerActionSeed] = [
+    {
+        "program_code": "PHOENIX",
+        "meeting_date": date(2026, 3, 15),
+        "description": "Reprice the 3 open change requests and re-present to CAB",
+        "owner": "Priya Sharma",
+        "due_date": date(2026, 4, 5),
+        "status": "In Progress",
+        "priority": "P1",
+        "escalated": True,
+    },
+    {
+        "program_code": "PHOENIX",
+        "meeting_date": date(2026, 3, 15),
+        "description": "Evaluate backup integration vendor within 2 weeks",
+        "owner": "Raj Kumar",
+        "due_date": date(2026, 3, 29),
+        "status": "Open",
+        "priority": "P1",
+        "escalated": False,
+    },
+    {
+        "program_code": "ORION",
+        "meeting_date": date(2026, 3, 20),
+        "description": "Redeploy 4 bench FTEs to Atlas workstream by end of Q1",
+        "owner": "Meera Iyer",
+        "due_date": date(2026, 3, 31),
+        "status": "Open",
+        "priority": "P1",
+        "escalated": True,
+    },
+    {
+        "program_code": "TITAN",
+        "meeting_date": date(2026, 3, 10),
+        "description": "Publish updated P1 SLA runbook and on-call roster",
+        "owner": "Nisha Rao",
+        "due_date": date(2026, 3, 22),
+        "status": "Closed",
+        "priority": "P2",
+        "escalated": False,
+    },
+    {
+        "program_code": "ATLAS",
+        "meeting_date": date(2026, 3, 25),
+        "description": "Rebalance team mix: +2 Senior, -2 Junior",
+        "owner": "Suresh Menon",
+        "due_date": date(2026, 4, 15),
+        "status": "Open",
+        "priority": "P2",
+        "escalated": False,
+    },
+    {
+        "program_code": "SENTINEL",
+        "meeting_date": date(2026, 3, 5),
+        "description": "Present AI augmentation case study at next QBR",
+        "owner": "Suresh Menon",
+        "due_date": date(2026, 4, 30),
+        "status": "Open",
+        "priority": "P3",
+        "escalated": False,
+    },
+]

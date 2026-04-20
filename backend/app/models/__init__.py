@@ -1,4 +1,4 @@
-"""SQLAlchemy ORM models — 42 tables matching ARCHITECTURE.md §5."""
+"""SQLAlchemy ORM models — 44 tables matching ARCHITECTURE.md §5."""
 
 from app.models.ai import (
     AiCodeMetrics,
@@ -26,6 +26,8 @@ from app.models.core import (
 )
 from app.models.financial import BenchTracking, LossExposure, ScopeCreepLog
 from app.models.intelligence import (
+    CustomerAction,
+    CustomerExpectation,
     CustomerSatisfaction,
     KpiForecast,
     Milestone,
@@ -59,7 +61,7 @@ __all__ = [
     "SprintData",
     "CommercialScenario",
     "EvmSnapshot",
-    # Intelligence (7)
+    # Intelligence (9)
     "Milestone",
     "SlaIncident",
     "RateCard",
@@ -67,6 +69,8 @@ __all__ = [
     "CustomerSatisfaction",
     "KpiForecast",
     "NarrativeCache",
+    "CustomerExpectation",
+    "CustomerAction",
     # AI (8)
     "AiTool",
     "AiToolAssignment",
@@ -101,4 +105,4 @@ __all__ = [
     "UserRole",
 ]
 
-TABLE_COUNT = 42
+TABLE_COUNT = 44

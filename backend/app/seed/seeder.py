@@ -9,6 +9,8 @@ from app.logging_config import get_logger
 from app.models import (
     AppSetting,
     CurrencyRate,
+    CustomerAction,
+    CustomerExpectation,
     KpiDefinition,
     KpiSnapshot,
     Program,
@@ -18,6 +20,8 @@ from app.models import (
 from app.seed.data import (
     APP_SETTINGS_DEFAULTS,
     CURRENCY_RATES,
+    CUSTOMER_ACTIONS,
+    CUSTOMER_EXPECTATIONS,
     KPI_DEFINITIONS,
     MONTH_STARTS,
     MONTHLY_KPI_VALUES,
@@ -47,6 +51,8 @@ async def seed_demo_data(session: AsyncSession, *, force: bool = False) -> bool:
     kpi_ids = await _seed_kpi_definitions(session)
     await _seed_kpi_snapshots(session, program_ids, kpi_ids)
     await _seed_risks(session, program_ids)
+    await _seed_customer_expectations(session, program_ids)
+    await _seed_customer_actions(session, program_ids)
 
     await session.commit()
     log.info(
@@ -54,6 +60,8 @@ async def seed_demo_data(session: AsyncSession, *, force: bool = False) -> bool:
         programmes=len(program_ids),
         kpis=len(kpi_ids),
         risks=len(RISKS),
+        expectations=len(CUSTOMER_EXPECTATIONS),
+        actions=len(CUSTOMER_ACTIONS),
     )
     return True
 
@@ -155,3 +163,31 @@ async def _seed_risks(
         if program_id is None:
             continue
         session.add(Risk(program_id=program_id, **payload))
+
+
+async def _seed_customer_expectations(
+    session: AsyncSession,
+    program_ids: dict[str, int],
+) -> None:
+    for data in CUSTOMER_EXPECTATIONS:
+        payload = dict(data)
+        program_id = program_ids.get(payload.pop("program_code"))
+        if program_id is None:
+            continue
+        expected = payload["expected_score"]
+        delivered = payload["delivered_score"]
+        if expected is not None and delivered is not None:
+            payload["gap"] = delivered - expected
+        session.add(CustomerExpectation(program_id=program_id, **payload))
+
+
+async def _seed_customer_actions(
+    session: AsyncSession,
+    program_ids: dict[str, int],
+) -> None:
+    for data in CUSTOMER_ACTIONS:
+        payload = dict(data)
+        program_id = program_ids.get(payload.pop("program_code"))
+        if program_id is None:
+            continue
+        session.add(CustomerAction(program_id=program_id, **payload))
