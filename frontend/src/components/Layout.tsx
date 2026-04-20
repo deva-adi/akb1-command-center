@@ -9,7 +9,7 @@ const tabs = [
   { to: "/delivery", label: "Delivery", num: "03" },
   { to: "/velocity", label: "Velocity & Flow", num: "04" },
   { to: "/margin", label: "Margin & EVM", num: "05" },
-  { to: "/customer", label: "Customer", num: "06", disabled: true },
+  { to: "/customer", label: "Customer", num: "06" },
   { to: "/ai", label: "AI Governance", num: "07", disabled: true },
   { to: "/smart-ops", label: "Smart Ops", num: "08", disabled: true },
   { to: "/raid", label: "Risk & Audit", num: "09", disabled: true },

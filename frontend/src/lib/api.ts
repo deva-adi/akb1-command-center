@@ -423,6 +423,113 @@ export async function fetchChangeRequests(programId?: number): Promise<ChangeReq
   return data;
 }
 
+// ---------- Customer Intelligence ----------
+
+export type CustomerSatisfaction = {
+  id: number;
+  program_id: number | null;
+  snapshot_date: string;
+  csat_score: number | null;
+  nps_score: number | null;
+  escalation_count: number;
+  escalation_open: number;
+  steering_meetings_planned: number | null;
+  steering_meetings_held: number | null;
+  action_items_open: number | null;
+  action_items_closed: number | null;
+  positive_themes: string | null;
+  concern_themes: string | null;
+  renewal_score: number | null;
+};
+
+export type SlaIncident = {
+  id: number;
+  program_id: number | null;
+  incident_id: string | null;
+  priority: string;
+  summary: string | null;
+  reported_at: string;
+  responded_at: string | null;
+  resolved_at: string | null;
+  response_time_minutes: number | null;
+  resolution_time_minutes: number | null;
+  sla_breached: boolean;
+  penalty_amount: number;
+  root_cause: string | null;
+};
+
+export type CustomerExpectation = {
+  id: number;
+  program_id: number | null;
+  snapshot_date: string;
+  dimension: string;
+  expected_score: number | null;
+  delivered_score: number | null;
+  gap: number | null;
+  weight: number;
+  evidence_source: string | null;
+  owner: string | null;
+  notes: string | null;
+};
+
+export type CustomerAction = {
+  id: number;
+  program_id: number | null;
+  meeting_date: string | null;
+  description: string;
+  owner: string | null;
+  due_date: string | null;
+  status: string;
+  priority: string | null;
+  escalated: boolean;
+  resolution_notes: string | null;
+  closed_date: string | null;
+};
+
+export async function fetchCustomerSatisfaction(
+  programId?: number,
+): Promise<CustomerSatisfaction[]> {
+  const { data } = await api.get<CustomerSatisfaction[]>(
+    "/api/v1/customer/satisfaction",
+    { params: programId ? { program_id: programId } : undefined },
+  );
+  return data;
+}
+
+export async function fetchSlaIncidents(
+  programId?: number,
+  breachedOnly = false,
+): Promise<SlaIncident[]> {
+  const { data } = await api.get<SlaIncident[]>(
+    "/api/v1/customer/sla-incidents",
+    {
+      params: {
+        program_id: programId,
+        breached_only: breachedOnly || undefined,
+      },
+    },
+  );
+  return data;
+}
+
+export async function fetchCustomerExpectations(
+  programId: number,
+): Promise<CustomerExpectation[]> {
+  const { data } = await api.get<CustomerExpectation[]>(
+    `/api/v1/customer/${programId}/expectations`,
+  );
+  return data;
+}
+
+export async function fetchCustomerActions(
+  programId: number,
+): Promise<CustomerAction[]> {
+  const { data } = await api.get<CustomerAction[]>(
+    `/api/v1/customer/${programId}/actions`,
+  );
+  return data;
+}
+
 export async function previewCsv(file: File): Promise<{
   filename: string;
   columns: string[];
