@@ -1,0 +1,65 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: light;
+  }
+
+  html {
+    font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont,
+      "Segoe UI", Roboto, sans-serif;
+  }
+
+  body {
+    min-height: 100vh;
+    background-color: theme("colors.ice.50");
+    color: theme("colors.navy.DEFAULT");
+  }
+
+  :focus-visible {
+    outline: 2px solid theme("colors.amber.500");
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+}
+
+@layer components {
+  .card {
+    @apply rounded-lg border border-ice-100 bg-white p-5 shadow-card transition-shadow;
+  }
+  .card:hover {
+    @apply shadow-card-hover;
+  }
+
+  .kpi-label {
+    @apply text-xs font-medium uppercase tracking-wider text-navy/70;
+  }
+
+  .kpi-value {
+    @apply font-mono text-3xl font-semibold text-navy;
+  }
+
+  .kpi-sub {
+    @apply text-sm text-navy/60;
+  }
+
+  .btn-primary {
+    @apply inline-flex items-center gap-2 rounded-md bg-amber-500 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-amber-600 disabled:opacity-60;
+  }
+
+  .btn-ghost {
+    @apply inline-flex items-center gap-2 rounded-md border border-ice-100 bg-white px-3 py-1.5 text-sm font-medium text-navy transition hover:bg-ice-50;
+  }
+
+  .status-green {
+    @apply bg-success-500/10 text-success-600;
+  }
+  .status-amber {
+    @apply bg-amber-500/15 text-amber-600;
+  }
+  .status-red {
+    @apply bg-danger-500/10 text-danger-600;
+  }
+}
