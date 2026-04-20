@@ -1,17 +1,41 @@
-const RUPEE_LAKH = 100_000;
-const RUPEE_CRORE = 10_000_000;
+export type CurrencyCode = "USD" | "INR" | "GBP" | "EUR";
 
-export function formatCurrencyINR(amount: number | null | undefined): string {
+const SYMBOLS: Record<CurrencyCode, string> = {
+  USD: "$",
+  INR: "₹",
+  GBP: "£",
+  EUR: "€",
+};
+
+const LAKH = 100_000;
+const CRORE = 10_000_000;
+const MILLION = 1_000_000;
+const BILLION = 1_000_000_000;
+
+export function formatCurrency(
+  amount: number | null | undefined,
+  code: CurrencyCode = "USD",
+): string {
   if (amount === null || amount === undefined) return "—";
+  const symbol = SYMBOLS[code];
   const abs = Math.abs(amount);
-  if (abs >= RUPEE_CRORE) {
-    return `₹${(amount / RUPEE_CRORE).toFixed(2)} Cr`;
+
+  if (code === "INR") {
+    if (abs >= CRORE) return `${symbol}${(amount / CRORE).toFixed(2)} Cr`;
+    if (abs >= LAKH) return `${symbol}${(amount / LAKH).toFixed(2)} L`;
+    return `${symbol}${amount.toLocaleString("en-IN", { maximumFractionDigits: 0 })}`;
   }
-  if (abs >= RUPEE_LAKH) {
-    return `₹${(amount / RUPEE_LAKH).toFixed(2)} L`;
-  }
-  return `₹${amount.toLocaleString("en-IN", { maximumFractionDigits: 0 })}`;
+
+  // USD / GBP / EUR — Western formatting with K / M / B suffixes
+  if (abs >= BILLION) return `${symbol}${(amount / BILLION).toFixed(2)} B`;
+  if (abs >= MILLION) return `${symbol}${(amount / MILLION).toFixed(2)} M`;
+  if (abs >= 1_000) return `${symbol}${(amount / 1_000).toFixed(1)} K`;
+  return `${symbol}${amount.toLocaleString("en-US", { maximumFractionDigits: 0 })}`;
 }
+
+/** @deprecated — kept for backwards-compat while call sites migrate. */
+export const formatCurrencyINR = (amount: number | null | undefined) =>
+  formatCurrency(amount, "INR");
 
 export function formatPct(value: number | null | undefined, fractionDigits = 1): string {
   if (value === null || value === undefined) return "—";

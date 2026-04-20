@@ -146,6 +146,19 @@ export async function fetchImportLog(): Promise<DataImportLog[]> {
   return data;
 }
 
+export type CurrencyRate = {
+  code: string;
+  symbol: string | null;
+  rate_to_base: string;
+  source: string;
+  last_updated: string;
+};
+
+export async function fetchCurrencyRates(): Promise<CurrencyRate[]> {
+  const { data } = await api.get<CurrencyRate[]>("/api/v1/currency/rates");
+  return data;
+}
+
 export async function previewCsv(file: File): Promise<{
   filename: string;
   columns: string[];

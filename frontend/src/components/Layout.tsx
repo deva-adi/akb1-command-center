@@ -1,4 +1,5 @@
 import { NavLink, Outlet } from "react-router-dom";
+import { CurrencySelector } from "@/components/CurrencySelector";
 import { useUiStore } from "@/stores/uiStore";
 import { cn } from "@/lib/cn";
 
@@ -17,7 +18,6 @@ const tabs = [
 ];
 
 export function Layout() {
-  const baseCurrency = useUiStore((s) => s.baseCurrency);
   const fiscalYearLabel = useUiStore((s) => s.fiscalYearLabel);
 
   return (
@@ -33,9 +33,7 @@ export function Layout() {
           </div>
         </div>
         <div className="flex items-center gap-4 text-sm">
-          <span className="rounded bg-white/10 px-3 py-1 font-mono text-xs">
-            Base {baseCurrency}
-          </span>
+          <CurrencySelector />
           <span className="rounded bg-white/10 px-3 py-1 text-xs">{fiscalYearLabel}</span>
         </div>
       </header>

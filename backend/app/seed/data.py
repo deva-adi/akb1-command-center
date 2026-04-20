@@ -543,20 +543,24 @@ RISKS: list[RiskSeed] = [
 
 
 APP_SETTINGS_DEFAULTS: dict[str, str] = {
-    "base_currency": "INR",
+    "base_currency": "USD",
     "fiscal_year_start_month": "4",
-    "locale": "en-IN",
+    "locale": "en-US",
     "org_name": "NovaTech Solutions",
     "industry_preset": "IT Services",
     "demo_mode": "true",
 }
 
 
+# Rates anchored to USD (USD = 1.0). rate_to_base[X] answers
+# "how many units of X equal 1 USD" — e.g. 1 USD = 83.50 INR.
+# Seed rates are point-in-time (set 2026-04-20); a live-refresh endpoint
+# against an external FX feed is tracked as follow-up work.
 CURRENCY_RATES: list[tuple[str, str, float]] = [
-    ("INR", "₹", 1.0),
-    ("USD", "$", 83.5),
-    ("GBP", "£", 105.2),
-    ("EUR", "€", 89.7),
+    ("USD", "$", 1.0),
+    ("INR", "₹", 83.50),
+    ("GBP", "£", 0.79),
+    ("EUR", "€", 0.93),
 ]
 
 

@@ -38,7 +38,7 @@ class Settings(BaseSettings):
     rate_limit_write: str = Field(default="10/minute")
     rate_limit_upload: str = Field(default="5/minute")
 
-    base_currency: str = Field(default="INR")
+    base_currency: str = Field(default="USD")
 
     @computed_field  # type: ignore[prop-decorator]
     @property
