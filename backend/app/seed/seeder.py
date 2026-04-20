@@ -16,6 +16,7 @@ from app.models import (
     AiTrustScore,
     AiUsageMetrics,
     AppSetting,
+    AuditLog,
     CommercialScenario,
     CurrencyRate,
     CustomerAction,
@@ -31,7 +32,9 @@ from app.models import (
     Project,
     ProjectPhase,
     RateCard,
+    ResourcePool,
     Risk,
+    ScenarioExecution,
     ScopeCreepLog,
     SlaIncident,
     SprintData,
@@ -75,6 +78,11 @@ from app.seed.delivery_data import (
     MILESTONES,
     PROJECT_PHASES,
     SPRINTS,
+)
+from app.seed.ops_data import (
+    AUDIT_LOG,
+    RESOURCE_POOL,
+    SCENARIO_EXECUTIONS,
 )
 
 log = get_logger(__name__)
@@ -121,6 +129,9 @@ async def seed_demo_data(session: AsyncSession, *, force: bool = False) -> bool:
     await _seed_ai_trust_scores(session, program_ids, ai_tool_ids)
     await _seed_ai_governance_config(session, program_ids)
     await _seed_ai_override_log(session, program_ids, project_ids, ai_tool_ids)
+    await _seed_scenario_executions(session)
+    await _seed_resource_pool(session, program_ids, project_ids)
+    await _seed_audit_log(session)
 
     await session.commit()
     log.info(
@@ -152,6 +163,9 @@ async def seed_demo_data(session: AsyncSession, *, force: bool = False) -> bool:
         ai_trust_rows=len(AI_TRUST_SCORES),
         ai_governance_rows=len(AI_GOVERNANCE_CONFIG),
         ai_overrides=len(AI_OVERRIDE_LOG),
+        scenarios=len(SCENARIO_EXECUTIONS),
+        resources=len(RESOURCE_POOL),
+        audit_entries=len(AUDIT_LOG),
     )
     return True
 
@@ -626,3 +640,31 @@ async def _seed_ai_override_log(
                 **payload,
             )
         )
+
+
+async def _seed_scenario_executions(session: AsyncSession) -> None:
+    for data in SCENARIO_EXECUTIONS:
+        session.add(ScenarioExecution(**data))
+
+
+async def _seed_resource_pool(
+    session: AsyncSession,
+    program_ids: dict[str, int],
+    project_ids: dict[str, int],
+) -> None:
+    for data in RESOURCE_POOL:
+        payload = dict(data)
+        program_code = payload.pop("current_program_code", None)
+        project_code = payload.pop("current_project_code", None)
+        session.add(
+            ResourcePool(
+                current_program_id=program_ids.get(program_code) if program_code else None,
+                current_project_id=project_ids.get(project_code) if project_code else None,
+                **payload,
+            )
+        )
+
+
+async def _seed_audit_log(session: AsyncSession) -> None:
+    for data in AUDIT_LOG:
+        session.add(AuditLog(**data))
