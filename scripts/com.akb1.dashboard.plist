@@ -1,18 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
   AKB1 Command Center — macOS LaunchAgent
-  Installs as a per-user agent that runs `docker compose up -d` on every login.
+  Per-user agent that runs scripts/autostart.sh on every login:
+    1. Wait for Docker Desktop
+    2. docker compose up -d
+    3. Wait for /health
+    4. open http://localhost:9000 in the default browser
 
   Install:
-    cp scripts/com.akb1.dashboard.plist ~/Library/LaunchAgents/
-    launchctl load -w ~/Library/LaunchAgents/com.akb1.dashboard.plist
+    ./scripts/install-autostart.sh
 
   Uninstall:
     launchctl unload ~/Library/LaunchAgents/com.akb1.dashboard.plist
     rm ~/Library/LaunchAgents/com.akb1.dashboard.plist
 
   Logs:
-    /tmp/akb1-launch.log  (stdout + stderr)
+    /tmp/akb1-launch.log  (stdout + stderr from the helper)
 -->
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
@@ -23,30 +26,15 @@
     <key>ProgramArguments</key>
     <array>
       <string>/bin/bash</string>
-      <string>-c</string>
-      <!--
-        Wait up to 90s for Docker Desktop to come up before running compose.
-        Uses only binaries that exist on a fresh macOS + Homebrew path so the
-        agent works even when the user shell profile hasn't been sourced.
-      -->
-      <string>
-        export PATH="/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin";
-        cd "$HOME/Documents/Claude/Claude_Code/Projects/akb1-command-center" || exit 1;
-        for i in $(seq 1 30); do
-          if docker info &gt; /dev/null 2&gt;&amp;1; then
-            break;
-          fi;
-          sleep 3;
-        done;
-        docker compose up -d
-      </string>
+      <string>-lc</string>
+      <string>"$HOME/Documents/Claude/Claude_Code/Projects/akb1-command-center/scripts/autostart.sh"</string>
     </array>
 
-    <!-- Run once at login. -->
     <key>RunAtLoad</key>
     <true/>
 
-    <!-- If it fails, retry every 5 minutes for up to 3 attempts. -->
+    <!-- Retry if the first attempt exits non-zero (Docker still waking up etc.).
+         Will throttle by ThrottleInterval seconds between retries. -->
     <key>KeepAlive</key>
     <dict>
       <key>SuccessfulExit</key>
@@ -60,7 +48,6 @@
     <key>StandardErrorPath</key>
     <string>/tmp/akb1-launch.log</string>
 
-    <!-- Inherit the user's HOME correctly. -->
     <key>EnvironmentVariables</key>
     <dict>
       <key>LANG</key>
