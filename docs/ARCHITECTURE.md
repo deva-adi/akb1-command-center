@@ -1053,6 +1053,45 @@ CREATE TABLE audit_log (
 );
 ```
 
+### 5.8 Customer Intelligence Tables (2 — v5.2 addition)
+
+These two tables power Tab 10 (Customer Intelligence). `customer_satisfaction`
+captures the monthly scorecard snapshot; these two capture the dimensional
+gap analysis and the steering-committee action log that sit underneath it.
+
+```sql
+-- 36. customer_expectations — per-dimension gap analysis (Tab 10)
+CREATE TABLE customer_expectations (
+    id INTEGER PRIMARY KEY,
+    program_id INTEGER REFERENCES programs(id),
+    snapshot_date DATE NOT NULL,
+    dimension TEXT NOT NULL,             -- timeline | quality | communication | innovation | cost | responsiveness | stability
+    expected_score REAL,                 -- 1–10 customer expectation
+    delivered_score REAL,                -- 1–10 actual delivered value
+    gap REAL,                            -- Computed: delivered_score - expected_score
+    weight REAL DEFAULT 1.0,             -- Dimension weight in renewal composite
+    evidence_source TEXT,                -- Survey / Escalation / Steering committee / Manual
+    owner TEXT,
+    notes TEXT
+);
+
+-- 37. customer_actions — steering-committee action-item tracker (Tab 10)
+CREATE TABLE customer_actions (
+    id INTEGER PRIMARY KEY,
+    program_id INTEGER REFERENCES programs(id),
+    meeting_date DATE,
+    description TEXT NOT NULL,
+    owner TEXT,
+    due_date DATE,
+    status TEXT DEFAULT 'Open',          -- Open | In Progress | Closed | Escalated
+    priority TEXT,                       -- P1 | P2 | P3
+    escalated BOOLEAN DEFAULT 0,
+    resolution_notes TEXT,
+    closed_date DATE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+```
+
 ### NEW v5.2 TABLES (5 added)
 
 ```sql
