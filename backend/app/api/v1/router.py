@@ -9,10 +9,12 @@ from app.api.v1 import (
     customer,
     data_import,
     delivery,
+    forecasts,
     health,
     kpi,
     ops,
     programmes,
+    reports,
     risks,
     settings,
 )
@@ -46,5 +48,7 @@ api_router.include_router(ai.override_router)
 api_router.include_router(ops.scenarios_router)
 api_router.include_router(ops.resources_router)
 api_router.include_router(ops.audit_router)
+api_router.include_router(reports.router)
+api_router.include_router(forecasts.router)
 api_router.include_router(settings.router)
 api_router.include_router(data_import.router)

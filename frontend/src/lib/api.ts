@@ -738,6 +738,43 @@ export async function fetchAuditLog(
   return data;
 }
 
+// ---------- Reports & Forecasts ----------
+
+export type Forecast = {
+  kpi_code: string;
+  programme_code: string | null;
+  historical_dates: string[];
+  historical_values: number[];
+  horizon_months: number;
+  horizon_labels: string[];
+  series: { label: string; values: number[] }[];
+};
+
+export async function fetchForecast(
+  kpiCode: string,
+  programmeCode?: string,
+  horizon = 3,
+): Promise<Forecast> {
+  const { data } = await api.get<Forecast>("/api/v1/forecasts", {
+    params: {
+      kpi_code: kpiCode,
+      programme_code: programmeCode,
+      horizon,
+    },
+  });
+  return data;
+}
+
+export function qbrPdfUrl(programId: number): string {
+  return `/api/v1/reports/qbr/${programId}.pdf`;
+}
+
+export function auditPackageUrl(programId?: number): string {
+  return programId !== undefined
+    ? `/api/v1/reports/audit-package.zip?program_id=${programId}`
+    : `/api/v1/reports/audit-package.zip`;
+}
+
 export async function previewCsv(file: File): Promise<{
   filename: string;
   columns: string[];

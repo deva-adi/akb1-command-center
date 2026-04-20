@@ -13,7 +13,7 @@ const tabs = [
   { to: "/ai", label: "AI Governance", num: "07" },
   { to: "/smart-ops", label: "Smart Ops", num: "08" },
   { to: "/raid", label: "Risk & Audit", num: "09" },
-  { to: "/reports", label: "Reports", num: "10", disabled: true },
+  { to: "/reports", label: "Reports", num: "10" },
   { to: "/data-hub", label: "Data Hub", num: "11" },
 ];
 
@@ -48,32 +48,20 @@ export function Layout() {
               key={tab.to}
               to={tab.to}
               end={tab.to === "/"}
-              aria-disabled={tab.disabled ? true : undefined}
               className={({ isActive }) =>
                 cn(
                   "group flex items-center justify-between rounded-md px-3 py-2 text-sm font-medium transition",
-                  tab.disabled
-                    ? "pointer-events-none text-navy/40"
-                    : "text-navy hover:bg-ice-50",
-                  isActive && !tab.disabled && "bg-navy text-white shadow-sm",
+                  "text-navy hover:bg-ice-50",
+                  isActive && "bg-navy text-white shadow-sm",
                 )
               }
             >
               <span>{tab.label}</span>
-              <span
-                className={cn(
-                  "font-mono text-xs",
-                  tab.disabled ? "text-navy/30" : "text-navy/50 group-hover:text-navy",
-                )}
-              >
+              <span className="font-mono text-xs text-navy/50 group-hover:text-navy">
                 {tab.num}
               </span>
             </NavLink>
           ))}
-          <p className="mt-4 px-3 text-[11px] leading-snug text-navy/50">
-            Tabs 02–10 light up across Iterations 2–4. See
-            <span className="font-mono"> docs/ROADMAP.md</span>.
-          </p>
         </nav>
 
         <main className="flex-1 overflow-x-hidden p-6">
