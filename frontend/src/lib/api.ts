@@ -159,6 +159,11 @@ export async function fetchCurrencyRates(): Promise<CurrencyRate[]> {
   return data;
 }
 
+export async function refreshCurrencyRates(): Promise<CurrencyRate[]> {
+  const { data } = await api.post<CurrencyRate[]>("/api/v1/currency/refresh");
+  return data;
+}
+
 // ---------- Delivery Health ----------
 
 export type Sprint = {

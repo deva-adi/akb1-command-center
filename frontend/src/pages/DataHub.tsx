@@ -1,9 +1,22 @@
 import { useRef, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { CheckCircle2, Download, RotateCcw, Upload, UploadCloud } from "lucide-react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  CheckCircle2,
+  Download,
+  RefreshCw,
+  RotateCcw,
+  Upload,
+  UploadCloud,
+} from "lucide-react";
 import { Card, CardHeader } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
-import { fetchImportLog, fetchSettings, previewCsv } from "@/lib/api";
+import {
+  fetchCurrencyRates,
+  fetchImportLog,
+  fetchSettings,
+  previewCsv,
+  refreshCurrencyRates,
+} from "@/lib/api";
 import { formatDate } from "@/lib/format";
 
 type PreviewState = {
@@ -38,10 +51,22 @@ export function DataHub() {
   const [uploading, setUploading] = useState(false);
   const [dragOver, setDragOver] = useState(false);
 
+  const queryClient = useQueryClient();
   const settings = useQuery({ queryKey: ["settings"], queryFn: fetchSettings });
   const imports = useQuery({ queryKey: ["imports"], queryFn: fetchImportLog });
+  const rates = useQuery({
+    queryKey: ["currency-rates"],
+    queryFn: fetchCurrencyRates,
+  });
 
   const settingMap = new Map((settings.data ?? []).map((s) => [s.key, s.value ?? "—"]));
+
+  const refreshRates = useMutation({
+    mutationFn: refreshCurrencyRates,
+    onSuccess: (fresh) => {
+      queryClient.setQueryData(["currency-rates"], fresh);
+    },
+  });
 
   async function handleFile(file: File) {
     setPreviewError(null);
@@ -248,6 +273,76 @@ export function DataHub() {
           </p>
         </Card>
       </section>
+
+      <Card>
+        <CardHeader
+          title="Currency rates"
+          subtitle={
+            rates.data && rates.data.length > 0
+              ? `Last updated ${formatDate(rates.data[0].last_updated)} · source ${rates.data[0].source}`
+              : "No rates loaded yet"
+          }
+          action={
+            <button
+              type="button"
+              onClick={() => refreshRates.mutate()}
+              disabled={refreshRates.isPending}
+              className="btn-primary text-xs"
+            >
+              <RefreshCw
+                className={`size-3 ${refreshRates.isPending ? "animate-spin" : ""}`}
+                aria-hidden="true"
+              />{" "}
+              {refreshRates.isPending ? "Refreshing…" : "Refresh from ECB"}
+            </button>
+          }
+        />
+        {refreshRates.isError ? (
+          <p className="mb-2 text-xs text-danger-600">
+            {(refreshRates.error as Error).message}
+          </p>
+        ) : null}
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="text-left text-xs uppercase text-navy/70">
+              <th className="py-2">Code</th>
+              <th>Symbol</th>
+              <th className="text-right">Rate per 1 USD</th>
+              <th>Source</th>
+              <th>Last updated</th>
+            </tr>
+          </thead>
+          <tbody>
+            {(rates.data ?? []).map((r) => (
+              <tr key={r.code} className="border-t border-ice-100">
+                <td className="py-2 font-mono font-semibold">{r.code}</td>
+                <td>{r.symbol ?? "—"}</td>
+                <td className="text-right font-mono">
+                  {Number(r.rate_to_base).toFixed(4)}
+                </td>
+                <td className="font-mono text-xs">{r.source}</td>
+                <td className="text-xs text-navy/70">
+                  {formatDate(r.last_updated)}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        <p className="mt-3 text-xs text-navy/70">
+          Refresh hits{" "}
+          <a
+            className="underline"
+            href="https://www.frankfurter.app/"
+            target="_blank"
+            rel="noreferrer"
+          >
+            frankfurter.app
+          </a>{" "}
+          (European Central Bank mirror, no API key). If the container can't
+          reach the internet, the dashboard keeps using the last stored rates
+          and shows a 502 message here — no chart data is lost.
+        </p>
+      </Card>
 
       <Card>
         <CardHeader
