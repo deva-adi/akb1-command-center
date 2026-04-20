@@ -16,7 +16,7 @@ export function useProgrammes() {
 }
 
 export function useKpiDefinitions() {
-  return useQuery({ queryKey: ["kpi-definitions"], queryFn: fetchKpiDefinitions });
+  return useQuery({ queryKey: ["kpi-definitions"], queryFn: () => fetchKpiDefinitions() });
 }
 
 export function useMarginSnapshots() {

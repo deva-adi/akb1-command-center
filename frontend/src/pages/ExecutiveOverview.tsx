@@ -19,11 +19,13 @@ import {
   useMarginSnapshots,
   useProgrammes,
 } from "@/hooks/usePortfolio";
+import { useCurrency } from "@/hooks/useCurrency";
 import {
   bucketForStatus,
-  formatCurrencyINR,
+  formatCurrency,
   formatPct,
   formatRatio,
+  type CurrencyCode,
   type RagBucket,
 } from "@/lib/format";
 
@@ -32,6 +34,7 @@ type ProgrammeRow = {
   name: string;
   status: string;
   revenue: number;
+  currency_code: string;
   latestMargin: number | null;
   latestCpi: number | null;
 };
@@ -48,6 +51,7 @@ export function ExecutiveOverview() {
   const programmes = useProgrammes();
   const margin = useMarginSnapshots();
   const cpi = useCpiSnapshots();
+  const currency = useCurrency();
 
   const rows: ProgrammeRow[] = useMemo(() => {
     if (!programmes.data) return [];
@@ -58,6 +62,7 @@ export function ExecutiveOverview() {
       name: p.name,
       status: p.status,
       revenue: p.revenue ?? 0,
+      currency_code: p.currency_code,
       latestMargin: marginByProgram.get(p.id) ?? null,
       latestCpi: cpiByProgram.get(p.id) ?? null,
     }));
@@ -72,7 +77,12 @@ export function ExecutiveOverview() {
   }, [rows]);
 
   const totals = useMemo(() => {
-    const revenue = rows.reduce((sum, r) => sum + r.revenue, 0);
+    // Convert each programme's native revenue into the selected display
+    // currency before summing — avoids mixing INR + USD amounts.
+    const revenue = rows.reduce(
+      (sum, r) => sum + (currency.convert(r.revenue, r.currency_code) ?? 0),
+      0,
+    );
     const avgMargin =
       rows.filter((r) => r.latestMargin !== null).length === 0
         ? null
@@ -88,7 +98,7 @@ export function ExecutiveOverview() {
             .reduce((sum, r) => sum + (r.latestCpi ?? 0), 0) /
           rows.filter((r) => r.latestCpi !== null).length;
     return { revenue, avgMargin, avgCpi };
-  }, [rows]);
+  }, [rows, currency]);
 
   const marginSeries = useMemo(
     () => buildSeries(margin.data ?? [], programmes.data ?? []),
@@ -96,8 +106,8 @@ export function ExecutiveOverview() {
   );
 
   const narrative = useMemo(
-    () => buildNarrative(buckets, totals, rows),
-    [buckets, totals, rows],
+    () => buildNarrative(buckets, totals, rows, currency.baseCurrency),
+    [buckets, totals, rows, currency.baseCurrency],
   );
 
   const loading =
@@ -155,7 +165,10 @@ export function ExecutiveOverview() {
         <Card>
           <CardHeader title="Financials" subtitle="Annualised portfolio revenue" />
           <div className="grid grid-cols-2 gap-3">
-            <KpiMini label="Revenue" value={formatCurrencyINR(totals.revenue)} />
+            <KpiMini
+              label="Revenue"
+              value={currency.format(totals.revenue, currency.baseCurrency)}
+            />
             <KpiMini
               label="Avg margin"
               value={formatPct(totals.avgMargin)}
@@ -186,7 +199,11 @@ export function ExecutiveOverview() {
       </section>
 
       <section className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-        <KpiTile label="Revenue realised" value={formatCurrencyINR(totals.revenue)} sub="YTD across 5 programmes" />
+        <KpiTile
+          label="Revenue realised"
+          value={currency.format(totals.revenue, currency.baseCurrency)}
+          sub="YTD across 5 programmes"
+        />
         <KpiTile
           label="Blended margin"
           value={formatPct(totals.avgMargin)}
@@ -272,7 +289,7 @@ export function ExecutiveOverview() {
                         <Badge tone={tone}>{r.status}</Badge>
                       </td>
                       <td className="text-right font-mono">
-                        {formatCurrencyINR(r.revenue)}
+                        {currency.format(r.revenue, r.currency_code)}
                       </td>
                       <td className="text-right font-mono">
                         {formatPct(r.latestMargin)}
@@ -372,6 +389,7 @@ function buildNarrative(
   buckets: Record<RagBucket, number>,
   totals: { revenue: number; avgMargin: number | null; avgCpi: number | null },
   rows: ProgrammeRow[],
+  displayCurrency: CurrencyCode,
 ): string {
   const weakest = [...rows]
     .filter((r) => r.latestMargin !== null)
@@ -381,7 +399,7 @@ function buildNarrative(
     .sort((a, b) => (b.latestMargin ?? 0) - (a.latestMargin ?? 0))[0];
 
   const lines = [
-    `Portfolio revenue stands at ${formatCurrencyINR(totals.revenue)} across ${rows.length} programmes, with ${buckets.green} green, ${buckets.amber} amber and ${buckets.red} red on the RAG scorecard.`,
+    `Portfolio revenue stands at ${formatCurrency(totals.revenue, displayCurrency)} across ${rows.length} programmes, with ${buckets.green} green, ${buckets.amber} amber and ${buckets.red} red on the RAG scorecard.`,
     totals.avgMargin === null
       ? "Blended margin is unavailable until the margin KPI snapshots land."
       : `Blended margin sits at ${formatPct(totals.avgMargin)} — ${

@@ -295,6 +295,97 @@ KPI_DEFINITIONS: list[KpiDefinitionSeed] = [
         "category": "People",
         "is_higher_better": True,
     },
+    {
+        "name": "Attrition Rate",
+        "code": "ATTRITION",
+        "formula": "departures_12m / headcount_avg",
+        "description": "Rolling 12-month voluntary attrition",
+        "unit": "pct",
+        "green_threshold": 0.08,
+        "amber_threshold": 0.15,
+        "red_threshold": 0.25,
+        "weight": 0.9,
+        "category": "People",
+        "is_higher_better": False,
+    },
+    {
+        "name": "Revenue Realisation",
+        "code": "REV_REAL",
+        "formula": "actual_revenue / planned_revenue",
+        "description": "Invoiced + WIP revenue over plan",
+        "unit": "pct",
+        "green_threshold": 0.98,
+        "amber_threshold": 0.92,
+        "red_threshold": 0.85,
+        "weight": 1.2,
+        "category": "Commercial",
+        "is_higher_better": True,
+    },
+    {
+        "name": "Forecast Accuracy",
+        "code": "FORECAST_ACC",
+        "formula": "1 - MAPE(last_3_forecasts)",
+        "description": "Mean absolute percentage error on last 3 month forecasts",
+        "unit": "pct",
+        "green_threshold": 0.95,
+        "amber_threshold": 0.90,
+        "red_threshold": 0.80,
+        "weight": 0.8,
+        "category": "Commercial",
+        "is_higher_better": True,
+    },
+    {
+        "name": "Test Coverage",
+        "code": "TEST_COV",
+        "formula": "covered_lines / total_lines",
+        "description": "Unit test line coverage (pipeline-reported)",
+        "unit": "pct",
+        "green_threshold": 0.80,
+        "amber_threshold": 0.70,
+        "red_threshold": 0.60,
+        "weight": 1.0,
+        "category": "Quality",
+        "is_higher_better": True,
+    },
+    {
+        "name": "Critical Defect Rate",
+        "code": "CRIT_DEFECTS",
+        "formula": "critical_defects / total_defects",
+        "description": "Share of defects classed Critical or Blocker",
+        "unit": "pct",
+        "green_threshold": 0.05,
+        "amber_threshold": 0.10,
+        "red_threshold": 0.20,
+        "weight": 1.0,
+        "category": "Quality",
+        "is_higher_better": False,
+    },
+    {
+        "name": "AI Trust Score",
+        "code": "AI_TRUST",
+        "formula": "weighted_composite(provenance, review, coverage, drift, overrides, defects)",
+        "description": "6-factor AI trust composite per ARCHITECTURE.md §4.7",
+        "unit": "score_0_100",
+        "green_threshold": 75.0,
+        "amber_threshold": 60.0,
+        "red_threshold": 45.0,
+        "weight": 1.1,
+        "category": "AI",
+        "is_higher_better": True,
+    },
+    {
+        "name": "AI Velocity Uplift",
+        "code": "AI_UPLIFT",
+        "formula": "(ai_velocity - standard_velocity) / standard_velocity",
+        "description": "% uplift in sprint velocity when AI augmentation is applied",
+        "unit": "pct",
+        "green_threshold": 0.20,
+        "amber_threshold": 0.10,
+        "red_threshold": 0.0,
+        "weight": 0.9,
+        "category": "AI",
+        "is_higher_better": True,
+    },
 ]
 
 
@@ -316,6 +407,45 @@ MONTHLY_KPI_VALUES: dict[tuple[str, str], list[float]] = {
     ("TITAN", "CPI"): [1.04, 1.02, 1.00, 0.98, 0.97, 0.95, 0.94, 0.92, 0.91, 0.90, 0.89, 0.88],
     ("TITAN", "SPI"): [1.00, 0.99, 0.98, 0.96, 0.95, 0.93, 0.92, 0.91, 0.90, 0.88, 0.87, 0.86],
     ("TITAN", "MARGIN"): [0.19, 0.18, 0.18, 0.17, 0.17, 0.16, 0.16, 0.15, 0.15, 0.14, 0.14, 0.13],
+    # Utilization — higher is better, target 85%.
+    ("PHOENIX", "UTIL"): [0.82, 0.81, 0.80, 0.79, 0.78, 0.78, 0.77, 0.76, 0.75, 0.74, 0.73, 0.72],
+    ("SENTINEL", "UTIL"): [0.86, 0.87, 0.87, 0.88, 0.88, 0.89, 0.89, 0.89, 0.90, 0.90, 0.90, 0.91],
+    ("ORION", "UTIL"): [0.80, 0.78, 0.76, 0.74, 0.72, 0.70, 0.69, 0.68, 0.66, 0.65, 0.64, 0.62],
+    # Attrition — lower is better.
+    ("PHOENIX", "ATTRITION"): [0.09, 0.10, 0.11, 0.12, 0.13, 0.14, 0.15, 0.16, 0.17, 0.18, 0.19, 0.20],
+    ("SENTINEL", "ATTRITION"): [0.08, 0.08, 0.07, 0.07, 0.07, 0.07, 0.06, 0.06, 0.06, 0.06, 0.06, 0.05],
+    ("TITAN", "ATTRITION"): [0.11, 0.12, 0.13, 0.15, 0.16, 0.18, 0.20, 0.22, 0.23, 0.24, 0.25, 0.27],
+    # Revenue realisation.
+    ("PHOENIX", "REV_REAL"): [1.00, 0.99, 0.98, 0.97, 0.96, 0.95, 0.94, 0.93, 0.93, 0.92, 0.91, 0.90],
+    ("SENTINEL", "REV_REAL"): [0.97, 0.98, 0.99, 0.99, 1.00, 1.00, 1.01, 1.01, 1.01, 1.02, 1.02, 1.02],
+    ("ORION", "REV_REAL"): [0.96, 0.95, 0.94, 0.93, 0.92, 0.91, 0.89, 0.88, 0.87, 0.86, 0.85, 0.84],
+    # Forecast accuracy (1 - MAPE).
+    ("PHOENIX", "FORECAST_ACC"): [0.94, 0.93, 0.92, 0.92, 0.91, 0.90, 0.89, 0.88, 0.88, 0.87, 0.87, 0.86],
+    ("SENTINEL", "FORECAST_ACC"): [0.95, 0.95, 0.96, 0.96, 0.96, 0.97, 0.97, 0.97, 0.97, 0.98, 0.98, 0.98],
+    # Test coverage.
+    ("PHOENIX", "TEST_COV"): [0.72, 0.72, 0.71, 0.71, 0.70, 0.70, 0.69, 0.69, 0.68, 0.68, 0.67, 0.66],
+    ("SENTINEL", "TEST_COV"): [0.78, 0.79, 0.80, 0.81, 0.82, 0.82, 0.83, 0.83, 0.84, 0.84, 0.85, 0.85],
+    ("ATLAS", "TEST_COV"): [0.74, 0.75, 0.75, 0.76, 0.76, 0.77, 0.77, 0.77, 0.78, 0.78, 0.78, 0.79],
+    # Critical defect rate (lower is better).
+    ("PHOENIX", "CRIT_DEFECTS"): [0.07, 0.07, 0.08, 0.09, 0.10, 0.11, 0.12, 0.13, 0.14, 0.14, 0.15, 0.16],
+    ("SENTINEL", "CRIT_DEFECTS"): [0.04, 0.04, 0.03, 0.03, 0.03, 0.03, 0.03, 0.02, 0.02, 0.02, 0.02, 0.02],
+    ("ORION", "CRIT_DEFECTS"): [0.08, 0.09, 0.10, 0.11, 0.12, 0.13, 0.14, 0.15, 0.17, 0.18, 0.19, 0.21],
+    # AI Trust composite — 0-100 scale.
+    ("SENTINEL", "AI_TRUST"): [72, 73, 74, 76, 77, 78, 79, 80, 81, 82, 83, 84],
+    ("ATLAS", "AI_TRUST"): [68, 69, 70, 71, 72, 72, 73, 73, 74, 74, 75, 75],
+    ("TITAN", "AI_TRUST"): [64, 63, 62, 61, 60, 59, 58, 57, 57, 56, 55, 54],
+    # AI velocity uplift (higher is better).
+    ("SENTINEL", "AI_UPLIFT"): [0.10, 0.12, 0.14, 0.16, 0.18, 0.20, 0.22, 0.24, 0.25, 0.27, 0.28, 0.30],
+    ("ATLAS", "AI_UPLIFT"): [0.05, 0.06, 0.07, 0.08, 0.09, 0.10, 0.11, 0.12, 0.12, 0.13, 0.14, 0.14],
+    ("TITAN", "AI_UPLIFT"): [0.03, 0.03, 0.04, 0.04, 0.05, 0.05, 0.06, 0.06, 0.06, 0.07, 0.07, 0.08],
+    # On-time delivery rate.
+    ("PHOENIX", "OTD"): [0.92, 0.90, 0.89, 0.87, 0.86, 0.85, 0.83, 0.82, 0.80, 0.79, 0.77, 0.76],
+    ("SENTINEL", "OTD"): [0.96, 0.96, 0.97, 0.97, 0.97, 0.98, 0.98, 0.98, 0.98, 0.98, 0.99, 0.99],
+    ("TITAN", "OTD"): [0.90, 0.89, 0.88, 0.86, 0.85, 0.83, 0.82, 0.80, 0.79, 0.77, 0.76, 0.74],
+    # Defect density (defects / kloc, lower is better).
+    ("PHOENIX", "DEFECT_DENSITY"): [1.8, 1.9, 2.0, 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8, 2.9],
+    ("SENTINEL", "DEFECT_DENSITY"): [1.2, 1.2, 1.1, 1.1, 1.1, 1.0, 1.0, 1.0, 0.9, 0.9, 0.9, 0.9],
+    ("ORION", "DEFECT_DENSITY"): [2.1, 2.3, 2.5, 2.7, 2.9, 3.1, 3.3, 3.5, 3.7, 3.9, 4.1, 4.3],
 }
 
 
@@ -413,20 +543,24 @@ RISKS: list[RiskSeed] = [
 
 
 APP_SETTINGS_DEFAULTS: dict[str, str] = {
-    "base_currency": "INR",
+    "base_currency": "USD",
     "fiscal_year_start_month": "4",
-    "locale": "en-IN",
+    "locale": "en-US",
     "org_name": "NovaTech Solutions",
     "industry_preset": "IT Services",
     "demo_mode": "true",
 }
 
 
+# Rates anchored to USD (USD = 1.0). rate_to_base[X] answers
+# "how many units of X equal 1 USD" — e.g. 1 USD = 83.50 INR.
+# Seed rates are point-in-time (set 2026-04-20); a live-refresh endpoint
+# against an external FX feed is tracked as follow-up work.
 CURRENCY_RATES: list[tuple[str, str, float]] = [
-    ("INR", "₹", 1.0),
-    ("USD", "$", 83.5),
-    ("GBP", "£", 105.2),
-    ("EUR", "€", 89.7),
+    ("USD", "$", 1.0),
+    ("INR", "₹", 83.50),
+    ("GBP", "£", 0.79),
+    ("EUR", "€", 0.93),
 ]
 
 

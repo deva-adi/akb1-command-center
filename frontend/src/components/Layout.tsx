@@ -1,10 +1,11 @@
 import { NavLink, Outlet } from "react-router-dom";
+import { CurrencySelector } from "@/components/CurrencySelector";
 import { useUiStore } from "@/stores/uiStore";
 import { cn } from "@/lib/cn";
 
 const tabs = [
   { to: "/", label: "Executive", num: "01" },
-  { to: "/portfolio", label: "Portfolio", num: "02", disabled: true },
+  { to: "/kpi", label: "KPI Studio", num: "02" },
   { to: "/delivery", label: "Delivery", num: "03", disabled: true },
   { to: "/velocity", label: "Velocity & Flow", num: "04", disabled: true },
   { to: "/margin", label: "Margin & EVM", num: "05", disabled: true },
@@ -17,7 +18,6 @@ const tabs = [
 ];
 
 export function Layout() {
-  const baseCurrency = useUiStore((s) => s.baseCurrency);
   const fiscalYearLabel = useUiStore((s) => s.fiscalYearLabel);
 
   return (
@@ -33,9 +33,7 @@ export function Layout() {
           </div>
         </div>
         <div className="flex items-center gap-4 text-sm">
-          <span className="rounded bg-white/10 px-3 py-1 font-mono text-xs">
-            Base {baseCurrency}
-          </span>
+          <CurrencySelector />
           <span className="rounded bg-white/10 px-3 py-1 text-xs">{fiscalYearLabel}</span>
         </div>
       </header>

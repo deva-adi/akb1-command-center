@@ -2,23 +2,48 @@ import { describe, expect, it } from "vitest";
 import {
   bucketForMargin,
   bucketForStatus,
+  formatCurrency,
   formatCurrencyINR,
   formatPct,
   formatRatio,
 } from "./format";
 
-describe("formatCurrencyINR", () => {
-  it("uses crore suffix past 1 crore", () => {
-    expect(formatCurrencyINR(12_500_000)).toBe("₹1.25 Cr");
+describe("formatCurrency — USD (default)", () => {
+  it("uses M suffix past 1M", () => {
+    expect(formatCurrency(1_250_000)).toBe("$1.25 M");
   });
-  it("uses lakh suffix between 1 lakh and 1 crore", () => {
-    expect(formatCurrencyINR(500_000)).toBe("₹5.00 L");
+  it("uses K suffix between 1K and 1M", () => {
+    expect(formatCurrency(25_000)).toBe("$25.0 K");
   });
-  it("falls back to Indian digit grouping below 1 lakh", () => {
-    expect(formatCurrencyINR(45_678)).toMatch(/^₹45,678$/);
+  it("uses plain grouping below 1K", () => {
+    expect(formatCurrency(850)).toBe("$850");
   });
   it("returns em dash for null", () => {
-    expect(formatCurrencyINR(null)).toBe("—");
+    expect(formatCurrency(null)).toBe("—");
+  });
+});
+
+describe("formatCurrency — INR", () => {
+  it("uses Cr suffix past 1 crore", () => {
+    expect(formatCurrency(12_500_000, "INR")).toBe("₹1.25 Cr");
+  });
+  it("uses L suffix between lakh and crore", () => {
+    expect(formatCurrency(500_000, "INR")).toBe("₹5.00 L");
+  });
+});
+
+describe("formatCurrency — GBP / EUR", () => {
+  it("uses K suffix for GBP", () => {
+    expect(formatCurrency(50_000, "GBP")).toBe("£50.0 K");
+  });
+  it("uses M suffix for EUR", () => {
+    expect(formatCurrency(2_500_000, "EUR")).toBe("€2.50 M");
+  });
+});
+
+describe("legacy formatCurrencyINR", () => {
+  it("delegates to INR-flavoured formatter", () => {
+    expect(formatCurrencyINR(12_500_000)).toBe("₹1.25 Cr");
   });
 });
 

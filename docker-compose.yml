@@ -11,7 +11,7 @@ services:
       - DATABASE_URL=${DATABASE_URL:-sqlite+aiosqlite:////data/akb1.db}
       - DATABASE_SYNC_URL=${DATABASE_SYNC_URL:-sqlite:////data/akb1.db}
       - SEED_DEMO_DATA=${SEED_DEMO_DATA:-true}
-      - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost:9000}
+      - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost:9000,http://127.0.0.1:9000}
       - LOG_LEVEL=${LOG_LEVEL:-info}
       - API_KEY_ENABLED=${API_KEY_ENABLED:-false}
       - RATE_LIMIT_READ=${RATE_LIMIT_READ:-60/minute}
@@ -41,7 +41,9 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
       args:
-        - VITE_API_URL=${VITE_API_URL:-http://localhost:9001}
+        # Empty = same-origin requests (proxied by nginx). Override to hit a
+        # different backend origin in non-compose deployments.
+        - VITE_API_URL=${VITE_API_URL:-}
     container_name: akb1-frontend
     ports:
       - "127.0.0.1:${FRONTEND_PORT:-9000}:80"    # Localhost-only by default (Tier 0 security)

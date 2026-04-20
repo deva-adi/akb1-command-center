@@ -37,6 +37,7 @@ export type KpiDefinition = {
   name: string;
   code: string;
   formula: string;
+  description: string | null;
   unit: string | null;
   green_threshold: number | null;
   amber_threshold: number | null;
@@ -97,8 +98,21 @@ export async function fetchProgrammes(): Promise<Programme[]> {
   return data;
 }
 
-export async function fetchKpiDefinitions(): Promise<KpiDefinition[]> {
-  const { data } = await api.get<KpiDefinition[]>("/api/v1/kpi/definitions");
+export async function fetchKpiDefinitions(category?: string): Promise<KpiDefinition[]> {
+  const { data } = await api.get<KpiDefinition[]>("/api/v1/kpi/definitions", {
+    params: category ? { category } : undefined,
+  });
+  return data;
+}
+
+export async function updateKpiWeight(
+  kpiId: number,
+  weight: number,
+): Promise<KpiDefinition> {
+  const { data } = await api.put<KpiDefinition>(
+    `/api/v1/kpi/definitions/${kpiId}/weight`,
+    { weight },
+  );
   return data;
 }
 
@@ -129,6 +143,19 @@ export async function fetchSettings(): Promise<AppSetting[]> {
 
 export async function fetchImportLog(): Promise<DataImportLog[]> {
   const { data } = await api.get<DataImportLog[]>("/api/v1/import/log");
+  return data;
+}
+
+export type CurrencyRate = {
+  code: string;
+  symbol: string | null;
+  rate_to_base: string;
+  source: string;
+  last_updated: string;
+};
+
+export async function fetchCurrencyRates(): Promise<CurrencyRate[]> {
+  const { data } = await api.get<CurrencyRate[]>("/api/v1/currency/rates");
   return data;
 }
 
