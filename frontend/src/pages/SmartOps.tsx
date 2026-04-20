@@ -166,7 +166,7 @@ export function SmartOps() {
           }
         />
         {visibleScenarios.length === 0 ? (
-          <p className="text-sm text-navy/60">No scenario executions match the current scope.</p>
+          <p className="text-sm text-navy/70">No scenario executions match the current scope.</p>
         ) : (
           <ul className="flex flex-col gap-2">
             {visibleScenarios.map((s) => (
@@ -188,12 +188,12 @@ export function SmartOps() {
         <CardHeader
           title="Resource pool"
           subtitle={`${visibleResources.length} people · ${bench.length} on bench`}
-          action={<Users className="size-4 text-navy/60" aria-hidden="true" />}
+          action={<Users className="size-4 text-navy/70" aria-hidden="true" />}
         />
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="text-left text-xs uppercase text-navy/60">
+              <tr className="text-left text-xs uppercase text-navy/70">
                 <th className="py-2">Name</th>
                 <th>Role</th>
                 <th>Tier</th>
@@ -264,7 +264,7 @@ function ScenarioRow({
             <span className="font-semibold">{scenario.scenario_name}</span>
             <Badge tone={tone}>{scenario.status ?? "—"}</Badge>
           </div>
-          <p className="text-xs text-navy/60">
+          <p className="text-xs text-navy/70">
             <Clock className="inline size-3" aria-hidden="true" />{" "}
             {scenario.execution_date
               ? new Date(scenario.execution_date).toLocaleString("en-GB")
@@ -419,7 +419,7 @@ function Stat({
         <p className="font-mono text-xl font-semibold text-navy">{value}</p>
         {tone && tone !== "neutral" ? <Badge tone={tone}>·</Badge> : null}
       </div>
-      {sub ? <p className="text-xs text-navy/60">{sub}</p> : null}
+      {sub ? <p className="text-xs text-navy/70">{sub}</p> : null}
     </div>
   );
 }

@@ -14,7 +14,7 @@ export function CurrencySelector() {
   return (
     <label className="flex items-center gap-2 text-xs">
       <span className="sr-only">Base currency</span>
-      <span aria-hidden="true" className="text-white/70">
+      <span aria-hidden="true" className="text-white/80">
         Base
       </span>
       <select

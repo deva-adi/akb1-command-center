@@ -31,7 +31,7 @@ export function CardHeader({ title, subtitle, action, className }: CardHeaderPro
       <div>
         <h3 className="text-base font-semibold text-navy">{title}</h3>
         {subtitle ? (
-          <p className="mt-0.5 text-xs text-navy/60">{subtitle}</p>
+          <p className="mt-0.5 text-xs text-navy/70">{subtitle}</p>
         ) : null}
       </div>
       {action ? <div className="shrink-0">{action}</div> : null}

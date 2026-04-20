@@ -59,3 +59,11 @@ data/
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
+
+# Playwright
+frontend/playwright-report/
+frontend/test-results/
+frontend/e2e-report/
+
+# SBOM artefacts (regenerate via scripts/sbom.sh)
+sbom/*.json

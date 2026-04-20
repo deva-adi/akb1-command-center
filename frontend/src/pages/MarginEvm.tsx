@@ -151,7 +151,7 @@ export function MarginEvm() {
           }
         />
         {marginWaterfall.length === 0 ? (
-          <p className="text-sm text-navy/60">No commercial scenarios seeded yet.</p>
+          <p className="text-sm text-navy/70">No commercial scenarios seeded yet.</p>
         ) : (
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
@@ -187,7 +187,7 @@ export function MarginEvm() {
           subtitle={`Total exposure ${currency.format(totalLosses, sourceCurrency)} across seven categories (ARCHITECTURE.md §6)`}
         />
         {(losses.data ?? []).length === 0 ? (
-          <p className="text-sm text-navy/60">No loss exposure rows seeded.</p>
+          <p className="text-sm text-navy/70">No loss exposure rows seeded.</p>
         ) : (
           <div className="h-72">
             <ResponsiveContainer width="100%" height="100%">
@@ -239,7 +239,7 @@ export function MarginEvm() {
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="text-left text-xs uppercase text-navy/60">
+              <tr className="text-left text-xs uppercase text-navy/70">
                 <th className="py-2">Programme</th>
                 <th>Role tier</th>
                 <th className="text-right">Planned</th>
@@ -292,12 +292,12 @@ export function MarginEvm() {
           subtitle="CR log with margin impact and billable flag"
         />
         {(changeRequests.data ?? []).length === 0 ? (
-          <p className="text-sm text-navy/60">No change requests recorded.</p>
+          <p className="text-sm text-navy/70">No change requests recorded.</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-left text-xs uppercase text-navy/60">
+                <tr className="text-left text-xs uppercase text-navy/70">
                   <th className="py-2">Date</th>
                   <th>Description</th>
                   <th className="text-right">Effort (h)</th>

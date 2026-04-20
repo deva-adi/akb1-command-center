@@ -165,7 +165,7 @@ export function KpiStudio() {
   }, [snapshots.data, programmes.data]);
 
   if (definitions.isLoading) {
-    return <p className="text-sm text-navy/60">Loading KPI library…</p>;
+    return <p className="text-sm text-navy/70">Loading KPI library…</p>;
   }
   if (definitions.error) {
     return <p className="text-sm text-danger-600">{(definitions.error as Error).message}</p>;
@@ -361,7 +361,7 @@ export function KpiStudio() {
               />
               <div className="h-80">
                 {chartData.length === 0 ? (
-                  <p className="grid h-full place-items-center text-sm text-navy/60">
+                  <p className="grid h-full place-items-center text-sm text-navy/70">
                     No snapshots for this KPI yet.
                   </p>
                 ) : (
@@ -443,7 +443,7 @@ export function KpiStudio() {
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="text-left text-xs uppercase text-navy/60">
+                    <tr className="text-left text-xs uppercase text-navy/70">
                       <th className="py-2">Programme</th>
                       <th className="text-right">Latest</th>
                       <th className="text-right">Status</th>
@@ -490,7 +490,7 @@ export function KpiStudio() {
           </>
         ) : (
           <Card>
-            <p className="text-sm text-navy/60">Select a KPI from the library.</p>
+            <p className="text-sm text-navy/70">Select a KPI from the library.</p>
           </Card>
         )}
       </section>
@@ -530,7 +530,7 @@ function FormulaModal({ kpi, onClose }: { kpi: KpiDefinition; onClose: () => voi
         <div className="flex items-start justify-between gap-3 border-b border-ice-100 pb-3">
           <div>
             <h3 className="text-base font-semibold text-navy">{kpi.name}</h3>
-            <p className="text-xs text-navy/60">{kpi.category ?? "—"}</p>
+            <p className="text-xs text-navy/70">{kpi.category ?? "—"}</p>
           </div>
           <button onClick={onClose} type="button" className="btn-ghost">
             <X className="size-3" /> Close
@@ -568,7 +568,7 @@ function FormulaModal({ kpi, onClose }: { kpi: KpiDefinition; onClose: () => voi
             </dd>
           </div>
         </dl>
-        <p className="mt-4 text-xs text-navy/60">
+        <p className="mt-4 text-xs text-navy/70">
           Source: docs/FORMULAS.md — 45 formulas documented for every KPI and
           composite in AKB1 v5.2.
         </p>

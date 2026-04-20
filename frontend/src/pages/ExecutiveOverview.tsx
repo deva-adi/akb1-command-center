@@ -126,7 +126,7 @@ export function ExecutiveOverview() {
 
   if (loading) {
     return (
-      <div className="grid place-items-center py-20 text-sm text-navy/60">
+      <div className="grid place-items-center py-20 text-sm text-navy/70">
         Loading portfolio snapshot…
       </div>
     );
@@ -197,7 +197,7 @@ export function ExecutiveOverview() {
               onClick={() => setRagFilter(ragFilter === "red" ? null : "red")}
             />
           </div>
-          <p className="mt-4 text-xs text-navy/60">
+          <p className="mt-4 text-xs text-navy/70">
             Derived from programme status and the latest monthly margin KPI.
           </p>
         </Card>
@@ -265,7 +265,7 @@ export function ExecutiveOverview() {
         />
         <div className="h-72">
           {marginSeries.length === 0 ? (
-            <p className="grid h-full place-items-center text-sm text-navy/60">
+            <p className="grid h-full place-items-center text-sm text-navy/70">
               No KPI snapshots yet — run the seeder (SEED_DEMO_DATA=true).
             </p>
           ) : (
@@ -326,7 +326,7 @@ export function ExecutiveOverview() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-left text-xs uppercase text-navy/60">
+                <tr className="text-left text-xs uppercase text-navy/70">
                   <th className="py-2">Programme</th>
                   <th>Status</th>
                   <th className="text-right">Revenue</th>
@@ -338,7 +338,7 @@ export function ExecutiveOverview() {
               <tbody>
                 {visibleRows.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="py-6 text-center text-xs text-navy/60">
+                    <td colSpan={6} className="py-6 text-center text-xs text-navy/70">
                       No programmes match the {ragFilter} filter.
                     </td>
                   </tr>
@@ -427,7 +427,7 @@ function RagStat({
       <Badge tone={tone} className="px-3 py-1 text-sm">
         {count}
       </Badge>
-      <span className="text-xs text-navy/60">{label}</span>
+      <span className="text-xs text-navy/70">{label}</span>
     </button>
   );
 }

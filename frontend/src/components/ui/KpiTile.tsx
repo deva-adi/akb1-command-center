@@ -27,7 +27,7 @@ export function KpiTile({ label, value, sub, trend, className }: KpiTileProps) {
               "text-sm font-semibold",
               trend === "up" && "text-success-600",
               trend === "down" && "text-danger-600",
-              trend === "flat" && "text-navy/60",
+              trend === "flat" && "text-navy/70",
             )}
           >
             {trendChar[trend]}

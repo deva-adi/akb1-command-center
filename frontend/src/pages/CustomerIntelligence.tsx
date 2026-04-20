@@ -260,7 +260,7 @@ export function CustomerIntelligence() {
         />
         <div className="h-72">
           {trendData.length === 0 ? (
-            <p className="grid h-full place-items-center text-sm text-navy/60">
+            <p className="grid h-full place-items-center text-sm text-navy/70">
               No customer-satisfaction rows yet.
             </p>
           ) : (
@@ -324,7 +324,7 @@ export function CustomerIntelligence() {
           />
           <div className="h-80">
             {radarData.every((r) => r.expected === 0 && r.delivered === 0) ? (
-              <p className="grid h-full place-items-center text-sm text-navy/60">
+              <p className="grid h-full place-items-center text-sm text-navy/70">
                 No expectation rows seeded for this programme.
               </p>
             ) : (
@@ -396,7 +396,7 @@ export function CustomerIntelligence() {
               </div>
             </>
           ) : (
-            <p className="text-sm text-navy/60">No communication data yet.</p>
+            <p className="text-sm text-navy/70">No communication data yet.</p>
           )}
         </Card>
       </section>
@@ -408,7 +408,7 @@ export function CustomerIntelligence() {
           action={<Sparkles className="size-4 text-amber-500" aria-hidden="true" />}
         />
         {(actions.data ?? []).length === 0 ? (
-          <p className="text-sm text-navy/60">No steering-committee actions recorded.</p>
+          <p className="text-sm text-navy/70">No steering-committee actions recorded.</p>
         ) : (
           <ul className="flex flex-col gap-2 text-sm">
             {(actions.data ?? []).map((a) => {
@@ -426,7 +426,7 @@ export function CustomerIntelligence() {
                   >
                     <div>
                       <p className="font-medium">{a.description}</p>
-                      <p className="text-xs text-navy/60">
+                      <p className="text-xs text-navy/70">
                         Meeting {formatDate(a.meeting_date)}
                         {a.owner ? ` · ${a.owner}` : ""}
                         {a.due_date ? ` · due ${formatDate(a.due_date)}` : ""}
@@ -486,14 +486,14 @@ export function CustomerIntelligence() {
           subtitle="Breaches incur penalty amounts — shown in the active base currency"
         />
         {(incidents.data ?? []).length === 0 ? (
-          <p className="text-sm text-navy/60">
+          <p className="text-sm text-navy/70">
             No SLA incidents recorded for this programme.
           </p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-left text-xs uppercase text-navy/60">
+                <tr className="text-left text-xs uppercase text-navy/70">
                   <th className="py-2">ID</th>
                   <th>Priority</th>
                   <th>Summary</th>
@@ -538,7 +538,7 @@ export function CustomerIntelligence() {
                         <td>
                           <p className="font-medium">{i.summary ?? "—"}</p>
                           {i.root_cause ? (
-                            <p className="text-xs text-navy/60">{i.root_cause}</p>
+                            <p className="text-xs text-navy/70">{i.root_cause}</p>
                           ) : null}
                         </td>
                         <td className="text-right font-mono">
@@ -630,7 +630,7 @@ function Stat({
         <p className="font-mono text-xl font-semibold text-navy">{value}</p>
         {tone !== "neutral" ? <Badge tone={tone}>·</Badge> : null}
       </div>
-      {sub ? <p className="text-xs text-navy/60">{sub}</p> : null}
+      {sub ? <p className="text-xs text-navy/70">{sub}</p> : null}
     </div>
   );
 }

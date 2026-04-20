@@ -75,7 +75,7 @@ export function Reports() {
               >
                 <div>
                   <p className="font-medium">{p.name}</p>
-                  <p className="text-xs text-navy/60">
+                  <p className="text-xs text-navy/70">
                     {p.code} · {p.client ?? "—"}
                   </p>
                 </div>
@@ -95,7 +95,7 @@ export function Reports() {
           <CardHeader
             title="Audit evidence package"
             subtitle="ZIP of risks, CRs, SLA incidents, KPI snapshots, customer satisfaction and audit_log — filtered if you pick a programme"
-            action={<Package className="size-4 text-navy/60" aria-hidden="true" />}
+            action={<Package className="size-4 text-navy/70" aria-hidden="true" />}
           />
           <div className="flex flex-col gap-3">
             <a
@@ -163,7 +163,7 @@ export function Reports() {
 
         <div className="mt-4 h-80">
           {forecast.isLoading ? (
-            <p className="grid h-full place-items-center text-sm text-navy/60">
+            <p className="grid h-full place-items-center text-sm text-navy/70">
               Running forecast…
             </p>
           ) : forecast.error ? (
@@ -171,7 +171,7 @@ export function Reports() {
               {(forecast.error as Error).message}
             </p>
           ) : forecast.data && forecast.data.historical_values.length === 0 ? (
-            <p className="grid h-full place-items-center text-sm text-navy/60">
+            <p className="grid h-full place-items-center text-sm text-navy/70">
               No snapshots seeded for this KPI/programme combination.
             </p>
           ) : forecast.data ? (
@@ -239,7 +239,7 @@ export function Reports() {
             </ResponsiveContainer>
           ) : null}
         </div>
-        <p className="mt-2 text-xs text-navy/60">
+        <p className="mt-2 text-xs text-navy/70">
           <Sparkles className="inline size-3 text-amber-500" aria-hidden="true" />
           {" "}
           The three curves diverge after the vertical line — treat each as a

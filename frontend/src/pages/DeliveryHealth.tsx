@@ -119,14 +119,14 @@ export function DeliveryHealth() {
   }, [evm.data]);
 
   if (programmes.isLoading || allProjectsQuery.isLoading) {
-    return <p className="text-sm text-navy/60">Loading projects…</p>;
+    return <p className="text-sm text-navy/70">Loading projects…</p>;
   }
 
   if (projects.length === 0) {
     return (
       <Card>
         <CardHeader title="No projects yet" />
-        <p className="text-sm text-navy/60">
+        <p className="text-sm text-navy/70">
           Seed the NovaTech demo or import <code>projects.csv</code> to see
           Delivery Health.
         </p>
@@ -290,7 +290,7 @@ export function DeliveryHealth() {
             />
             <div className="h-72">
               {evmTrend.length === 0 ? (
-                <p className="grid h-full place-items-center text-sm text-navy/60">
+                <p className="grid h-full place-items-center text-sm text-navy/70">
                   No EVM snapshots for this project yet.
                 </p>
               ) : (
@@ -341,7 +341,7 @@ export function DeliveryHealth() {
             <WaterfallView project={selected} />
           ) : (
             <Card>
-              <p className="text-sm text-navy/60">
+              <p className="text-sm text-navy/70">
                 {selected.delivery_methodology} view is scheduled for a future
                 iteration. Scrum, Kanban and Waterfall views are live today.
               </p>
