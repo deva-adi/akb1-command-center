@@ -298,6 +298,131 @@ export async function fetchMilestones(projectId: number): Promise<Milestone[]> {
   return data;
 }
 
+// ---------- Velocity & Flow / Margin & EVM ----------
+
+export type DualVelocity = {
+  id: number;
+  program_id: number | null;
+  project_id: number | null;
+  sprint_number: number | null;
+  standard_velocity: number | null;
+  ai_raw_velocity: number | null;
+  ai_rework_points: number | null;
+  ai_quality_adjusted_velocity: number | null;
+  combined_velocity: number | null;
+  merge_eligible: boolean;
+  quality_parity_ratio: number | null;
+  snapshot_date: string | null;
+};
+
+export type BlendRule = {
+  id: number;
+  program_id: number | null;
+  gate_name: string;
+  gate_condition: string | null;
+  current_value: number | null;
+  threshold: number | null;
+  passed: boolean;
+  last_evaluated: string | null;
+};
+
+export type CommercialScenario = {
+  id: number;
+  program_id: number | null;
+  project_id: number | null;
+  scenario_name: string | null;
+  planned_revenue: number | null;
+  actual_revenue: number | null;
+  planned_cost: number | null;
+  actual_cost: number | null;
+  gross_margin_pct: number | null;
+  contribution_margin_pct: number | null;
+  portfolio_margin_pct: number | null;
+  net_margin_pct: number | null;
+  snapshot_date: string | null;
+  notes: string | null;
+};
+
+export type LossExposure = {
+  id: number;
+  program_id: number | null;
+  snapshot_date: string | null;
+  loss_category: string;
+  amount: number | null;
+  percentage_of_revenue: number | null;
+  detection_method: string | null;
+  mitigation_status: string | null;
+  notes: string | null;
+};
+
+export type RateCardRow = {
+  id: number;
+  program_id: number | null;
+  role_tier: string;
+  planned_rate: number;
+  actual_rate: number | null;
+  planned_headcount: number | null;
+  actual_headcount: number | null;
+  snapshot_date: string | null;
+  notes: string | null;
+};
+
+export type ChangeRequest = {
+  id: number;
+  program_id: number | null;
+  project_id: number | null;
+  cr_date: string | null;
+  cr_description: string | null;
+  effort_hours: number | null;
+  cr_value: number | null;
+  processing_cost: number | null;
+  status: string | null;
+  margin_impact: number | null;
+  is_billable: boolean | null;
+};
+
+export async function fetchDualVelocity(programId?: number): Promise<DualVelocity[]> {
+  const { data } = await api.get<DualVelocity[]>("/api/v1/dual-velocity", {
+    params: programId ? { program_id: programId } : undefined,
+  });
+  return data;
+}
+
+export async function fetchBlendRules(programId?: number): Promise<BlendRule[]> {
+  const { data } = await api.get<BlendRule[]>("/api/v1/blend-rules", {
+    params: programId ? { program_id: programId } : undefined,
+  });
+  return data;
+}
+
+export async function fetchCommercial(programId?: number): Promise<CommercialScenario[]> {
+  const { data } = await api.get<CommercialScenario[]>("/api/v1/commercial", {
+    params: programId ? { program_id: programId } : undefined,
+  });
+  return data;
+}
+
+export async function fetchLosses(programId?: number): Promise<LossExposure[]> {
+  const { data } = await api.get<LossExposure[]>("/api/v1/losses", {
+    params: programId ? { program_id: programId } : undefined,
+  });
+  return data;
+}
+
+export async function fetchRateCards(programId?: number): Promise<RateCardRow[]> {
+  const { data } = await api.get<RateCardRow[]>("/api/v1/rate-cards", {
+    params: programId ? { program_id: programId } : undefined,
+  });
+  return data;
+}
+
+export async function fetchChangeRequests(programId?: number): Promise<ChangeRequest[]> {
+  const { data } = await api.get<ChangeRequest[]>("/api/v1/change-requests", {
+    params: programId ? { program_id: programId } : undefined,
+  });
+  return data;
+}
+
 export async function previewCsv(file: File): Promise<{
   filename: string;
   columns: string[];
