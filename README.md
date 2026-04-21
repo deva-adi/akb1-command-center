@@ -1,8 +1,8 @@
-# AKB1 Command Center v5.3
+# AKB1 Command Center v5.4
 
 **The open-source delivery intelligence platform that answers every question your CTO, CIO, or CEO would ask — driven entirely by your data.**
 
-Built by an Associate Director - Delivery with ~20 years of enterprise IT experience. Not a toy dashboard — a real delivery operating system with 45 formulas, 7 loss detection categories, AI governance, predictive analytics, customer intelligence, proactive scenario detection, live SSE alerts, live FX rate refresh, dark/light mode, multi-currency support, and full SDLC framework compatibility (Scrum / Kanban / Waterfall / SAFe / Hybrid).
+Built by an Associate Director - Delivery with ~20 years of enterprise IT experience. Not a toy dashboard — a real delivery operating system with **55+ formulas** (every one revealed inline via Eye icon), 7 loss detection categories, AI governance, predictive analytics, customer intelligence, proactive scenario detection, live SSE alerts, live FX rate refresh, dark/light mode, multi-currency support, and full SDLC framework compatibility (Scrum / Kanban / Waterfall / SAFe / Hybrid).
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?logo=docker)](docker-compose.yml)
@@ -29,8 +29,9 @@ A Docker-containerized portfolio delivery dashboard that provides:
 - **Multi-Currency Engine:** Base currency aggregation with live FX rate refresh via frankfurter.dev (INR, USD, EUR, GBP + any ISO 4217), fiscal year configuration, locale-aware number and date formatting
 - **Live SSE Alerts Ticker:** Executive Overview shows a real-time scrollable chip strip of Active/Monitoring Smart Ops scenarios, pushed via Server-Sent Events every 10 s — no page refresh needed
 - **Dark / Light Mode Toggle:** Sun/Moon button in the header; theme persisted to localStorage and applied instantly across all 11 tabs via Tailwind CSS `dark:` class strategy
+- **Universal Formula Reveal (v5.4):** Every metric, KPI tile, and graph card now has an Eye icon — click it to instantly see the formula, what it measures, how to interpret it, and traffic-light thresholds. 55+ metric definitions across 11 domains. No more black-box numbers.
 
-Ships with realistic demo data for 5 programmes × 12 months (NovaTech Solutions narrative). Bring your own data via guided onboarding wizard, Excel (.xlsx) or CSV upload with auto-mapping, manual entry, or REST API. Every import creates an instant rollback snapshot. **First real data in 15 minutes.**
+Ships with realistic demo data for **6 programmes** × 12 months (NovaTech Solutions narrative, including **Hercules** workload consolidation programme added in v5.3). Bring your own data via guided onboarding wizard, Excel (.xlsx) or CSV upload with auto-mapping, manual entry, or REST API. Every import creates an instant rollback snapshot. **First real data in 15 minutes.**
 
 ---
 
@@ -217,7 +218,38 @@ Schema migrations managed via Alembic. Full DDL: see [`docs/ARCHITECTURE.md`](do
 
 ---
 
-## Formulas (45)
+## Universal Formula Reveal (v5.4)
+
+Every metric in the dashboard — KPI tiles, summary cards, waterfall bars, drill panels, sprint stats, flow metrics — has an **Eye icon** in the top-right corner. Clicking it expands an inline panel showing:
+
+| Panel Section | Content |
+|--------------|---------|
+| **Formula** | Exact calculation (e.g. `Earned Value (EV) / Actual Cost (AC)`) |
+| **What it measures** | Plain-English explanation of what the number represents |
+| **How to use it** | Actionable guidance — when to escalate, what thresholds mean, what to do |
+| **Thresholds** | Green / Amber / Red band boundaries (e.g. CPI: Green ≥1.00, Amber 0.90–0.99, Red <0.90) |
+
+**55+ metric definitions** across 11 domains, centrally defined in `frontend/src/lib/metrics.ts`:
+
+| Domain | Metrics |
+|--------|---------|
+| Sprint (Scrum) | velocity, planned_points, completed_points, burndown_pct, shortfall, defects, rework_hours, ai_assisted_points, team_size |
+| Flow (Kanban) | throughput, wip, cycle_p50, blocked, lead_time, flow_efficiency |
+| EVM | cpi, spi, eac, tcpi, percent_complete |
+| Dual Velocity | standard_velocity, ai_raw_velocity, ai_adjusted_velocity, quality_parity, ai_rework_points, combined_velocity, merge_eligible |
+| Margin | gross_margin, blended_margin, contribution_margin, net_margin |
+| Customer | csat, nps, open_escalations, renewal_probability |
+| AI Governance | time_saved, acceptance_rate, ai_spend |
+| Smart Ops | scenario_alerts, mitigating_scenarios, risk_exposure, bench_cost |
+| Risk | open_risks |
+| Portfolio (KPI tiles) | portfolio_revenue, avg_cpi |
+| Waterfall | phase_completion, schedule_variance_days, milestone_slip |
+
+No more black-box numbers — every stakeholder can understand exactly how a figure is calculated without leaving the screen.
+
+---
+
+## Formulas (55+)
 
 Every formula is documented with definition, calculation, 2 worked examples, thresholds, and dashboard location. Categories:
 
@@ -230,6 +262,7 @@ Every formula is documented with definition, calculation, 2 worked examples, thr
 - **Loss Detection (3):** Attrition Knowledge Loss, SLA Penalty Exposure, Scope Creep Absorption
 - **Predictive & Customer (3):** Renewal Probability, AI Cost-Benefit Ratio, Forecast Confidence
 - **New in v5.2 (5):** Currency Conversion (base aggregation), Kanban Throughput, Cycle Time (p50/p85/p95), Lead Time, WIP Aging
+- **New in v5.4 (10+):** AI Rework Points, Combined Velocity, Mitigating Scenarios, Open Escalations, Phase Completion, Schedule Variance Days, Milestone Slip, Bench Cost, Risk Exposure, Scenario Alerts — all with inline formula reveal
 
 Full reference: see [`docs/FORMULAS.md`](docs/FORMULAS.md).
 
@@ -417,13 +450,15 @@ Each programme has a distinct problem. The demo data tells a story — it teache
 
 **Full 5-level drill-down** (v5.3+): Every number in the dashboard traces back to individual stories/tasks. Click any sprint bar, KPI card, or flow metric to drill to L5 — assignee, points, AI flag, defects, rework hours. 403 work items across 9 projects, all invariant-verified.
 
+**Universal formula reveal** (v5.4): Every metric on every tab has an Eye icon. Click it to see the formula, plain-English meaning, interpretation guidance, and traffic-light thresholds — inline, no page navigation required.
+
 ---
 
 ## Project Structure
 
 ```
 akb1-command-center/
-├── README.md
+├── README.md                    # This file (v5.4)
 ├── LICENSE (MIT)
 ├── CHANGELOG.md                 # SemVer release log
 ├── docker-compose.yml
@@ -453,6 +488,8 @@ akb1-command-center/
 │   ├── ROADMAP.md               # Build phases + iteration plan
 │   ├── CONTRIBUTING.md          # Contributor guide (Win/Mac/Linux)
 │   ├── DAILY_OPS.md             # Daily startup, troubleshooting decision tree, LaunchAgent guide
+│   ├── USER_GUIDE.md            # Production-grade user guide (v5.4, 9700 words, 17 sections)
+│   ├── TEST_PLAN.md             # Full test plan (116 test cases, 10 bugs documented)
 │   ├── postmortems/             # Public Sev-1 postmortems (YYYY-MM-DD-<slug>.md)
 │   └── csv-templates/           # 15 CSV templates with sample data
 │       ├── programmes.csv
@@ -478,7 +515,14 @@ akb1-command-center/
 │   ├── vite.config.ts
 │   └── src/
 │       ├── pages/               # 11 tab pages
-│       ├── components/          # Reusable chart/card/wizard components
+│       ├── components/
+│       │   └── ui/
+│       │       ├── MetricCard.tsx   # Universal metric card with Eye icon formula reveal (v5.4)
+│       │       ├── KpiTile.tsx      # KPI tile with formula reveal support (v5.4)
+│       │       └── ...              # Badge, Card, Charts, etc.
+│       ├── lib/
+│       │   ├── metrics.ts       # 55+ metric definitions — formula, description, interpretation, thresholds
+│       │   └── ...              # api.ts, format.ts, cn.ts
 │       ├── stores/              # Zustand state (uiStore: currency, theme, fiscal year)
 │       └── hooks/               # React Query hooks + useAlertsStream (SSE)
 ├── scripts/
@@ -510,6 +554,8 @@ akb1-command-center/
 | [`CONTRIBUTING.md`](docs/CONTRIBUTING.md) | Code style, PR process, testing, brand guidelines, Windows/Mac/Linux dev setup |
 | [`ROADMAP.md`](docs/ROADMAP.md) | 4-iteration build plan, release gates, v5.4 horizon |
 | [`DAILY_OPS.md`](docs/DAILY_OPS.md) | Daily startup guide, manual startup, health checks, troubleshooting decision tree, LaunchAgent management |
+| [`USER_GUIDE.md`](docs/USER_GUIDE.md) | Production-grade user guide — all 11 tabs, every metric explained, real-world applicability, data insertion formats (9700 words) |
+| [`TEST_PLAN.md`](docs/TEST_PLAN.md) | Full test coverage — 116 test cases, drill-down path verification, formula accuracy validation, 10 bugs documented and resolved |
 
 ---
 
@@ -627,7 +673,19 @@ MIT License. Use it, fork it, adapt it. Attribution appreciated but not required
 **Adi Kompalli** — Associate Director - Delivery | ~20 years enterprise software delivery
 - LinkedIn: [/in/adikompalli](https://linkedin.com/in/adikompalli)
 - GitHub: [deva-adi](https://github.com/deva-adi)
-- Framework: AKB1 v5.2
+- Framework: AKB1 v5.4
+
+---
+
+## Release History
+
+| Version | Highlights |
+|---------|-----------|
+| **v5.4** | Universal Formula Reveal — Eye icon on every metric, 55+ inline definitions (MetricCard + metrics.ts). 10 audit bugs fixed. USER_GUIDE.md + TEST_PLAN.md. |
+| **v5.3** | Live FX rates (frankfurter.dev), CSV import commit + rollback (Tab 11), 6th programme (Hercules) |
+| **v5.2** | Multi-currency engine, SDLC framework compatibility (Kanban/Waterfall sub-views), 44 tables, 45 formulas |
+| **v5.1** | Dark/light mode, SSE alerts ticker, AI governance dashboard |
+| **v5.0** | Initial public release — Executive Overview, 5 programmes, EVM, Smart Ops |
 
 ---
 
