@@ -1,5 +1,8 @@
+import { Fragment } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import {
   Bar,
   BarChart,
@@ -25,7 +28,7 @@ import {
 } from "@/lib/api";
 import { formatDate } from "@/lib/format";
 
-export function ScrumView({ project }: { project: ProjectListItem }) {
+export function ScrumView({ project, programmeCode }: { project: ProjectListItem; programmeCode?: string }) {
   const [expandedSprint, setExpandedSprint] = useState<number | null>(null);
   const [drillSprint, setDrillSprint] = useState<string | null>(null);
 
@@ -269,6 +272,13 @@ export function ScrumView({ project }: { project: ProjectListItem }) {
                     <DetailCell label="AI-assisted" value={`${s.ai_assisted_points} pts`} />
                     <DetailCell label="Estimation" value={s.estimation_unit} />
                     <DetailCell label="Iteration type" value={s.iteration_type} />
+                    {programmeCode && (
+                      <div className="col-span-2 md:col-span-4 flex flex-wrap gap-2 pt-1">
+                        <span className="text-xs text-navy/50 self-center">Open in:</span>
+                        <Link to={`/velocity?programme=${programmeCode}`} className="rounded-full border border-ice-100 bg-white px-2 py-0.5 text-xs text-navy hover:bg-ice-50">Velocity & Flow</Link>
+                        <Link to={`/ai?programme=${programmeCode}`} className="rounded-full border border-ice-100 bg-white px-2 py-0.5 text-xs text-navy hover:bg-ice-50">AI Governance</Link>
+                      </div>
+                    )}
                   </dl>
                 ) : null}
               </li>
@@ -291,6 +301,7 @@ function SprintDrillPanel({
   sprint: Sprint;
   onClose: () => void;
 }) {
+  const navigate = useNavigate();
   const [storyFilter, setStoryFilter] = useState<StoryFilter>(null);
 
   const burndownPct =
@@ -386,6 +397,7 @@ function SprintDrillPanel({
           metricId="team_size"
           value={`${sprint.team_size ?? "—"} people`}
           tone="neutral"
+          onClick={() => navigate('/smart-ops')}
         />
         <MetricCard
           metricId="rework_hours"
@@ -399,6 +411,7 @@ function SprintDrillPanel({
           metricId="defects"
           value={`${sprint.defects_found ?? 0} found · ${sprint.defects_fixed ?? 0} fixed`}
           tone={(sprint.defects_found ?? 0) > (sprint.defects_fixed ?? 0) ? "amber" : "green"}
+          onClick={() => navigate('/raid')}
         />
         <MetricCard
           metricId="ai_assisted_points"
@@ -428,6 +441,8 @@ function SprintDrillPanel({
 }
 
 function BacklogItemsTable({ items }: { items: BacklogItem[] }) {
+  const [expandedItem, setExpandedItem] = useState<number | null>(null);
+
   if (items.length === 0) {
     return <p className="text-xs text-navy/50 italic">No items match this filter.</p>;
   }
@@ -467,37 +482,67 @@ function BacklogItemsTable({ items }: { items: BacklogItem[] }) {
         </thead>
         <tbody className="divide-y divide-navy/5">
           {items.map((item) => (
-            <tr key={item.id} className="bg-white hover:bg-ice-50">
-              <td className="px-2 py-1.5">
-                <Badge tone={typeBadge(item.item_type) as "green" | "amber" | "red" | "neutral"}>
-                  {item.item_type}
-                </Badge>
-              </td>
-              <td className="px-2 py-1.5 font-medium text-navy">{item.title}</td>
-              <td className="px-2 py-1.5 font-mono text-navy">{item.story_points ?? "—"}</td>
-              <td className="px-2 py-1.5 text-navy/80">{item.assignee ?? "—"}</td>
-              <td className="px-2 py-1.5">
-                <Badge tone={statusBadge(item.status)}>{item.status}</Badge>
-              </td>
-              <td className="px-2 py-1.5">
-                {item.is_ai_assisted ? <Badge tone="amber">AI</Badge> : <span className="text-navy/30">—</span>}
-              </td>
-              <td className="px-2 py-1.5 font-mono text-navy">{item.defects_raised}</td>
-              <td className="px-2 py-1.5 font-mono text-navy">{item.rework_hours.toFixed(1)}</td>
-              <td className="px-2 py-1.5">
-                <Badge
-                  tone={
-                    item.priority === "critical"
-                      ? "red"
-                      : item.priority === "high"
-                        ? "amber"
-                        : "neutral"
+            <Fragment key={item.id}>
+              <tr
+                role="button"
+                tabIndex={0}
+                className="bg-white hover:bg-ice-50 cursor-pointer"
+                onClick={() => setExpandedItem(expandedItem === item.id ? null : item.id)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    setExpandedItem(expandedItem === item.id ? null : item.id);
                   }
-                >
-                  {item.priority ?? "—"}
-                </Badge>
-              </td>
-            </tr>
+                }}
+              >
+                <td className="px-2 py-1.5">
+                  <Badge tone={typeBadge(item.item_type) as "green" | "amber" | "red" | "neutral"}>
+                    {item.item_type}
+                  </Badge>
+                </td>
+                <td className="px-2 py-1.5 font-medium text-navy">{item.title}</td>
+                <td className="px-2 py-1.5 font-mono text-navy">{item.story_points ?? "—"}</td>
+                <td className="px-2 py-1.5 text-navy/80">{item.assignee ?? "—"}</td>
+                <td className="px-2 py-1.5">
+                  <Badge tone={statusBadge(item.status)}>{item.status}</Badge>
+                </td>
+                <td className="px-2 py-1.5">
+                  {item.is_ai_assisted ? <Badge tone="amber">AI</Badge> : <span className="text-navy/30">—</span>}
+                </td>
+                <td className="px-2 py-1.5 font-mono text-navy">{item.defects_raised}</td>
+                <td className="px-2 py-1.5 font-mono text-navy">{item.rework_hours.toFixed(1)}</td>
+                <td className="px-2 py-1.5">
+                  <Badge
+                    tone={
+                      item.priority === "critical"
+                        ? "red"
+                        : item.priority === "high"
+                          ? "amber"
+                          : "neutral"
+                    }
+                  >
+                    {item.priority ?? "—"}
+                  </Badge>
+                </td>
+              </tr>
+              {expandedItem === item.id ? (
+                <tr key={`${item.id}-expand`} className="bg-ice-50/60">
+                  <td colSpan={9} className="px-3 py-2">
+                    <dl className="grid grid-cols-2 gap-2 md:grid-cols-4 text-xs">
+                      <div className="flex flex-col"><span className="kpi-label">Title</span><span className="font-medium text-navy">{item.title}</span></div>
+                      <div className="flex flex-col"><span className="kpi-label">Assignee</span><span className="font-mono text-navy">{item.assignee ?? "—"}</span></div>
+                      <div className="flex flex-col"><span className="kpi-label">Story points</span><span className="font-mono text-navy">{item.story_points ?? "—"}</span></div>
+                      <div className="flex flex-col"><span className="kpi-label">Type</span><span className="font-mono text-navy">{item.item_type}</span></div>
+                      <div className="flex flex-col"><span className="kpi-label">Status</span><span className="font-mono text-navy">{item.status}</span></div>
+                      <div className="flex flex-col"><span className="kpi-label">AI-assisted</span><span className="font-mono text-navy">{item.is_ai_assisted ? "Yes" : "No"}</span></div>
+                      <div className="flex flex-col"><span className="kpi-label">Defects raised</span><span className="font-mono text-navy">{item.defects_raised}</span></div>
+                      <div className="flex flex-col"><span className="kpi-label">Rework hours</span><span className="font-mono text-navy">{item.rework_hours.toFixed(1)}h</span></div>
+                      <div className="flex flex-col"><span className="kpi-label">Priority</span><span className="font-mono text-navy">{item.priority ?? "—"}</span></div>
+                    </dl>
+                  </td>
+                </tr>
+              ) : null}
+            </Fragment>
           ))}
         </tbody>
         <tfoot>

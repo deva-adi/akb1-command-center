@@ -1,5 +1,6 @@
 import { Fragment, useMemo, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import {
   AlertOctagon,
@@ -35,6 +36,7 @@ const STATUS_TONE: Record<string, RagBucket | "neutral"> = {
 };
 
 export function SmartOps() {
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const programmeFilter = searchParams.get("programme");
   const programmes = useProgrammes();
@@ -97,6 +99,11 @@ export function SmartOps() {
     return [...set].sort();
   }, [scenarios.data]);
 
+  const programmesMap = useMemo(
+    () => new Map((programmes.data ?? []).map(p => [p.id, p.code])),
+    [programmes.data],
+  );
+
   return (
     <div className="flex flex-col gap-6">
       <Breadcrumb
@@ -122,13 +129,14 @@ export function SmartOps() {
       />
 
       <section className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        <MetricCard metricId="scenario_alerts" label="Active alerts" value={`${activeCount}`} tone={activeCount === 0 ? "green" : "red"} />
-        <MetricCard metricId="mitigating_scenarios" value={`${mitigatingCount}`} tone={mitigatingCount > 0 ? "amber" : "green"} />
+        <MetricCard metricId="scenario_alerts" label="Active alerts" value={`${activeCount}`} tone={activeCount === 0 ? "green" : "red"} onClick={() => setFilter("Active")} />
+        <MetricCard metricId="mitigating_scenarios" value={`${mitigatingCount}`} tone={mitigatingCount > 0 ? "amber" : "green"} onClick={() => setFilter("Mitigating")} />
         <MetricCard
           metricId="risk_exposure"
           label="Financial impact"
           value={currency.format(totalFinancialImpact, "INR")}
           sub="Sum across visible alerts"
+          onClick={() => navigate("/raid")}
         />
         <MetricCard
           metricId="bench_cost"
@@ -216,6 +224,7 @@ export function SmartOps() {
                     setExpandedResource(expandedResource === r.id ? null : r.id)
                   }
                   currencyFormat={currency.format}
+                  programmesMap={programmesMap}
                 />
               ))}
             </tbody>
@@ -305,6 +314,16 @@ function ScenarioRow({
               Proposed action: {scenario.outcome_notes}
             </p>
           ) : null}
+          {(() => {
+            const progCode = (parsedDetails?.programme ?? parsedDetails?.program ?? null) as string | null;
+            if (!progCode) return null;
+            return (
+              <div className="mt-2 flex flex-wrap gap-2">
+                <Link to={`/raid?programme=${progCode}`} className="rounded-full border border-ice-100 bg-white px-2 py-0.5 text-xs text-navy hover:bg-ice-50">→ Risk Register</Link>
+                <Link to={`/delivery?programme=${progCode}`} className="rounded-full border border-ice-100 bg-white px-2 py-0.5 text-xs text-navy hover:bg-ice-50">→ Delivery Health</Link>
+              </div>
+            );
+          })()}
         </div>
       ) : null}
     </li>
@@ -316,11 +335,13 @@ function ResourceRowView({
   isOpen,
   onToggle,
   currencyFormat,
+  programmesMap,
 }: {
   row: ResourceRow;
   isOpen: boolean;
   onToggle: () => void;
   currencyFormat: (amount: number | null, src: string) => string;
+  programmesMap: Map<number, string>;
 }) {
   return (
     <Fragment>
@@ -372,7 +393,7 @@ function ResourceRowView({
               <Detail label="Skills" value={row.skill_set ?? "—"} />
               <Detail
                 label="Current programme"
-                value={row.current_program_id ? `#${row.current_program_id}` : "—"}
+                value={row.current_program_id ? (programmesMap.get(row.current_program_id) ?? `#${row.current_program_id}`) : "—"}
               />
               <Detail
                 label="Current project"
@@ -387,6 +408,12 @@ function ResourceRowView({
                 }
               />
             </dl>
+            {row.current_program_id && programmesMap.get(row.current_program_id) && (
+              <div className="mt-3 flex flex-wrap gap-2">
+                <Link to={`/delivery?programme=${programmesMap.get(row.current_program_id)}`} className="rounded-full border border-ice-100 bg-white px-2 py-0.5 text-xs text-navy hover:bg-ice-50">→ Delivery Health</Link>
+                <Link to={`/velocity?programme=${programmesMap.get(row.current_program_id)}`} className="rounded-full border border-ice-100 bg-white px-2 py-0.5 text-xs text-navy hover:bg-ice-50">→ Velocity & Flow</Link>
+              </div>
+            )}
           </td>
         </tr>
       ) : null}

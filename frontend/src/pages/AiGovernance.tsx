@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { Fragment, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -16,7 +16,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { AlertOctagon, Home, ShieldCheck, Sparkles } from "lucide-react";
+import { AlertOctagon, ChevronDown, ChevronUp, Home, ShieldCheck, Sparkles } from "lucide-react";
 import { Breadcrumb } from "@/components/Breadcrumb";
 import { ProgrammeFilterBar } from "@/components/ProgrammeFilterBar";
 import { PROGRAMME_CROSS_LINKS } from "@/components/programmeCrossLinks";
@@ -54,6 +54,9 @@ export function AiGovernance() {
   const [searchParams] = useSearchParams();
   const programmeFilter = searchParams.get("programme");
   const programmes = useProgrammes();
+  const [expandedOverride, setExpandedOverride] = useState<number | null>(null);
+  const [selectedTool, setSelectedTool] = useState<number | null>(null);
+  const toolCatalogueRef = useRef<HTMLDivElement>(null);
 
   const filteredProgramme = useMemo(
     () => programmes.data?.find((p) => p.code === programmeFilter) ?? null,
@@ -215,11 +218,13 @@ export function AiGovernance() {
           label="AI tools in use"
           value={`${tools.data?.length ?? 0}`}
           sub={`${(tools.data ?? []).filter((t) => t.status === "Active").length} active`}
+          onClick={() => toolCatalogueRef.current?.scrollIntoView({ behavior: 'smooth' })}
         />
         <MetricCard
           metricId="time_saved"
           value={`${totalTimeSaved.toFixed(0)}h`}
           sub="Accepted suggestions × hrs saved"
+          onClick={() => navigate(filteredProgramme ? `/velocity?programme=${filteredProgramme.code}` : '/velocity')}
         />
         <MetricCard
           metricId="acceptance_rate"
@@ -233,11 +238,13 @@ export function AiGovernance() {
                   ? "amber"
                   : "red"
           }
+          onClick={() => toolCatalogueRef.current?.scrollIntoView({ behavior: 'smooth' })}
         />
         <MetricCard
           metricId="ai_spend"
           value={`$${totalCost.toLocaleString()}`}
           sub="Monthly seat + usage cost"
+          onClick={() => toolCatalogueRef.current?.scrollIntoView({ behavior: 'smooth' })}
         />
       </section>
 
@@ -359,7 +366,17 @@ export function AiGovernance() {
               </thead>
               <tbody>
                 {(governance.data ?? []).map((g) => (
-                  <tr key={g.id} className="border-t border-ice-100 align-top">
+                  <tr
+                    key={g.id}
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => {
+                      const prog = g.program_id !== null ? programmeByName.get(g.program_id) : null;
+                      navigate(prog ? `/raid?programme=${prog.code}` : '/raid');
+                    }}
+                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); const prog = g.program_id !== null ? programmeByName.get(g.program_id) : null; navigate(prog ? `/raid?programme=${prog.code}` : '/raid'); } }}
+                    className="border-t border-ice-100 align-top cursor-pointer hover:bg-ice-50 transition"
+                  >
                     <td className="py-2">
                       <Badge tone={g.config_type === "policy" ? "neutral" : "amber"}>
                         {g.config_type}
@@ -417,26 +434,41 @@ export function AiGovernance() {
                 o.program_id !== null
                   ? programmeByName.get(o.program_id)?.code ?? "—"
                   : "—";
+              const isExpanded = expandedOverride === o.id;
               return (
                 <li
                   key={o.id}
-                  className="flex items-start justify-between gap-3 rounded border border-ice-100 bg-white px-3 py-2"
+                  role="button"
+                  tabIndex={0}
+                  className="flex flex-col rounded border border-ice-100 bg-white px-3 py-2 cursor-pointer hover:bg-ice-50 transition"
+                  onClick={() => setExpandedOverride(isExpanded ? null : o.id)}
+                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setExpandedOverride(isExpanded ? null : o.id); } }}
                 >
-                  <div className="flex-1">
-                    <p className="font-medium">{o.reason ?? "—"}</p>
-                    <p className="text-xs text-navy/70">
-                      {o.override_date
-                        ? new Date(o.override_date).toLocaleString("en-GB")
-                        : "—"}{" "}
-                      · {programmeName} · {o.override_type ?? "—"}
-                      {o.approver ? ` · approver: ${o.approver}` : ""}
-                    </p>
-                    {o.outcome ? (
-                      <p className="mt-1 text-xs italic text-navy/70">
-                        Outcome: {o.outcome}
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex-1">
+                      <p className="font-medium">{o.reason ?? "—"}</p>
+                      <p className="text-xs text-navy/70">
+                        {o.override_date
+                          ? new Date(o.override_date).toLocaleString("en-GB")
+                          : "—"}{" "}
+                        · {programmeName} · {o.override_type ?? "—"}
+                        {o.approver ? ` · approver: ${o.approver}` : ""}
                       </p>
-                    ) : null}
+                      {o.outcome ? (
+                        <p className="mt-1 text-xs italic text-navy/70">
+                          Outcome: {o.outcome}
+                        </p>
+                      ) : null}
+                    </div>
+                    {isExpanded ? <ChevronUp className="size-4 text-navy/40 shrink-0" aria-hidden="true" /> : <ChevronDown className="size-4 text-navy/40 shrink-0" aria-hidden="true" />}
                   </div>
+                  {isExpanded ? (
+                    <dl className="mt-2 grid grid-cols-2 gap-2 border-t border-ice-100 pt-2 text-xs md:grid-cols-3">
+                      <div className="flex flex-col"><span className="kpi-label">Override type</span><span className="font-mono text-navy">{o.override_type ?? "—"}</span></div>
+                      <div className="flex flex-col"><span className="kpi-label">Approver</span><span className="font-mono text-navy">{o.approver ?? "—"}</span></div>
+                      <div className="flex flex-col"><span className="kpi-label">Outcome</span><span className="font-mono text-navy">{o.outcome ?? "—"}</span></div>
+                    </dl>
+                  ) : null}
                 </li>
               );
             })}
@@ -444,6 +476,7 @@ export function AiGovernance() {
         )}
       </Card>
 
+      <div ref={toolCatalogueRef}>
       <Card>
         <CardHeader
           title="Tool catalogue"
@@ -464,25 +497,56 @@ export function AiGovernance() {
             </thead>
             <tbody>
               {(tools.data ?? []).map((t) => (
-                <tr key={t.id} className="border-t border-ice-100">
-                  <td className="py-2 font-medium">{t.name}</td>
-                  <td>{t.vendor ?? "—"}</td>
-                  <td>{t.category ?? "—"}</td>
-                  <td>{t.license_type ?? "—"}</td>
-                  <td className="text-right font-mono">
-                    ${t.cost_per_seat?.toFixed(0) ?? "—"}
-                  </td>
-                  <td className="text-right">
-                    <Badge tone={t.status === "Active" ? "green" : "amber"}>
-                      {t.status}
-                    </Badge>
-                  </td>
-                </tr>
+                <Fragment key={t.id}>
+                  <tr
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => setSelectedTool(selectedTool === t.id ? null : t.id)}
+                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSelectedTool(selectedTool === t.id ? null : t.id); } }}
+                    className="border-t border-ice-100 cursor-pointer hover:bg-ice-50 transition"
+                  >
+                    <td className="py-2 font-medium">{t.name}</td>
+                    <td>{t.vendor ?? "—"}</td>
+                    <td>{t.category ?? "—"}</td>
+                    <td>{t.license_type ?? "—"}</td>
+                    <td className="text-right font-mono">
+                      ${t.cost_per_seat?.toFixed(0) ?? "—"}
+                    </td>
+                    <td className="text-right">
+                      <Badge tone={t.status === "Active" ? "green" : "amber"}>
+                        {t.status}
+                      </Badge>
+                    </td>
+                  </tr>
+                  {selectedTool === t.id && (
+                    <tr key={`${t.id}-expand`} className="bg-ice-50/40">
+                      <td colSpan={6} className="px-3 py-3 text-xs">
+                        {(() => {
+                          const toolUsage = (usage.data ?? []).filter(u => u.ai_tool_id === t.id);
+                          if (toolUsage.length === 0) return <p className="text-navy/50">No usage records for this tool in the current scope.</p>;
+                          const totalPrompts = toolUsage.reduce((s, u) => s + (u.prompts_count ?? 0), 0);
+                          const totalAccepted = toolUsage.reduce((s, u) => s + (u.suggestions_accepted ?? 0), 0);
+                          const totalTimeSavedTool = toolUsage.reduce((s, u) => s + (u.time_saved_hours ?? 0), 0);
+                          const totalCostTool = toolUsage.reduce((s, u) => s + (u.cost ?? 0), 0);
+                          return (
+                            <dl className="grid grid-cols-2 gap-3 md:grid-cols-4">
+                              <div><span className="kpi-label">Prompts</span><span className="font-mono text-navy">{totalPrompts}</span></div>
+                              <div><span className="kpi-label">Accepted</span><span className="font-mono text-navy">{totalAccepted}</span></div>
+                              <div><span className="kpi-label">Time saved</span><span className="font-mono text-navy">{totalTimeSavedTool.toFixed(0)}h</span></div>
+                              <div><span className="kpi-label">Cost</span><span className="font-mono text-navy">${totalCostTool.toLocaleString()}</span></div>
+                            </dl>
+                          );
+                        })()}
+                      </td>
+                    </tr>
+                  )}
+                </Fragment>
               ))}
             </tbody>
           </table>
         </div>
       </Card>
+      </div>
     </div>
   );
 }

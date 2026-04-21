@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
+import { Link } from "react-router-dom";
 import { Card, CardHeader } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { MetricCard } from "@/components/ui/MetricCard";
@@ -22,7 +23,7 @@ const STATUS_TONE: Record<string, RagBucket | "neutral"> = {
   "At Risk": "red",
 };
 
-export function WaterfallView({ project }: { project: ProjectListItem }) {
+export function WaterfallView({ project, programmeCode }: { project: ProjectListItem; programmeCode?: string }) {
   const [expandedPhase, setExpandedPhase] = useState<number | null>(null);
   const [expandedMilestone, setExpandedMilestone] = useState<number | null>(null);
 
@@ -151,6 +152,13 @@ export function WaterfallView({ project }: { project: ProjectListItem }) {
                         <p className="text-sm italic text-navy/80">{phase.notes}</p>
                       </div>
                     ) : null}
+                    {programmeCode && (
+                      <div className="md:col-span-3 flex flex-wrap gap-2 mt-2">
+                        <span className="text-xs text-navy/50 self-center">Open in:</span>
+                        <Link to={`/delivery?programme=${programmeCode}`} className="rounded-full border border-ice-100 bg-white px-2 py-0.5 text-xs text-navy hover:bg-ice-50">Delivery Health</Link>
+                        <Link to={`/raid?programme=${programmeCode}`} className="rounded-full border border-ice-100 bg-white px-2 py-0.5 text-xs text-navy hover:bg-ice-50">Risk Register</Link>
+                      </div>
+                    )}
                   </dl>
                 ) : null}
               </li>
@@ -233,6 +241,13 @@ export function WaterfallView({ project }: { project: ProjectListItem }) {
                         <p className="text-sm italic text-navy/80">{m.notes}</p>
                       </div>
                     ) : null}
+                    {programmeCode && (
+                      <div className="md:col-span-3 flex flex-wrap gap-2 mt-2">
+                        <span className="text-xs text-navy/50 self-center">Open in:</span>
+                        <Link to={`/raid?programme=${programmeCode}`} className="rounded-full border border-ice-100 bg-white px-2 py-0.5 text-xs text-navy hover:bg-ice-50">Risk Register</Link>
+                        <Link to={`/delivery?programme=${programmeCode}`} className="rounded-full border border-ice-100 bg-white px-2 py-0.5 text-xs text-navy hover:bg-ice-50">Delivery Health</Link>
+                      </div>
+                    )}
                   </dl>
                 ) : null}
               </li>

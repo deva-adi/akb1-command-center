@@ -179,6 +179,8 @@ export function MarginEvm() {
                       ? "amber"
                       : "red"
                 }
+                active={selectedWaterfallLayer === w.label}
+                onClick={() => setSelectedWaterfallLayer(w.label === selectedWaterfallLayer ? null : w.label)}
               />
             );
           })}
@@ -642,6 +644,17 @@ export function MarginEvm() {
                                 }
                               />
                             </dl>
+                            <div className="mt-3 flex flex-wrap gap-2">
+                              <span className="text-xs text-navy/50 self-center">Open in:</span>
+                              <button type="button" onClick={() => {
+                                const prog = programmes.data?.find(p => p.id === cr.program_id);
+                                if (prog) navigate(`/delivery?programme=${prog.code}`);
+                              }} className="rounded-full border border-ice-100 bg-white px-2 py-0.5 text-xs text-navy hover:bg-ice-50 cursor-pointer">→ Delivery Health</button>
+                              <button type="button" onClick={() => {
+                                const prog = programmes.data?.find(p => p.id === cr.program_id);
+                                if (prog) navigate(`/raid?programme=${prog.code}`);
+                              }} className="rounded-full border border-ice-100 bg-white px-2 py-0.5 text-xs text-navy hover:bg-ice-50 cursor-pointer">→ Risk Register</button>
+                            </div>
                           </td>
                         </tr>
                       ) : null}

@@ -281,6 +281,8 @@ export function DeliveryHealth() {
               evm={evm.data ?? []}
               project={selected}
               sourceCurrency={sourceCurrency}
+              programmeCode={selectedProgrammeCode ?? undefined}
+              onNavigate={(path) => navigate(path)}
             />
           </Card>
 
@@ -342,11 +344,11 @@ export function DeliveryHealth() {
           </Card>
 
           {selected.delivery_methodology === "Scrum" ? (
-            <ScrumView project={selected} />
+            <ScrumView project={selected} programmeCode={selectedProgrammeCode ?? undefined} />
           ) : selected.delivery_methodology === "Kanban" ? (
             <KanbanView project={selected} />
           ) : selected.delivery_methodology === "Waterfall" ? (
-            <WaterfallView project={selected} />
+            <WaterfallView project={selected} programmeCode={selectedProgrammeCode ?? undefined} />
           ) : (
             <Card>
               <p className="text-sm text-navy/70">

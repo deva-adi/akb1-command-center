@@ -1,4 +1,4 @@
-import { Fragment, useMemo, useState } from "react";
+import { Fragment, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -47,6 +47,9 @@ export function RiskAudit() {
   const programmeFilter = searchParams.get("programme");
   const [tableFilter, setTableFilter] = useState<string | null>(null);
   const [expandedRisk, setExpandedRisk] = useState<number | null>(null);
+  const [expandedAudit, setExpandedAudit] = useState<number | null>(null);
+  const riskTableRef = useRef<HTMLDivElement>(null);
+  const auditTrailRef = useRef<HTMLDivElement>(null);
   const programmes = useProgrammes();
   const currency = useCurrency();
 
@@ -138,16 +141,18 @@ export function RiskAudit() {
       </div>
 
       <section className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        <MetricCard metricId="open_risks" value={`${visibleRisks.length}`} />
+        <MetricCard metricId="open_risks" value={`${visibleRisks.length}`} onClick={() => riskTableRef.current?.scrollIntoView({ behavior: 'smooth' })} />
         <MetricCard
           label="Controls tracked"
           value={`${governance.data?.length ?? 0}`}
           sub={`${(governance.data ?? []).filter((g) => g.config_type === "policy").length} policies · ${(governance.data ?? []).filter((g) => g.config_type === "control").length} controls`}
+          onClick={() => navigate('/ai')}
         />
         <MetricCard
           label="Audit entries"
           value={`${audit.data?.length ?? 0}`}
           sub={`${auditTables.length} tables tracked`}
+          onClick={() => auditTrailRef.current?.scrollIntoView({ behavior: 'smooth' })}
         />
         <MetricCard
           metricId="risk_exposure"
@@ -159,9 +164,11 @@ export function RiskAudit() {
             "INR",
           )}
           sub="Σ impact × probability"
+          onClick={() => navigate('/')}
         />
       </section>
 
+      <div ref={riskTableRef}>
       <Card>
         <CardHeader
           title="Risk register"
@@ -281,6 +288,7 @@ export function RiskAudit() {
           </table>
         </div>
       </Card>
+      </div>
 
       <section className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <Card>
@@ -342,7 +350,11 @@ export function RiskAudit() {
               {complianceByControl.map((row) => (
                 <li
                   key={row.control}
-                  className="flex items-center justify-between gap-3 rounded border border-ice-100 bg-white px-3 py-2"
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => navigate('/ai')}
+                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navigate('/ai'); } }}
+                  className="flex items-center justify-between gap-3 rounded border border-ice-100 bg-white px-3 py-2 cursor-pointer hover:bg-ice-50 transition"
                 >
                   <p className="font-medium">{row.control}</p>
                   <Badge
@@ -363,6 +375,7 @@ export function RiskAudit() {
         </Card>
       </section>
 
+      <div ref={auditTrailRef}>
       <Card>
         <CardHeader
           title="Audit trail"
@@ -400,36 +413,64 @@ export function RiskAudit() {
             {(audit.data ?? []).map((a) => (
               <li
                 key={a.id}
-                className="flex items-start gap-3 rounded border border-ice-100 bg-white px-3 py-2"
+                role="button"
+                tabIndex={0}
+                className="flex flex-col rounded border border-ice-100 bg-white px-3 py-2 cursor-pointer hover:bg-ice-50 transition"
+                onClick={() => setExpandedAudit(expandedAudit === a.id ? null : a.id)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    setExpandedAudit(expandedAudit === a.id ? null : a.id);
+                  }
+                }}
               >
-                <FileText className="mt-0.5 size-3 text-navy/70" aria-hidden="true" />
-                <div className="flex-1">
-                  <div className="flex items-center gap-2">
-                    <Badge tone={a.action === "DELETE" ? "red" : a.action === "UPDATE" ? "amber" : "neutral"}>
-                      {a.action ?? "—"}
-                    </Badge>
-                    <span className="font-mono text-xs">{a.table_name ?? "—"}</span>
-                    <span className="text-xs text-navy/70">
-                      #{a.record_id ?? "—"}
-                    </span>
+                <div className="flex items-start gap-3">
+                  <FileText className="mt-0.5 size-3 text-navy/70" aria-hidden="true" />
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <Badge tone={a.action === "DELETE" ? "red" : a.action === "UPDATE" ? "amber" : "neutral"}>
+                        {a.action ?? "—"}
+                      </Badge>
+                      <span className="font-mono text-xs">{a.table_name ?? "—"}</span>
+                      <span className="text-xs text-navy/70">
+                        #{a.record_id ?? "—"}
+                      </span>
+                    </div>
+                    <p className="text-xs text-navy/70">{a.user_action ?? "—"}</p>
+                    {a.old_value || a.new_value ? (
+                      <p className="mt-1 font-mono text-[11px] text-navy/70">
+                        {a.old_value ? <span className="text-danger-600">{a.old_value}</span> : null}
+                        {a.old_value && a.new_value ? " → " : null}
+                        {a.new_value ? <span className="text-success-600">{a.new_value}</span> : null}
+                      </p>
+                    ) : null}
                   </div>
-                  <p className="text-xs text-navy/70">{a.user_action ?? "—"}</p>
-                  {a.old_value || a.new_value ? (
-                    <p className="mt-1 font-mono text-[11px] text-navy/70">
-                      {a.old_value ? <span className="text-danger-600">{a.old_value}</span> : null}
-                      {a.old_value && a.new_value ? " → " : null}
-                      {a.new_value ? <span className="text-success-600">{a.new_value}</span> : null}
-                    </p>
-                  ) : null}
+                  <span className="text-xs text-navy/70">
+                    {formatDate(a.timestamp)}
+                  </span>
                 </div>
-                <span className="text-xs text-navy/70">
-                  {formatDate(a.timestamp)}
-                </span>
+                {expandedAudit === a.id && (a.old_value || a.new_value) ? (
+                  <div className="mt-2 grid grid-cols-2 gap-2 border-t border-ice-100 pt-2">
+                    {a.old_value ? (
+                      <div>
+                        <span className="kpi-label text-danger-600">Old value</span>
+                        <pre className="mt-1 overflow-x-auto rounded bg-danger-50 p-2 font-mono text-[10px] text-danger-700 whitespace-pre-wrap break-all">{a.old_value}</pre>
+                      </div>
+                    ) : null}
+                    {a.new_value ? (
+                      <div>
+                        <span className="kpi-label text-success-700">New value</span>
+                        <pre className="mt-1 overflow-x-auto rounded bg-success-50 p-2 font-mono text-[10px] text-success-700 whitespace-pre-wrap break-all">{a.new_value}</pre>
+                      </div>
+                    ) : null}
+                  </div>
+                ) : null}
               </li>
             ))}
           </ul>
         )}
       </Card>
+      </div>
 
       <Card>
         <CardHeader
@@ -448,13 +489,13 @@ export function RiskAudit() {
               </tr>
             </thead>
             <tbody>
-              <AuditRow dimension="Financial Controls" ask="Are costs tracked against budget?" source="evm_snapshots + commercial_scenarios" status="Monthly CPI/SPI available" tone="green" />
-              <AuditRow dimension="AI Governance" ask="Is AI output reviewed before production?" source="ai_override_log + ai_code_metrics" status="Branch protection + reviewer gate" tone="green" />
-              <AuditRow dimension="Risk Management" ask="Are risks identified, assessed, mitigated?" source="risks + risk_history" status="All risks have owner + plan" tone="green" />
-              <AuditRow dimension="Change Management" ask="Are changes tracked and approved?" source="scope_creep_log + audit_log" status="All CRs logged with CAB approval" tone="amber" />
-              <AuditRow dimension="Quality Assurance" ask="Is quality measured and improving?" source="sprint_data (defects, rework)" status="Sentinel improving; Phoenix trending amber" tone="amber" />
-              <AuditRow dimension="Process Adherence" ask="Are governance meetings happening?" source="customer_satisfaction (meeting tracker)" status="≥90% for Atlas/Sentinel/Titan" tone="green" />
-              <AuditRow dimension="Data Integrity" ask="Can you trace every number?" source="Data lineage + audit_log" status="Lineage documented, lineage tab planned in I-4" tone="amber" />
+              <AuditRow dimension="Financial Controls" ask="Are costs tracked against budget?" source="evm_snapshots + commercial_scenarios" status="Monthly CPI/SPI available" tone="green" onClick={() => navigate(DIMENSION_ROUTE["Financial Controls"])} />
+              <AuditRow dimension="AI Governance" ask="Is AI output reviewed before production?" source="ai_override_log + ai_code_metrics" status="Branch protection + reviewer gate" tone="green" onClick={() => navigate(DIMENSION_ROUTE["AI Governance"])} />
+              <AuditRow dimension="Risk Management" ask="Are risks identified, assessed, mitigated?" source="risks + risk_history" status="All risks have owner + plan" tone="green" onClick={() => navigate(DIMENSION_ROUTE["Risk Management"])} />
+              <AuditRow dimension="Change Management" ask="Are changes tracked and approved?" source="scope_creep_log + audit_log" status="All CRs logged with CAB approval" tone="amber" onClick={() => navigate(DIMENSION_ROUTE["Change Management"])} />
+              <AuditRow dimension="Quality Assurance" ask="Is quality measured and improving?" source="sprint_data (defects, rework)" status="Sentinel improving; Phoenix trending amber" tone="amber" onClick={() => navigate(DIMENSION_ROUTE["Quality Assurance"])} />
+              <AuditRow dimension="Process Adherence" ask="Are governance meetings happening?" source="customer_satisfaction (meeting tracker)" status="≥90% for Atlas/Sentinel/Titan" tone="green" onClick={() => navigate(DIMENSION_ROUTE["Process Adherence"])} />
+              <AuditRow dimension="Data Integrity" ask="Can you trace every number?" source="Data lineage + audit_log" status="Lineage documented, lineage tab planned in I-4" tone="amber" onClick={() => navigate(DIMENSION_ROUTE["Data Integrity"])} />
             </tbody>
           </table>
         </div>
@@ -463,21 +504,40 @@ export function RiskAudit() {
   );
 }
 
+const DIMENSION_ROUTE: Record<string, string> = {
+  "Financial Controls": "/margin",
+  "AI Governance": "/ai",
+  "Risk Management": "/raid",
+  "Change Management": "/raid",
+  "Quality Assurance": "/delivery",
+  "Process Adherence": "/customer",
+  "Data Integrity": "/raid",
+};
+
 function AuditRow({
   dimension,
   ask,
   source,
   status,
   tone,
+  onClick,
 }: {
   dimension: string;
   ask: string;
   source: string;
   status: string;
   tone: RagBucket;
+  onClick?: () => void;
 }) {
   return (
-    <tr className="border-t border-ice-100 align-top">
+    <tr
+      className={`border-t border-ice-100 align-top${onClick ? " cursor-pointer hover:bg-ice-50 transition" : ""}`}
+      onClick={onClick}
+      role={onClick ? "button" : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      onKeyDown={onClick ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick(); } } : undefined}
+      title={onClick ? `Click to navigate to ${dimension}` : undefined}
+    >
       <td className="py-2 font-medium">{dimension}</td>
       <td className="text-xs italic text-navy/70">{ask}</td>
       <td className="font-mono text-xs">{source}</td>

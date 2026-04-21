@@ -7,10 +7,14 @@ export function EvmStrip({
   evm,
   project,
   sourceCurrency,
+  programmeCode,
+  onNavigate,
 }: {
   evm: EvmSnapshot[];
   project: ProjectListItem;
   sourceCurrency: string;
+  programmeCode?: string;
+  onNavigate?: (path: string) => void;
 }) {
   const currency = useCurrency();
   const latest = evm.length > 0 ? evm[evm.length - 1] : null;
@@ -21,11 +25,13 @@ export function EvmStrip({
         metricId="cpi"
         value={formatRatio(latest?.cpi)}
         tone={toneForIndex(latest?.cpi ?? null)}
+        onClick={programmeCode && onNavigate ? () => onNavigate(`/margin?programme=${programmeCode}`) : undefined}
       />
       <MetricCard
         metricId="spi"
         value={formatRatio(latest?.spi)}
         tone={toneForIndex(latest?.spi ?? null)}
+        onClick={programmeCode && onNavigate ? () => onNavigate(`/margin?programme=${programmeCode}`) : undefined}
       />
       <MetricCard
         metricId="eac"

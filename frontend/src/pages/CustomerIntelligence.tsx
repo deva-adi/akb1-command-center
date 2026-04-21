@@ -1,5 +1,5 @@
 import { Fragment, useEffect, useMemo, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import {
   CartesianGrid,
@@ -236,22 +236,26 @@ export function CustomerIntelligence() {
           value={latest?.csat_score != null ? latest.csat_score.toFixed(1) : "—"}
           tone={csatTone(latest?.csat_score ?? null)}
           sub="0-10"
+          onClick={() => navigate(activeProgramme ? `/raid?programme=${activeProgramme.code}` : '/raid')}
         />
         <MetricCard
           metricId="nps"
           value={latest?.nps_score != null ? latest.nps_score.toFixed(0) : "—"}
           tone={npsTone(latest?.nps_score ?? null)}
+          onClick={() => navigate(activeProgramme ? `/raid?programme=${activeProgramme.code}` : '/raid')}
         />
         <MetricCard
           metricId="open_escalations"
           value={`${latest?.escalation_open ?? 0}`}
           tone={(latest?.escalation_open ?? 0) === 0 ? "green" : (latest?.escalation_open ?? 0) > 3 ? "red" : "amber"}
           sub={`total ${latest?.escalation_count ?? 0} this month`}
+          onClick={() => navigate(activeProgramme ? `/raid?programme=${activeProgramme.code}` : '/raid')}
         />
         <MetricCard
           metricId="renewal_probability"
           value={latest?.renewal_score != null ? `${latest.renewal_score.toFixed(0)}%` : "—"}
           tone={renewalTone(latest?.renewal_score ?? null)}
+          onClick={() => navigate(activeProgramme ? `/raid?programme=${activeProgramme.code}` : '/raid')}
         />
       </section>
 
@@ -345,7 +349,11 @@ export function CustomerIntelligence() {
               </p>
             ) : (
               <ResponsiveContainer width="100%" height="100%">
-                <RadarChart data={radarData}>
+                <RadarChart
+                  data={radarData}
+                  onClick={() => navigate(activeProgramme ? `/raid?programme=${activeProgramme.code}` : '/raid')}
+                  style={{ cursor: 'pointer' }}
+                >
                   <PolarGrid stroke="#D5E8F0" />
                   <PolarAngleAxis dataKey="dimension" tick={{ fontSize: 11 }} />
                   <PolarRadiusAxis domain={[0, 10]} tick={{ fontSize: 10 }} />
@@ -487,6 +495,12 @@ export function CustomerIntelligence() {
                           <p className="text-navy/80 italic">{a.resolution_notes}</p>
                         </div>
                       ) : null}
+                      <div className="md:col-span-4 flex flex-wrap gap-2 mt-2">
+                        {a.escalated && (
+                          <Link to={activeProgramme ? `/raid?programme=${activeProgramme.code}` : '/raid'} className="rounded-full border border-danger-200 bg-danger-50 px-2 py-0.5 text-xs text-danger-600 hover:bg-danger-100">→ Risk Register (escalated)</Link>
+                        )}
+                        <Link to={activeProgramme ? `/customer?programme=${activeProgramme.code}` : '/customer'} className="rounded-full border border-ice-100 bg-white px-2 py-0.5 text-xs text-navy hover:bg-ice-50">↑ Back to actions</Link>
+                      </div>
                     </dl>
                   ) : null}
                 </li>
@@ -612,6 +626,9 @@ export function CustomerIntelligence() {
                                   <p className="italic text-navy/80">{i.root_cause}</p>
                                 </div>
                               ) : null}
+                              <div className="md:col-span-4 flex flex-wrap gap-2 mt-2">
+                                <Link to={activeProgramme ? `/raid?programme=${activeProgramme.code}` : '/raid'} className="rounded-full border border-ice-100 bg-white px-2 py-0.5 text-xs text-navy hover:bg-ice-50">→ Risk Register</Link>
+                              </div>
                             </dl>
                           </td>
                         </tr>

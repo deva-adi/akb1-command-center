@@ -205,7 +205,24 @@ export function VelocityFlow() {
                     programmes.data?.find((p) => p.id === g.program_id)?.code ??
                     "—";
                   return (
-                    <tr key={g.id} className="border-t border-ice-100">
+                    <tr
+                      key={g.id}
+                      role="button"
+                      tabIndex={0}
+                      title="Click to drill into Delivery Health"
+                      className="border-t border-ice-100 cursor-pointer hover:bg-ice-50 transition"
+                      onClick={() => {
+                        const code = programmes.data?.find((p) => p.id === g.program_id)?.code;
+                        if (code) navigate(`/delivery?programme=${code}`);
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          const code = programmes.data?.find((p) => p.id === g.program_id)?.code;
+                          if (code) navigate(`/delivery?programme=${code}`);
+                        }
+                      }}
+                    >
                       <td className="py-2 font-medium">{programmeName}</td>
                       <td>
                         <div>{g.gate_name}</div>
@@ -255,6 +272,7 @@ function DualVelocityChart({
   programmeCode?: string;
   onDrillDown?: (code: string) => void;
 }) {
+  const navigate = useNavigate();
   const [drillSprint, setDrillSprint] = useState<string | null>(null);
 
   const data = rows.map((r) => ({
@@ -329,9 +347,9 @@ function DualVelocityChart({
             </button>
           </div>
           <dl className="mt-2 grid grid-cols-2 gap-3 md:grid-cols-4">
-            <MetricCard metricId="standard_velocity" value={`${(drillRow.standard_velocity ?? 0).toFixed(0)} pts`} />
-            <MetricCard metricId="ai_raw_velocity" value={`${(drillRow.ai_raw_velocity ?? 0).toFixed(0)} pts`} />
-            <MetricCard metricId="ai_adjusted_velocity" value={`${(drillRow.ai_quality_adjusted_velocity ?? 0).toFixed(0)} pts`} />
+            <MetricCard metricId="standard_velocity" value={`${(drillRow.standard_velocity ?? 0).toFixed(0)} pts`} onClick={programmeCode && onDrillDown ? () => onDrillDown(programmeCode) : undefined} />
+            <MetricCard metricId="ai_raw_velocity" value={`${(drillRow.ai_raw_velocity ?? 0).toFixed(0)} pts`} onClick={programmeCode && onDrillDown ? () => onDrillDown(programmeCode) : undefined} />
+            <MetricCard metricId="ai_adjusted_velocity" value={`${(drillRow.ai_quality_adjusted_velocity ?? 0).toFixed(0)} pts`} onClick={programmeCode && onDrillDown ? () => onDrillDown(programmeCode) : undefined} />
             <MetricCard
               metricId="quality_parity"
               value={formatPct(drillRow.quality_parity_ratio)}
@@ -342,25 +360,31 @@ function DualVelocityChart({
                     ? "amber"
                     : "red"
               }
+              onClick={programmeCode && onDrillDown ? () => onDrillDown(programmeCode) : undefined}
             />
-            <MetricCard metricId="ai_rework_points" value={`${(drillRow.ai_rework_points ?? 0).toFixed(0)} pts`} />
-            <MetricCard metricId="combined_velocity" value={`${(drillRow.combined_velocity ?? 0).toFixed(0)} pts`} />
+            <MetricCard metricId="ai_rework_points" value={`${(drillRow.ai_rework_points ?? 0).toFixed(0)} pts`} onClick={programmeCode && onDrillDown ? () => onDrillDown(programmeCode) : undefined} />
+            <MetricCard metricId="combined_velocity" value={`${(drillRow.combined_velocity ?? 0).toFixed(0)} pts`} onClick={programmeCode && onDrillDown ? () => onDrillDown(programmeCode) : undefined} />
             <MetricCard
               metricId="merge_eligible"
               value={drillRow.merge_eligible ? "Yes" : "No"}
               tone={drillRow.merge_eligible ? "green" : "red"}
+              onClick={programmeCode && onDrillDown ? () => onDrillDown(programmeCode) : undefined}
             />
           </dl>
-          {programmeCode && onDrillDown && (
-            <button
-              type="button"
-              onClick={() => onDrillDown(programmeCode)}
-              className="mt-3 inline-flex items-center gap-1.5 rounded border border-navy/20 px-3 py-1.5 text-xs text-navy hover:bg-ice-50"
-            >
-              → Drill into Delivery Health for {programmeCode}
-              <ChevronRight className="size-3" />
-            </button>
-          )}
+          <button
+            type="button"
+            onClick={() => {
+              if (programmeCode && onDrillDown) {
+                onDrillDown(programmeCode);
+              } else {
+                navigate('/delivery');
+              }
+            }}
+            className="mt-3 inline-flex items-center gap-1.5 rounded border border-navy/20 px-3 py-1.5 text-xs text-navy hover:bg-ice-50"
+          >
+            → Drill into Delivery Health{programmeCode ? ` for ${programmeCode}` : ''}
+            <ChevronRight className="size-3" />
+          </button>
           <p className="mt-2 text-xs text-navy/50">
             Level 3 of 4 · Click "Drill into Delivery Health" for full sprint ledger (Level 4)
           </p>

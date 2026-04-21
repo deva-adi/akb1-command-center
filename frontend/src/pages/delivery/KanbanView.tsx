@@ -1,3 +1,4 @@
+import { Fragment } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo, useRef, useState, useCallback } from "react";
 import ReactECharts from "echarts-for-react";
@@ -525,6 +526,7 @@ function FlowItemsTable({
   activeFilter: ItemFilter;
   activeMetric: MetricKey | null;
 }) {
+  const [expandedItem, setExpandedItem] = useState<number | null>(null);
   const totalPoints = items.reduce((s, i) => s + (i.story_points ?? 0), 0);
   const aiCount = items.filter((i) => i.is_ai_assisted).length;
 
@@ -571,32 +573,65 @@ function FlowItemsTable({
           </thead>
           <tbody>
             {items.map((item) => (
-              <tr key={item.id} className="border-b border-navy/5 hover:bg-ice-50">
-                <td className="py-1 pr-3">
-                  <Badge tone={FLOW_TYPE_TONE[item.item_type] ?? "neutral"}>
-                    {item.item_type}
-                  </Badge>
-                </td>
-                <td className="max-w-[260px] truncate py-1 pr-3 font-medium text-navy">
-                  {item.title}
-                </td>
-                <td className="py-1 pr-3 font-mono text-navy">{item.story_points ?? "—"}</td>
-                <td className="py-1 pr-3 text-navy/70">{item.assignee ?? "—"}</td>
-                <td className="py-1 pr-3">
-                  <Badge tone={FLOW_STATUS_TONE[item.status] ?? "neutral"}>
-                    {item.status.replace("_", " ")}
-                  </Badge>
-                </td>
-                <td className="py-1 pr-3">
-                  {item.is_ai_assisted ? (
-                    <span className="font-semibold text-[#7C3AED]">AI</span>
-                  ) : (
-                    <span className="text-navy/30">—</span>
-                  )}
-                </td>
-                <td className="py-1 pr-3 text-navy/70">{item.defects_raised}</td>
-                <td className="py-1 text-navy/70">{item.priority ?? "—"}</td>
-              </tr>
+              <Fragment key={item.id}>
+                <tr
+                  role="button"
+                  tabIndex={0}
+                  className="border-b border-navy/5 hover:bg-ice-50 cursor-pointer"
+                  onClick={() => setExpandedItem(expandedItem === item.id ? null : item.id)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      setExpandedItem(expandedItem === item.id ? null : item.id);
+                    }
+                  }}
+                >
+                  <td className="py-1 pr-3">
+                    <Badge tone={FLOW_TYPE_TONE[item.item_type] ?? "neutral"}>
+                      {item.item_type}
+                    </Badge>
+                  </td>
+                  <td className={`py-1 pr-3 font-medium text-navy${expandedItem === item.id ? "" : " max-w-[260px] truncate"}`}>
+                    {item.title}
+                  </td>
+                  <td className="py-1 pr-3 font-mono text-navy">{item.story_points ?? "—"}</td>
+                  <td className="py-1 pr-3 text-navy/70">{item.assignee ?? "—"}</td>
+                  <td className="py-1 pr-3">
+                    <Badge tone={FLOW_STATUS_TONE[item.status] ?? "neutral"}>
+                      {item.status.replace("_", " ")}
+                    </Badge>
+                  </td>
+                  <td className="py-1 pr-3">
+                    {item.is_ai_assisted ? (
+                      <span className="font-semibold text-[#7C3AED]">AI</span>
+                    ) : (
+                      <span className="text-navy/30">—</span>
+                    )}
+                  </td>
+                  <td className="py-1 pr-3 text-navy/70">{item.defects_raised}</td>
+                  <td className="py-1 text-navy/70">{item.priority ?? "—"}</td>
+                </tr>
+                {expandedItem === item.id ? (
+                  <tr key={`${item.id}-expand`} className="bg-ice-50/60">
+                    <td colSpan={8} className="px-3 py-2">
+                      <dl className="grid grid-cols-2 gap-2 md:grid-cols-4">
+                        <div className="flex flex-col"><span className="kpi-label">Title</span><span className="font-medium text-navy">{item.title}</span></div>
+                        <div className="flex flex-col"><span className="kpi-label">Assignee</span><span className="font-mono text-navy">{item.assignee ?? "—"}</span></div>
+                        <div className="flex flex-col"><span className="kpi-label">Story points</span><span className="font-mono text-navy">{item.story_points ?? "—"}</span></div>
+                        <div className="flex flex-col"><span className="kpi-label">Type</span><span className="font-mono text-navy">{item.item_type}</span></div>
+                        <div className="flex flex-col"><span className="kpi-label">Status</span><span className="font-mono text-navy">{item.status.replace("_", " ")}</span></div>
+                        <div className="flex flex-col"><span className="kpi-label">AI-assisted</span><span className="font-mono text-navy">{item.is_ai_assisted ? "Yes" : "No"}</span></div>
+                        <div className="flex flex-col"><span className="kpi-label">Defects raised</span><span className="font-mono text-navy">{item.defects_raised}</span></div>
+                        <div className="flex flex-col"><span className="kpi-label">Rework hours</span><span className="font-mono text-navy">{item.rework_hours.toFixed(1)}h</span></div>
+                        <div className="flex flex-col"><span className="kpi-label">Priority</span><span className="font-mono text-navy">{item.priority ?? "—"}</span></div>
+                        <div className="col-span-2 md:col-span-4 text-navy/50 italic mt-1">
+                          L6: Item-level detail — cycle time, acceptance criteria, and commit history available in your source issue tracker.
+                        </div>
+                      </dl>
+                    </td>
+                  </tr>
+                ) : null}
+              </Fragment>
             ))}
           </tbody>
           <tfoot>
