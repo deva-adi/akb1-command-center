@@ -133,20 +133,24 @@ export function VelocityFlow() {
           <MetricCard
             metricId="standard_velocity"
             value={`${aggregate.totalStandard.toFixed(0)} pts`}
+            onClick={() => navigate(filteredProgramme ? `/delivery?programme=${filteredProgramme.code}` : '/delivery')}
           />
           <MetricCard
             metricId="ai_raw_velocity"
             value={`${aggregate.totalAiRaw.toFixed(0)} pts`}
+            onClick={() => navigate(filteredProgramme ? `/delivery?programme=${filteredProgramme.code}` : '/delivery')}
           />
           <MetricCard
             metricId="ai_adjusted_velocity"
             value={`${aggregate.totalAiAdj.toFixed(0)} pts`}
             sub={`${formatPct(aggregate.totalAiRaw > 0 ? aggregate.totalAiAdj / aggregate.totalAiRaw : null)} retained after rework`}
+            onClick={() => navigate(filteredProgramme ? `/delivery?programme=${filteredProgramme.code}` : '/delivery')}
           />
           <MetricCard
             metricId="merge_eligible"
             value={`${aggregate.mergeEligibleCount} / ${aggregate.totalRows}`}
             tone={aggregate.mergeEligibleCount === aggregate.totalRows ? "green" : "amber"}
+            onClick={() => navigate(filteredProgramme ? `/delivery?programme=${filteredProgramme.code}` : '/delivery')}
           />
         </section>
       ) : null}
@@ -347,9 +351,9 @@ function DualVelocityChart({
             </button>
           </div>
           <dl className="mt-2 grid grid-cols-2 gap-3 md:grid-cols-4">
-            <MetricCard metricId="standard_velocity" value={`${(drillRow.standard_velocity ?? 0).toFixed(0)} pts`} onClick={programmeCode && onDrillDown ? () => onDrillDown(programmeCode) : undefined} />
-            <MetricCard metricId="ai_raw_velocity" value={`${(drillRow.ai_raw_velocity ?? 0).toFixed(0)} pts`} onClick={programmeCode && onDrillDown ? () => onDrillDown(programmeCode) : undefined} />
-            <MetricCard metricId="ai_adjusted_velocity" value={`${(drillRow.ai_quality_adjusted_velocity ?? 0).toFixed(0)} pts`} onClick={programmeCode && onDrillDown ? () => onDrillDown(programmeCode) : undefined} />
+            <MetricCard metricId="standard_velocity" value={`${(drillRow.standard_velocity ?? 0).toFixed(0)} pts`} onClick={() => programmeCode && onDrillDown ? onDrillDown(programmeCode) : navigate('/delivery')} />
+            <MetricCard metricId="ai_raw_velocity" value={`${(drillRow.ai_raw_velocity ?? 0).toFixed(0)} pts`} onClick={() => programmeCode && onDrillDown ? onDrillDown(programmeCode) : navigate('/delivery')} />
+            <MetricCard metricId="ai_adjusted_velocity" value={`${(drillRow.ai_quality_adjusted_velocity ?? 0).toFixed(0)} pts`} onClick={() => programmeCode && onDrillDown ? onDrillDown(programmeCode) : navigate('/delivery')} />
             <MetricCard
               metricId="quality_parity"
               value={formatPct(drillRow.quality_parity_ratio)}
@@ -360,15 +364,15 @@ function DualVelocityChart({
                     ? "amber"
                     : "red"
               }
-              onClick={programmeCode && onDrillDown ? () => onDrillDown(programmeCode) : undefined}
+              onClick={() => programmeCode && onDrillDown ? onDrillDown(programmeCode) : navigate('/delivery')}
             />
-            <MetricCard metricId="ai_rework_points" value={`${(drillRow.ai_rework_points ?? 0).toFixed(0)} pts`} onClick={programmeCode && onDrillDown ? () => onDrillDown(programmeCode) : undefined} />
-            <MetricCard metricId="combined_velocity" value={`${(drillRow.combined_velocity ?? 0).toFixed(0)} pts`} onClick={programmeCode && onDrillDown ? () => onDrillDown(programmeCode) : undefined} />
+            <MetricCard metricId="ai_rework_points" value={`${(drillRow.ai_rework_points ?? 0).toFixed(0)} pts`} onClick={() => programmeCode && onDrillDown ? onDrillDown(programmeCode) : navigate('/delivery')} />
+            <MetricCard metricId="combined_velocity" value={`${(drillRow.combined_velocity ?? 0).toFixed(0)} pts`} onClick={() => programmeCode && onDrillDown ? onDrillDown(programmeCode) : navigate('/delivery')} />
             <MetricCard
               metricId="merge_eligible"
               value={drillRow.merge_eligible ? "Yes" : "No"}
               tone={drillRow.merge_eligible ? "green" : "red"}
-              onClick={programmeCode && onDrillDown ? () => onDrillDown(programmeCode) : undefined}
+              onClick={() => programmeCode && onDrillDown ? onDrillDown(programmeCode) : navigate('/delivery')}
             />
           </dl>
           <button

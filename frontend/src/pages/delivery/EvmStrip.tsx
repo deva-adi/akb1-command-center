@@ -25,13 +25,13 @@ export function EvmStrip({
         metricId="cpi"
         value={formatRatio(latest?.cpi)}
         tone={toneForIndex(latest?.cpi ?? null)}
-        onClick={programmeCode && onNavigate ? () => onNavigate(`/margin?programme=${programmeCode}`) : undefined}
+        onClick={onNavigate ? () => onNavigate(programmeCode ? `/margin?programme=${programmeCode}` : '/margin') : undefined}
       />
       <MetricCard
         metricId="spi"
         value={formatRatio(latest?.spi)}
         tone={toneForIndex(latest?.spi ?? null)}
-        onClick={programmeCode && onNavigate ? () => onNavigate(`/margin?programme=${programmeCode}`) : undefined}
+        onClick={onNavigate ? () => onNavigate(programmeCode ? `/margin?programme=${programmeCode}` : '/margin') : undefined}
       />
       <MetricCard
         metricId="eac"
