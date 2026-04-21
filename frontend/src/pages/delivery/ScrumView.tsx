@@ -12,14 +12,16 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { ChevronDown, ChevronUp, X } from "lucide-react";
 import { Card, CardHeader } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
-import { fetchSprints, type ProjectListItem } from "@/lib/api";
+import { fetchSprints, type Sprint, type ProjectListItem } from "@/lib/api";
 import { formatDate } from "@/lib/format";
 
 export function ScrumView({ project }: { project: ProjectListItem }) {
   const [expandedSprint, setExpandedSprint] = useState<number | null>(null);
+  const [drillSprint, setDrillSprint] = useState<string | null>(null);
+
   const { data, isLoading, error } = useQuery({
     queryKey: ["sprints", project.id],
     queryFn: () => fetchSprints(project.id),
@@ -55,6 +57,16 @@ export function ScrumView({ project }: { project: ProjectListItem }) {
   const avgVelocity =
     sprints.reduce((sum, s) => sum + (s.velocity ?? 0), 0) / sprints.length;
 
+  function handleChartClick(payload: { activeLabel?: string } | null) {
+    const label = payload?.activeLabel ?? null;
+    if (!label) return;
+    setDrillSprint((prev) => (prev === label ? null : label));
+  }
+
+  const drillSprintData = drillSprint
+    ? sprints.find((s) => `#${s.sprint_number}` === drillSprint) ?? null
+    : null;
+
   return (
     <div className="flex flex-col gap-4">
       <section className="grid grid-cols-2 gap-3 md:grid-cols-4">
@@ -77,31 +89,50 @@ export function ScrumView({ project }: { project: ProjectListItem }) {
       <Card>
         <CardHeader
           title="Planned vs completed points"
-          subtitle="Each bar pair is one sprint"
+          subtitle="Click any bar to drill into that sprint's full detail"
         />
         <div className="h-72">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={chartData} margin={{ top: 8, right: 20, left: 0, bottom: 8 }}>
+            <BarChart
+              data={chartData}
+              margin={{ top: 8, right: 20, left: 0, bottom: 8 }}
+              onClick={handleChartClick}
+              style={{ cursor: "pointer" }}
+            >
               <CartesianGrid stroke="#E4EEF4" strokeDasharray="4 4" />
               <XAxis dataKey="sprint" stroke="#1B2A4A" tick={{ fontSize: 12 }} />
               <YAxis stroke="#1B2A4A" tick={{ fontSize: 12 }} />
-              <Tooltip contentStyle={{ border: "1px solid #D5E8F0" }} />
+              <Tooltip
+                contentStyle={{ border: "1px solid #D5E8F0" }}
+                labelFormatter={(l) => `${l} — click bar to see detail`}
+              />
               <Legend wrapperStyle={{ fontSize: 12 }} />
               <Bar dataKey="planned" name="Planned" fill="#D5E8F0" />
               <Bar dataKey="completed" name="Completed" fill="#1B2A4A" />
             </BarChart>
           </ResponsiveContainer>
         </div>
+        {drillSprintData && (
+          <SprintDrillPanel
+            sprint={drillSprintData}
+            onClose={() => setDrillSprint(null)}
+          />
+        )}
       </Card>
 
       <Card>
         <CardHeader
           title="Velocity trend + quality burden"
-          subtitle="Line = velocity; bars = rework hours and defects"
+          subtitle="Click any bar or point to drill into that sprint's quality data"
         />
         <div className="h-72">
           <ResponsiveContainer width="100%" height="100%">
-            <ComposedChart data={chartData} margin={{ top: 8, right: 20, left: 0, bottom: 8 }}>
+            <ComposedChart
+              data={chartData}
+              margin={{ top: 8, right: 20, left: 0, bottom: 8 }}
+              onClick={handleChartClick}
+              style={{ cursor: "pointer" }}
+            >
               <CartesianGrid stroke="#E4EEF4" strokeDasharray="4 4" />
               <XAxis dataKey="sprint" stroke="#1B2A4A" tick={{ fontSize: 12 }} />
               <YAxis yAxisId="left" stroke="#1B2A4A" tick={{ fontSize: 12 }} />
@@ -111,20 +142,13 @@ export function ScrumView({ project }: { project: ProjectListItem }) {
                 stroke="#F59E0B"
                 tick={{ fontSize: 12 }}
               />
-              <Tooltip contentStyle={{ border: "1px solid #D5E8F0" }} />
+              <Tooltip
+                contentStyle={{ border: "1px solid #D5E8F0" }}
+                labelFormatter={(l) => `${l} — click to drill down`}
+              />
               <Legend wrapperStyle={{ fontSize: 12 }} />
-              <Bar
-                yAxisId="right"
-                dataKey="rework"
-                name="Rework hrs"
-                fill="#FCD8A3"
-              />
-              <Bar
-                yAxisId="right"
-                dataKey="defectsFound"
-                name="Defects"
-                fill="#FCA5A5"
-              />
+              <Bar yAxisId="right" dataKey="rework" name="Rework hrs" fill="#FCD8A3" />
+              <Bar yAxisId="right" dataKey="defectsFound" name="Defects" fill="#FCA5A5" />
               <Line
                 yAxisId="left"
                 type="monotone"
@@ -132,35 +156,54 @@ export function ScrumView({ project }: { project: ProjectListItem }) {
                 name="Velocity"
                 stroke="#1B2A4A"
                 strokeWidth={2}
-                dot={{ r: 3 }}
+                dot={{ r: 4, style: { cursor: "pointer" } }}
+                activeDot={{ r: 6 }}
               />
             </ComposedChart>
           </ResponsiveContainer>
         </div>
+        {drillSprintData && (
+          <SprintDrillPanel
+            sprint={drillSprintData}
+            onClose={() => setDrillSprint(null)}
+          />
+        )}
       </Card>
 
       {project.is_ai_augmented ? (
         <Card>
           <CardHeader
             title="Dual velocity"
-            subtitle={`AI augmentation level: ${project.ai_augmentation_level ?? "—"}`}
-            action={
-              <Badge tone="amber">AI augmented</Badge>
-            }
+            subtitle={`AI augmentation level: ${project.ai_augmentation_level ?? "—"} — click any bar to drill into sprint`}
+            action={<Badge tone="amber">AI augmented</Badge>}
           />
           <div className="h-60">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={chartData} margin={{ top: 8, right: 20, left: 0, bottom: 8 }}>
+              <BarChart
+                data={chartData}
+                margin={{ top: 8, right: 20, left: 0, bottom: 8 }}
+                onClick={handleChartClick}
+                style={{ cursor: "pointer" }}
+              >
                 <CartesianGrid stroke="#E4EEF4" strokeDasharray="4 4" />
                 <XAxis dataKey="sprint" stroke="#1B2A4A" tick={{ fontSize: 12 }} />
                 <YAxis stroke="#1B2A4A" tick={{ fontSize: 12 }} />
-                <Tooltip contentStyle={{ border: "1px solid #D5E8F0" }} />
+                <Tooltip
+                  contentStyle={{ border: "1px solid #D5E8F0" }}
+                  labelFormatter={(l) => `${l} — click to drill down`}
+                />
                 <Legend wrapperStyle={{ fontSize: 12 }} />
                 <Bar dataKey="completed" name="Total points" fill="#1B2A4A" />
                 <Bar dataKey="aiAssisted" name="AI-assisted points" fill="#F59E0B" />
               </BarChart>
             </ResponsiveContainer>
           </div>
+          {drillSprintData && (
+            <SprintDrillPanel
+              sprint={drillSprintData}
+              onClose={() => setDrillSprint(null)}
+            />
+          )}
           <p className="mt-2 text-xs text-navy/70">
             Track AI-assisted points alongside standard velocity so trust-score
             and quality-parity dashboards in Tab 7 stay honest.
@@ -185,9 +228,7 @@ export function ScrumView({ project }: { project: ProjectListItem }) {
                 <button
                   type="button"
                   onClick={() =>
-                    setExpandedSprint(
-                      isOpen ? null : (s.sprint_number ?? null),
-                    )
+                    setExpandedSprint(isOpen ? null : (s.sprint_number ?? null))
                   }
                   aria-expanded={isOpen}
                   className="grid w-full grid-cols-[auto_1fr_auto] items-center gap-3 py-3 text-left text-sm transition hover:bg-ice-50"
@@ -213,26 +254,14 @@ export function ScrumView({ project }: { project: ProjectListItem }) {
                     />
                     <DetailCell label="Team size" value={`${s.team_size ?? "—"}`} />
                     <DetailCell label="Velocity" value={`${(s.velocity ?? 0).toFixed(0)} pts`} />
-                    <DetailCell
-                      label="Rework"
-                      value={`${(s.rework_hours ?? 0).toFixed(1)}h`}
-                    />
+                    <DetailCell label="Rework" value={`${(s.rework_hours ?? 0).toFixed(1)}h`} />
                     <DetailCell
                       label="Defects found / fixed"
                       value={`${s.defects_found ?? 0} / ${s.defects_fixed ?? 0}`}
                     />
-                    <DetailCell
-                      label="AI-assisted"
-                      value={`${s.ai_assisted_points} pts`}
-                    />
-                    <DetailCell
-                      label="Estimation"
-                      value={s.estimation_unit}
-                    />
-                    <DetailCell
-                      label="Iteration type"
-                      value={s.iteration_type}
-                    />
+                    <DetailCell label="AI-assisted" value={`${s.ai_assisted_points} pts`} />
+                    <DetailCell label="Estimation" value={s.estimation_unit} />
+                    <DetailCell label="Iteration type" value={s.iteration_type} />
                   </dl>
                 ) : null}
               </li>
@@ -240,6 +269,121 @@ export function ScrumView({ project }: { project: ProjectListItem }) {
           })}
         </ul>
       </Card>
+    </div>
+  );
+}
+
+// ---------- Sprint drill panel (Level 4 raw data) ----------
+
+function SprintDrillPanel({
+  sprint,
+  onClose,
+}: {
+  sprint: Sprint;
+  onClose: () => void;
+}) {
+  const burndownPct =
+    sprint.planned_points && sprint.planned_points > 0
+      ? Math.round(((sprint.completed_points ?? 0) / sprint.planned_points) * 100)
+      : 0;
+  const shortfall = (sprint.planned_points ?? 0) - (sprint.completed_points ?? 0);
+  const aiPct =
+    sprint.completed_points && sprint.completed_points > 0
+      ? ((sprint.ai_assisted_points / sprint.completed_points) * 100).toFixed(0)
+      : "0";
+
+  return (
+    <div className="mt-3 rounded-lg border border-navy/20 bg-navy/[0.03] p-3">
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-sm font-semibold text-navy">
+            Sprint #{sprint.sprint_number} — Level 4 detail
+          </p>
+          <p className="text-xs text-navy/60">
+            {formatDate(sprint.start_date)} → {formatDate(sprint.end_date)} ·{" "}
+            {sprint.iteration_type} · {sprint.estimation_unit}
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={onClose}
+          className="rounded p-1 hover:bg-ice-100"
+          aria-label="Close sprint detail"
+        >
+          <X className="size-3.5 text-navy/60" />
+        </button>
+      </div>
+
+      <dl className="mt-3 grid grid-cols-2 gap-3 md:grid-cols-4">
+        <DrillCell
+          label="Planned points"
+          value={`${sprint.planned_points ?? 0}`}
+          tone="neutral"
+        />
+        <DrillCell
+          label="Completed points"
+          value={`${sprint.completed_points ?? 0}`}
+          tone={burndownPct >= 90 ? "green" : burndownPct >= 70 ? "amber" : "red"}
+        />
+        <DrillCell
+          label="Burndown"
+          value={`${burndownPct}%`}
+          tone={burndownPct >= 90 ? "green" : burndownPct >= 70 ? "amber" : "red"}
+        />
+        <DrillCell
+          label="Shortfall"
+          value={shortfall > 0 ? `${shortfall} pts behind` : "On target"}
+          tone={shortfall > 0 ? "red" : "green"}
+        />
+        <DrillCell
+          label="Velocity"
+          value={`${(sprint.velocity ?? 0).toFixed(0)} pts`}
+          tone="neutral"
+        />
+        <DrillCell
+          label="Team size"
+          value={`${sprint.team_size ?? "—"} people`}
+          tone="neutral"
+        />
+        <DrillCell
+          label="Rework hours"
+          value={`${(sprint.rework_hours ?? 0).toFixed(1)}h`}
+          tone={(sprint.rework_hours ?? 0) > 20 ? "red" : (sprint.rework_hours ?? 0) > 10 ? "amber" : "green"}
+        />
+        <DrillCell
+          label="Defects found / fixed"
+          value={`${sprint.defects_found ?? 0} found · ${sprint.defects_fixed ?? 0} fixed`}
+          tone={(sprint.defects_found ?? 0) > (sprint.defects_fixed ?? 0) ? "amber" : "green"}
+        />
+        <DrillCell
+          label="AI-assisted points"
+          value={`${sprint.ai_assisted_points} pts (${aiPct}% of completed)`}
+          tone="neutral"
+        />
+      </dl>
+
+      <p className="mt-3 text-xs text-navy/50">
+        Level 4 of 4 · Lowest granularity · Sprint #{sprint.sprint_number} raw data
+      </p>
+    </div>
+  );
+}
+
+// ---------- helpers ----------
+
+function DrillCell({
+  label,
+  value,
+  tone,
+}: {
+  label: string;
+  value: string;
+  tone: "green" | "amber" | "red" | "neutral";
+}) {
+  return (
+    <div className="flex flex-col gap-1">
+      <span className="kpi-label">{label}</span>
+      <Badge tone={tone}>{value}</Badge>
     </div>
   );
 }

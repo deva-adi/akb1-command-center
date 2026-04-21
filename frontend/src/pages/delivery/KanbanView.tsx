@@ -1,11 +1,14 @@
 import { useQuery } from "@tanstack/react-query";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import ReactECharts from "echarts-for-react";
+import { X } from "lucide-react";
 import { Card, CardHeader } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { fetchFlow, type ProjectListItem } from "@/lib/api";
 
 export function KanbanView({ project }: { project: ProjectListItem }) {
+  const [selectedWeekIdx, setSelectedWeekIdx] = useState<number | null>(null);
+
   const { data, isLoading, error } = useQuery({
     queryKey: ["flow", project.id],
     queryFn: () => fetchFlow(project.id),
@@ -22,6 +25,19 @@ export function KanbanView({ project }: { project: ProjectListItem }) {
 
   const cfdOption = useMemo(() => buildCfdOption(sorted), [sorted]);
   const cycleOption = useMemo(() => buildCyclePercentileOption(sorted), [sorted]);
+
+  const chartEvents = useMemo(
+    () => ({
+      click: (params: { dataIndex?: number }) => {
+        const idx = params.dataIndex ?? null;
+        if (idx === null) return;
+        setSelectedWeekIdx((prev) => (prev === idx ? null : idx));
+      },
+    }),
+    [],
+  );
+
+  const selectedWeek = selectedWeekIdx !== null ? sorted[selectedWeekIdx] ?? null : null;
 
   if (isLoading) return <p className="text-sm text-navy/70">Loading flow metrics…</p>;
   if (error)
@@ -72,15 +88,19 @@ export function KanbanView({ project }: { project: ProjectListItem }) {
       <Card>
         <CardHeader
           title="Cumulative flow diagram"
-          subtitle="Approximate CFD built from per-week WIP and throughput"
+          subtitle="Click any point to drill into that week's flow metrics"
         />
         <div className="h-80">
           <ReactECharts
             option={cfdOption}
             style={{ height: "100%", width: "100%" }}
             notMerge
+            onEvents={chartEvents}
           />
         </div>
+        {selectedWeek && (
+          <FlowDrillPanel row={selectedWeek} onClose={() => setSelectedWeekIdx(null)} />
+        )}
         <p className="mt-2 text-xs text-navy/70">
           CFD = stacked backlog + in-progress + done. Widening bands →
           growing WIP or slowing throughput; look at the In Progress
@@ -91,16 +111,119 @@ export function KanbanView({ project }: { project: ProjectListItem }) {
       <Card>
         <CardHeader
           title="Cycle-time percentiles"
-          subtitle="p50 / p85 / p95 per week (days)"
+          subtitle="p50 / p85 / p95 per week (days) — click any point to drill into that week"
         />
         <div className="h-72">
           <ReactECharts
             option={cycleOption}
             style={{ height: "100%", width: "100%" }}
             notMerge
+            onEvents={chartEvents}
           />
         </div>
+        {selectedWeek && (
+          <FlowDrillPanel row={selectedWeek} onClose={() => setSelectedWeekIdx(null)} />
+        )}
       </Card>
+    </div>
+  );
+}
+
+// ---------- Flow drill panel ----------
+
+type FlowRow = {
+  period_start: string | null;
+  throughput_items: number | null;
+  wip_avg: number | null;
+  wip_limit: number | null;
+  cycle_time_p50: number | null;
+  cycle_time_p85: number | null;
+  cycle_time_p95: number | null;
+  lead_time_avg: number | null;
+  blocked_time_hours: number | null;
+};
+
+function FlowDrillPanel({ row, onClose }: { row: FlowRow; onClose: () => void }) {
+  const wipBreach =
+    row.wip_avg !== null && row.wip_limit !== null && row.wip_avg > row.wip_limit;
+
+  return (
+    <div className="mt-3 rounded-lg border border-navy/20 bg-navy/[0.03] p-3">
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-sm font-semibold text-navy">
+            Week of {row.period_start?.slice(0, 10) ?? "—"} — Level 4 detail
+          </p>
+          <p className="text-xs text-navy/60">Flow metrics for this period</p>
+        </div>
+        <button
+          type="button"
+          onClick={onClose}
+          className="rounded p-1 hover:bg-ice-100"
+          aria-label="Close flow detail"
+        >
+          <X className="size-3.5 text-navy/60" />
+        </button>
+      </div>
+
+      <dl className="mt-3 grid grid-cols-2 gap-3 md:grid-cols-4">
+        <FlowCell
+          label="Throughput"
+          value={`${row.throughput_items ?? 0} items`}
+          tone="neutral"
+        />
+        <FlowCell
+          label="WIP avg vs limit"
+          value={`${(row.wip_avg ?? 0).toFixed(1)} / ${row.wip_limit ?? "—"}`}
+          tone={wipBreach ? "red" : "green"}
+        />
+        <FlowCell
+          label="Cycle time p50"
+          value={`${(row.cycle_time_p50 ?? 0).toFixed(1)}d`}
+          tone="neutral"
+        />
+        <FlowCell
+          label="Cycle time p85"
+          value={`${(row.cycle_time_p85 ?? 0).toFixed(1)}d`}
+          tone={(row.cycle_time_p85 ?? 0) > (row.cycle_time_p50 ?? 0) * 2 ? "amber" : "neutral"}
+        />
+        <FlowCell
+          label="Cycle time p95"
+          value={`${(row.cycle_time_p95 ?? 0).toFixed(1)}d`}
+          tone={(row.cycle_time_p95 ?? 0) > (row.cycle_time_p50 ?? 0) * 3 ? "red" : "neutral"}
+        />
+        <FlowCell
+          label="Lead time avg"
+          value={`${(row.lead_time_avg ?? 0).toFixed(1)}d`}
+          tone="neutral"
+        />
+        <FlowCell
+          label="Blocked time"
+          value={`${(row.blocked_time_hours ?? 0).toFixed(1)}h`}
+          tone={(row.blocked_time_hours ?? 0) > 8 ? "red" : (row.blocked_time_hours ?? 0) > 4 ? "amber" : "green"}
+        />
+      </dl>
+
+      <p className="mt-3 text-xs text-navy/50">
+        Level 4 of 4 · Lowest granularity · Raw flow metrics for this week
+      </p>
+    </div>
+  );
+}
+
+function FlowCell({
+  label,
+  value,
+  tone,
+}: {
+  label: string;
+  value: string;
+  tone: "green" | "amber" | "red" | "neutral";
+}) {
+  return (
+    <div className="flex flex-col gap-1">
+      <span className="kpi-label">{label}</span>
+      <Badge tone={tone}>{value}</Badge>
     </div>
   );
 }

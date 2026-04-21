@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -14,7 +14,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { CheckCircle2, Home, XCircle } from "lucide-react";
+import { CheckCircle2, ChevronRight, Home, X, XCircle } from "lucide-react";
 import { Breadcrumb } from "@/components/Breadcrumb";
 import { ProgrammeFilterBar } from "@/components/ProgrammeFilterBar";
 import { PROGRAMME_CROSS_LINKS } from "@/components/programmeCrossLinks";
@@ -254,14 +254,27 @@ function DualVelocityChart({
   programmeCode?: string;
   onDrillDown?: (code: string) => void;
 }) {
+  const [drillSprint, setDrillSprint] = useState<string | null>(null);
+
   const data = rows.map((r) => ({
     sprint: `#${r.sprint_number ?? "?"}`,
     standard: r.standard_velocity ?? 0,
     aiRaw: r.ai_raw_velocity ?? 0,
     aiAdjusted: r.ai_quality_adjusted_velocity ?? 0,
     parity: r.quality_parity_ratio ?? 0,
+    _raw: r,
   }));
   const latest = rows[rows.length - 1];
+
+  function handleBarClick(payload: { activeLabel?: string } | null) {
+    const label = payload?.activeLabel ?? null;
+    if (!label) return;
+    setDrillSprint((prev) => (prev === label ? null : label));
+  }
+
+  const drillRow = drillSprint
+    ? data.find((d) => d.sprint === drillSprint)?._raw ?? null
+    : null;
 
   return (
     <div className="flex flex-col gap-2">
@@ -280,15 +293,15 @@ function DualVelocityChart({
           <BarChart
             data={data}
             margin={{ top: 8, right: 20, left: 0, bottom: 8 }}
-            onClick={() => { if (programmeCode && onDrillDown) onDrillDown(programmeCode); }}
-            style={programmeCode ? { cursor: "pointer" } : undefined}
+            onClick={handleBarClick}
+            style={{ cursor: "pointer" }}
           >
             <CartesianGrid stroke="#E4EEF4" strokeDasharray="4 4" />
             <XAxis dataKey="sprint" stroke="#1B2A4A" tick={{ fontSize: 12 }} />
             <YAxis stroke="#1B2A4A" tick={{ fontSize: 12 }} />
             <Tooltip
               contentStyle={{ border: "1px solid #D5E8F0" }}
-              labelFormatter={(label) => programmeCode ? `${label} — click to drill into Delivery` : label}
+              labelFormatter={(label) => `${label} — click to see sprint detail`}
             />
             <Legend wrapperStyle={{ fontSize: 12 }} />
             <Bar dataKey="standard" name="Standard" fill="#1B2A4A" />
@@ -297,9 +310,70 @@ function DualVelocityChart({
           </BarChart>
         </ResponsiveContainer>
       </div>
+
+      {/* Inline sprint drill panel */}
+      {drillRow && (
+        <div className="rounded-lg border border-navy/20 bg-navy/[0.03] p-3">
+          <div className="flex items-center justify-between">
+            <p className="text-sm font-semibold text-navy">
+              Sprint #{drillRow.sprint_number} — Velocity detail
+            </p>
+            <button
+              type="button"
+              onClick={() => setDrillSprint(null)}
+              className="rounded p-1 hover:bg-ice-100"
+              aria-label="Close sprint detail"
+            >
+              <X className="size-3.5 text-navy/60" />
+            </button>
+          </div>
+          <dl className="mt-2 grid grid-cols-2 gap-3 md:grid-cols-4">
+            <VCell label="Standard velocity" value={`${(drillRow.standard_velocity ?? 0).toFixed(0)} pts`} />
+            <VCell label="AI raw velocity" value={`${(drillRow.ai_raw_velocity ?? 0).toFixed(0)} pts`} />
+            <VCell label="AI adjusted velocity" value={`${(drillRow.ai_quality_adjusted_velocity ?? 0).toFixed(0)} pts`} />
+            <VCell
+              label="Quality parity"
+              value={formatPct(drillRow.quality_parity_ratio)}
+              tone={
+                (drillRow.quality_parity_ratio ?? 0) >= 0.95
+                  ? "green"
+                  : (drillRow.quality_parity_ratio ?? 0) >= 0.80
+                    ? "amber"
+                    : "red"
+              }
+            />
+            <VCell label="AI rework points" value={`${(drillRow.ai_rework_points ?? 0).toFixed(0)} pts`} />
+            <VCell label="Combined velocity" value={`${(drillRow.combined_velocity ?? 0).toFixed(0)} pts`} />
+            <VCell
+              label="Merge eligible"
+              value={drillRow.merge_eligible ? "Yes" : "No"}
+              tone={drillRow.merge_eligible ? "green" : "red"}
+            />
+          </dl>
+          {programmeCode && onDrillDown && (
+            <button
+              type="button"
+              onClick={() => onDrillDown(programmeCode)}
+              className="mt-3 inline-flex items-center gap-1.5 rounded border border-navy/20 px-3 py-1.5 text-xs text-navy hover:bg-ice-50"
+            >
+              → Drill into Delivery Health for {programmeCode}
+              <ChevronRight className="size-3" />
+            </button>
+          )}
+          <p className="mt-2 text-xs text-navy/50">
+            Level 3 of 4 · Click "Drill into Delivery Health" for full sprint ledger (Level 4)
+          </p>
+        </div>
+      )}
+
       <div className="h-32">
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={data} margin={{ top: 8, right: 20, left: 0, bottom: 8 }}>
+          <LineChart
+            data={data}
+            margin={{ top: 8, right: 20, left: 0, bottom: 8 }}
+            onClick={handleBarClick}
+            style={{ cursor: "pointer" }}
+          >
             <CartesianGrid stroke="#E4EEF4" strokeDasharray="4 4" />
             <XAxis dataKey="sprint" stroke="#1B2A4A" tick={{ fontSize: 12 }} />
             <YAxis
@@ -322,18 +396,39 @@ function DualVelocityChart({
             <Tooltip
               formatter={(v: number) => `${(v * 100).toFixed(1)}%`}
               contentStyle={{ border: "1px solid #D5E8F0" }}
+              labelFormatter={(l) => `${l} — click to see sprint detail`}
             />
             <Line
               type="monotone"
               dataKey="parity"
               stroke="#F59E0B"
               strokeWidth={2}
-              dot={false}
+              dot={{ r: 4, style: { cursor: "pointer" } }}
+              activeDot={{ r: 6 }}
               name="Quality parity"
             />
           </LineChart>
         </ResponsiveContainer>
       </div>
+    </div>
+  );
+}
+
+function VCell({
+  label,
+  value,
+  tone = "neutral",
+}: {
+  label: string;
+  value: string;
+  tone?: "green" | "amber" | "red" | "neutral";
+}) {
+  return (
+    <div className="flex flex-col gap-0.5">
+      <span className="kpi-label">{label}</span>
+      <span className={`font-mono text-sm font-semibold ${tone === "red" ? "text-red-600" : tone === "green" ? "text-success-600" : tone === "amber" ? "text-amber-600" : "text-navy"}`}>
+        {value}
+      </span>
     </div>
   );
 }
