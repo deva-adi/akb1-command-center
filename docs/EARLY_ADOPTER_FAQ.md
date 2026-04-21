@@ -1018,7 +1018,7 @@ For each question, the Command Center provides: the answer source (which tab, wh
 
 ### 15.1 Why This Application Exists (The Career Context)
 
-This application was designed and built by Adi Kompalli — a Senior Delivery & Program Manager with ~20 years of enterprise software delivery experience based in Hyderabad, India. It exists for two reasons:
+This application was designed and built by Adi Kompalli — an Associate Director - Delivery with ~20 years of enterprise software delivery experience based in Hyderabad, India. It exists for two reasons:
 
 1. **Solve a real problem:** Portfolio owners lack a single integrated view of delivery health + financials + AI governance + customer intelligence. This tool fills that gap.
 
@@ -1052,7 +1052,7 @@ This is what a Director-level Delivery Leader looks like: someone who doesn't ju
 | Director — Delivery / Program Management | Proven portfolio-level governance, P&L accountability, operating model design |
 | Associate Director — Delivery Excellence | Built the delivery excellence framework (the Command Center IS the delivery excellence tool) |
 | Head of PMO / Transformation Office | Designed the Command Center + transformation playbooks + AI governance framework |
-| Senior Delivery Manager (large accounts) | Multi-programme management with financial intelligence and AI governance |
+| Associate Director - Delivery (large accounts) | Multi-programme management with financial intelligence and AI governance |
 | VP — Delivery Operations | Strategic delivery intelligence + AI transformation + commercial governance |
 
 ### 15.5 How to Evaluate This Work
