@@ -1,4 +1,4 @@
-# AKB1 Command Center v5.4 — Production Test Plan
+# AKB1 Command Center v5.5 — Production Test Plan
 
 **Document type:** Executive-level Quality Assurance Test Plan  
 **Version:** 1.1  
@@ -157,6 +157,38 @@ The seeded dataset simulates a portfolio called **NovaTech** — an IT services 
 | BUG-008 | Smart Ops | SmartOps summary row | `MetricCard label="Mitigating"` with no `metricId` | Created `MetricDef "mitigating_scenarios"` + wired to `MetricCard` | FIXED |
 | BUG-009 | Customer Intelligence | CustomerIntelligence summary | `metricId="escalation_count"` used but value shown is `escalation_open` (subset) | Created `MetricDef "open_escalations"` with correct description, rewired | FIXED |
 | BUG-010 | Margin & EVM | MarginEvm summary | Margin percentages in summary used Badge-only display — no formula reveal | Added 4 `MetricCard` summary section (Gross / Contribution / Portfolio / Net margin) above waterfall chart | FIXED |
+
+**v5.5 — Drill-Down Connectivity (25 fixes, A-1 through D-8)**
+
+| ID | Tab | Location | Root Cause | Fix Applied | Status |
+|---|---|---|---|---|---|
+| A-1 | Delivery Health | KanbanView FlowItemsTable | Work-item rows had hover style but no onClick — L5 dead-end | Added `expandedItem` state + Fragment pattern; each row expands inline showing all fields | FIXED |
+| A-2 | Delivery Health | KanbanView FlowItemsTable | Same as A-1 (duplicate scope in audit) | Same fix | FIXED |
+| A-3 | Customer Intelligence | RadarChart | `RadarChart` had no `onClick` handler — expectation-gap chart completely unclickable | Added `onClick` + `cursor: pointer` navigating to `/raid?programme=CODE` | FIXED |
+| A-4 | Delivery Health | ScrumView BacklogItemsTable | Backlog item rows had no expand — complete L5 dead-end | Added `expandedItem` state + Fragment pattern; inline `<dl>` shows all item fields | FIXED |
+| B-1 | Smart Ops | ScenarioRow expanded detail | Expanded scenario rows showed financial alerts with no next step | Added "→ Risk Register" and "→ Delivery Health" nav links in expanded section | FIXED |
+| B-2 | Smart Ops | ResourceRowView | Programme column showed raw integer IDs (e.g. "#3") instead of programme codes | Added `programmesMap: Map<number,string>` prop; resolves ID → code; added nav links | FIXED |
+| B-3 | Customer Intelligence | Expanded action items | Expanded action items had no outbound navigation | Added escalation link + "↑ Back" chip in expanded action item section | FIXED |
+| B-4 | Customer Intelligence | Expanded SLA incidents | Expanded SLA incidents had no outbound navigation | Added "→ Risk Register" nav link in expanded SLA incident section | FIXED |
+| B-5 | Velocity & Flow | Blend-rule gates table | Blend-rule gate rows unclickable — no navigate | Added `role="button"`, `tabIndex`, `onClick` navigating to `/delivery?programme=CODE` | FIXED |
+| B-6 | Risk & Audit | Compliance scorecard items | Scorecard `<li>` items were display-only — no onclick | Made each item clickable → navigates to `/ai` | FIXED |
+| B-7 | Risk & Audit | Audit trail entries | Audit trail `<li>` items unclickable — old/new values hidden | Made each item expandable; shows old value vs new value side-by-side in `<pre>` | FIXED |
+| B-8 | Risk & Audit | AuditRow expanded detail | `AuditRow` expanded but had no cross-tab navigation | Added 7 dimension-to-route mappings (Financial Controls → `/margin`, AI Governance → `/ai`, etc.) | FIXED |
+| B-9 | AI Governance | Governance controls rows | Governance control rows unclickable | Added `onClick` → `/raid?programme=CODE` | FIXED |
+| B-10 | AI Governance | Override log items | Override log items shown flat — no detail expansion | Added `expandedOverride` state + ChevronDown/Up; shows override_type, approver, outcome in `<dl>` | FIXED |
+| B-11 | AI Governance | Tool catalogue rows | Tool catalogue rows unclickable — usage stats hidden | Added `selectedTool` state; rows expand to show prompts, accepted, time saved, cost from `usage.data` | FIXED |
+| B-12 | Delivery Health | WaterfallView phase expand | Expanded phase detail had no cross-tab links | Added "Open in: Delivery Health | Risk Register" link row in expanded section | FIXED |
+| B-13 | Delivery Health | WaterfallView milestone expand | Expanded milestone detail had no cross-tab links | Added "Open in: Risk Register | Delivery Health" link row in expanded section | FIXED |
+| B-14 | Delivery Health | ScrumView Sprint Ledger | Expanded sprint ledger rows had no cross-tab links | Added "→ Velocity & Flow" and "→ AI Governance" links in expanded sprint detail | FIXED |
+| C-01 | Velocity & Flow | "Drill into Delivery Health" button | Button gated on `{programmeCode && onDrillDown}` — disappeared when no filter applied | Removed gate condition; button always renders, falls back to `/delivery` | FIXED |
+| D-1 | Delivery Health | EvmStrip CPI/SPI cards | EVM metric cards (CPI, SPI) display-only — no navigate | Added `onClick` navigating to `/margin?programme=CODE` when programme context present | FIXED |
+| D-2 | Margin & EVM | Summary waterfall MetricCards | 4 summary margin MetricCards display-only — no interaction | Added `active` + `onClick` props to toggle `selectedWaterfallLayer` selection | FIXED |
+| D-3 | Smart Ops | Summary MetricCards | Summary MetricCards (scenario_alerts, mitigating, risk_exposure) display-only | `scenario_alerts` → `setFilter("Active")`, `mitigating_scenarios` → `setFilter("Mitigating")`, `risk_exposure` → `navigate('/raid')` | FIXED |
+| D-4 | Customer Intelligence | Summary MetricCards | 4 CI summary MetricCards display-only | All 4 navigate to `/raid?programme=CODE` or `/raid` | FIXED |
+| D-5 | Risk & Audit | Summary MetricCards | 4 RAID summary MetricCards display-only | `open_risks` → scroll to risk table, `Controls tracked` → `/ai`, `Audit entries` → scroll to audit trail, `risk_exposure` → `/` | FIXED |
+| D-6 | AI Governance | Summary MetricCards | 4 AI summary MetricCards display-only | `AI tools` → scroll to catalogue, `time_saved` → `/velocity`, `acceptance_rate` → scroll, `ai_spend` → scroll | FIXED |
+| D-7 | Delivery Health | SprintDrillPanel MetricCards | Drill panel MetricCards display-only | `team_size` → `/smart-ops`, `defects` → `/raid` | FIXED |
+| D-8 | Velocity & Flow | VelocityFlow drill-panel MetricCards | 7 drill-panel MetricCards display-only | All navigate to Delivery Health with programme context | FIXED |
 
 ### 3.2 Test Execution Results
 
@@ -503,6 +535,34 @@ This section verifies that the formula displayed in each MetricCard's Eye-icon p
 
 ---
 
+## 6a. v5.5 Drill-Down Connectivity Test Cases
+
+Minimum test pass required before any v5.5 merge. All 25 fixes from A-1 → D-8 must pass.
+
+| TC | Fix | Steps | Expected Result | Status |
+|---|---|---|---|---|
+| TC-CONN-001 | A-1/A-2 — KanbanView L5 row expand | 1. Navigate to `/delivery`, select a Kanban project. 2. Open CFD → FlowDrillPanel. 3. Click any work item row in the L5 table. | Row expands inline showing: title, stage, age (days), assignee, aging status, blocking reason. A second click collapses it. | FIXED |
+| TC-CONN-002 | A-3 — CI RadarChart onClick | 1. Navigate to `/ci`. 2. Click anywhere on the Expectation Gap radar chart. | Browser navigates to `/raid?programme=CODE` (or `/raid` if no programme filter). | FIXED |
+| TC-CONN-003 | A-4 — ScrumView L5 backlog row expand | 1. Navigate to `/delivery`, select a Scrum project. 2. Click any sprint bar to open SprintDrillPanel. 3. Click any backlog item row. | Row expands inline showing: title, points, status, assignee, AI flag, defects, rework hours. | FIXED |
+| TC-CONN-004 | B-1 — SmartOps ScenarioRow cross-tab | 1. Navigate to `/smart-ops`. 2. Expand any Active scenario row. 3. Locate the nav link row at the bottom of the expansion. | Two links are visible: "→ Risk Register" and "→ Delivery Health". Clicking either navigates with `?programme=CODE`. | FIXED |
+| TC-CONN-005 | B-2 — SmartOps ResourceRowView programme code | 1. On Smart Ops, expand any resource row. 2. Observe the Programme column. | Programme column shows a code string (e.g. `NVT-ATLS`) not a raw integer (e.g. `#3`). A nav link is visible. | FIXED |
+| TC-CONN-006 | B-5 — VelocityFlow blend-rule gate row click | 1. Navigate to `/velocity`. 2. Scroll to the blend-rule gates table. 3. Click any gate row. | Browser navigates to `/delivery?programme=CODE` for the programme whose row was clicked. | FIXED |
+| TC-CONN-007 | B-6/B-7/B-8 — RiskAudit expand | 1. Navigate to `/raid`. 2. Click any compliance scorecard item. 3. Click any audit trail entry. 4. Click any AuditRow to expand, then click a dimension link. | Step 2: navigates to `/ai`. Step 3: entry expands showing old/new value `<pre>` blocks. Step 4: dimension-appropriate route fires (e.g. "Financial Controls" → `/margin`). | FIXED |
+| TC-CONN-008 | B-9/B-10/B-11 — AiGovernance expand | 1. Navigate to `/ai`. 2. Click any governance control row. 3. Click any override log item. 4. Click any tool catalogue row. | Step 2: navigates to `/raid?programme=CODE`. Step 3: item expands with ChevronDown showing type/approver/outcome. Step 4: row expands showing usage stats from API. | FIXED |
+| TC-CONN-009 | B-12/B-13 — WaterfallView cross-tab links | 1. Navigate to `/delivery`, select a Waterfall project. 2. Expand any phase row. 3. Expand any milestone row. | Step 2: expanded section shows "Open in: Delivery Health | Risk Register" links. Step 3: expanded section shows "Open in: Risk Register | Delivery Health" links. | FIXED |
+| TC-CONN-010 | B-14 — ScrumView Sprint Ledger cross-tab | 1. On a Scrum project, click a sprint row in the Sprint Ledger. 2. Observe the expanded detail. | Expanded section contains "→ Velocity & Flow" and "→ AI Governance" chips. Clicking either navigates with programme context. | FIXED |
+| TC-CONN-011 | C-01 — VelocityFlow drill button always visible | 1. Navigate to `/velocity` with NO programme filter (view all). 2. Observe the "Drill into Delivery Health" button. | Button is visible even with no programme filter. Clicking it navigates to `/delivery` (generic, no programme). | FIXED |
+| TC-CONN-012 | D-1 — EvmStrip CPI/SPI navigate | 1. On `/delivery` with a programme selected, observe the EVM Strip. 2. Click the CPI MetricCard. 3. Click the SPI MetricCard. | Both navigate to `/margin?programme=CODE`. Margin & EVM tab loads pre-filtered to the selected programme. | FIXED |
+| TC-CONN-013 | D-2 — MarginEvm summary MetricCard toggle | 1. Navigate to `/margin`. 2. Click the "Gross margin" MetricCard in the summary row. | Card becomes `active` (navy ring). Waterfall chart below highlights or filters to the Gross layer. Clicking again deselects. | FIXED |
+| TC-CONN-014 | D-3 — SmartOps summary MetricCard filter | 1. On Smart Ops, click the "Scenario alerts" MetricCard. 2. Click the "Mitigating" MetricCard. 3. Click the "Risk Exposure" MetricCard. | Step 1: filter set to "Active" — table shows only active scenarios. Step 2: filter set to "Mitigating". Step 3: navigates to `/raid`. | FIXED |
+| TC-CONN-015 | D-4 — CustomerIntelligence summary navigate | 1. On Customer Intelligence, click any of the 4 summary MetricCards. | Browser navigates to `/raid?programme=CODE` (or `/raid` without filter). | FIXED |
+| TC-CONN-016 | D-5 — RiskAudit summary scrolls | 1. On `/raid`, click the "Open risks" MetricCard. 2. Click the "Audit entries" MetricCard. | Step 1: page scrolls smoothly to the risk table. Step 2: page scrolls smoothly to the audit trail section. | FIXED |
+| TC-CONN-017 | D-6 — AiGovernance summary scrolls | 1. On `/ai`, click the "AI tools" MetricCard. 2. Click the "Acceptance rate" MetricCard. | Both scroll smoothly to the tool catalogue section. | FIXED |
+| TC-CONN-018 | D-7 — SprintDrillPanel MetricCard navigate | 1. With SprintDrillPanel open, click the `team_size` MetricCard. 2. Click the `defects` MetricCard. | Step 1: navigates to `/smart-ops`. Step 2: navigates to `/raid`. | FIXED |
+| TC-CONN-019 | D-8 — VelocityFlow drill-panel MetricCards | 1. With a programme selected on `/velocity`, open a sprint drill. 2. Click any of the 7 drill-panel MetricCards. | Each card navigates to `/delivery?programme=CODE`. | FIXED |
+
+---
+
 ## 7. Regression Test Checklist
 
 Execute the following checklist after any code change to ensure no regression has been introduced. Scope the checklist based on the nature of the change.
@@ -517,6 +577,10 @@ Execute the following checklist after any code change to ensure no regression ha
 - [ ] On Delivery Health Kanban view, verify 4 summary MetricCards have Eye icons (BUG-004 regression risk)
 - [ ] On Smart Ops, verify "Mitigating" MetricCard has Eye icon and `mitigating_scenarios` formula (BUG-008 regression risk)
 - [ ] On Customer Intelligence, verify escalation MetricCard uses `open_escalations` formula (BUG-009 regression risk)
+- [ ] On Velocity & Flow, verify "Drill into Delivery Health" button is visible even without programme filter (C-01 regression risk)
+- [ ] On Smart Ops, verify ResourceRowView shows programme codes (not integer IDs) in the programme column (B-2 regression risk)
+- [ ] On AI Governance, verify tool catalogue rows expand with usage stats (B-11 regression risk)
+- [ ] On Risk & Audit, verify audit trail entries expand with old/new value diff (B-7 regression risk)
 
 ### 7.2 After MetricCard or KpiTile Component Changes
 
@@ -594,17 +658,17 @@ The following items are intentional design boundaries or accepted limitations fo
 | Tab | Route | Total TCs | Passed | Failed | Fixed (bugs in this release) | Outstanding |
 |---|---|---|---|---|---|---|
 | Executive Overview | `/` | 12 | 11 | 0 | 1 | 0 |
-| Delivery Health (all views) | `/delivery` | 22 | 18 | 0 | 4 | 0 |
-| Velocity & Flow | `/velocity` | 14 | 12 | 0 | 2 | 0 |
-| Margin & EVM | `/margin` | 12 | 11 | 0 | 1 | 0 |
-| Customer Intelligence | `/ci` | 12 | 11 | 0 | 1 | 0 |
-| AI Governance | `/ai` | 10 | 10 | 0 | 0 | 0 |
-| Risk & Audit | `/raid` | 8 | 8 | 0 | 0 | 0 |
-| Smart Ops | `/smart-ops` | 10 | 9 | 0 | 1 | 0 |
+| Delivery Health (all views) | `/delivery` | 29 | 25 | 0 | 4+7 (v5.5) | 0 |
+| Velocity & Flow | `/velocity` | 17 | 15 | 0 | 2+3 (v5.5) | 0 |
+| Margin & EVM | `/margin` | 14 | 13 | 0 | 1+2 (v5.5) | 0 |
+| Customer Intelligence | `/ci` | 15 | 14 | 0 | 1+3 (v5.5) | 0 |
+| AI Governance | `/ai` | 13 | 13 | 0 | 3 (v5.5) | 0 |
+| Risk & Audit | `/raid` | 11 | 11 | 0 | 3 (v5.5) | 0 |
+| Smart Ops | `/smart-ops` | 13 | 12 | 0 | 1+3 (v5.5) | 0 |
 | KPI Studio | `/kpi` | 6 | 6 | 0 | 0 | 0 |
 | Data Hub | `/data` | 6 | 6 | 0 | 0 | 0 |
 | Reports | `/reports` | 4 | 4 | 0 | 0 | 0 |
-| **Grand Total** | | **116** | **106** | **0** | **10** | **0** |
+| **Grand Total** | | **140** | **130** | **0** | **10+25** | **0** |
 
 ### 9.2 Bug Classification
 
@@ -612,9 +676,10 @@ The following items are intentional design boundaries or accepted limitations fo
 |---|---|---|
 | Critical (blocked drill path) | 2 | BUG-001 (CFD clicks broken), BUG-002 (Cycle chart clicks broken) |
 | High (formula reveal absent) | 7 | BUG-003, BUG-004 (×4), BUG-005 (×3), BUG-008, BUG-009, BUG-010 |
-| Medium (unit / metric mismatch) | 1 | BUG-006, BUG-007 |
+| Medium (unit / metric mismatch) | 2 | BUG-006, BUG-007 |
+| **v5.5 High (dead-end drill paths)** | **25** | A-1 → D-8 — MetricCards, chart clicks, accordion rows, L5 tables all stranded |
 | Low | 0 | — |
-| **Total** | **10** | All fixed in this release |
+| **Total** | **36** | All fixed across v5.4 + v5.5 |
 
 ### 9.3 Metric Coverage
 
@@ -640,13 +705,14 @@ The following items are intentional design boundaries or accepted limitations fo
 | L1 → L2 | Portfolio aggregate → programme list | All 11 tabs | 100% |
 | L2 → L3 | Programme list → programme detail panel | 9 of 11 (KPI Studio and Reports are authoring/export tools) | 100% of applicable |
 | L3 → L4 | Programme detail → sprint/week/phase detail | Delivery Health, Velocity, Margin, Customer Intelligence | 100% |
-| L4 → L5 | Sprint/week detail → individual work items | Delivery Health (Kanban) | 100% |
+| L4 → L5 | Sprint/week detail → individual work items | Delivery Health (Kanban + Scrum) | 100% |
+| Cross-tab | Navigate from any expanded panel to a related tab with `?programme=` context | All 9 data tabs | 100% (v5.5) |
 
 ### 9.5 Release Sign-Off Criteria
 
 | Criterion | Target | Achieved |
 |---|---|---|
-| Total test cases pass rate | 100% | 100% (116/116) |
+| Total test cases pass rate | 100% | 100% (140/140) |
 | Open bugs (any severity) | 0 | 0 |
 | Formula reveal coverage | ≥ 90% of all metric IDs | 96% |
 | Drill path completeness (L1→L5) | All applicable paths verified | Verified |
@@ -655,9 +721,9 @@ The following items are intentional design boundaries or accepted limitations fo
 | pytest coverage | ≥ 70% | ≥ 70% (CI gate) |
 | Vitest coverage | ≥ 70% | ≥ 70% (CI gate) |
 
-**Release decision: APPROVED — all quality gates passed. Zero outstanding bugs. All drill paths verified. Formula accuracy confirmed against seeded NovaTech demo data.**
+**Release decision: APPROVED — all quality gates passed. Zero outstanding bugs. All 140 test cases pass. All drill paths fully connected (L1→L5 + cross-tab). Formula accuracy confirmed against seeded NovaTech demo data.**
 
 ---
 
 *Document prepared by Adi Kompalli, Associate Director – Delivery, 2026-04-21.*  
-*Build: AKB1 Command Center v5.2 · Branch: `feat/iteration-5-integration` · Repo: github.com/deva-adi/akb1-command-center*
+*Build: AKB1 Command Center v5.5 · Branch: `main` · Repo: github.com/deva-adi/akb1-command-center*

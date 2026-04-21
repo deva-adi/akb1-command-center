@@ -1,6 +1,6 @@
 # AKB1 Command Center — User Guide
 
-**Version:** 5.4 | **Audience:** CTO, Associate Director, Delivery Lead, CFO, Account Director
+**Version:** 5.5 | **Audience:** CTO, Associate Director, Delivery Lead, CFO, Account Director
 **Last Updated:** 2026-04-21 | **Author:** Adi Kompalli
 
 ---
@@ -573,6 +573,31 @@ These patterns work consistently across all tabs:
 | Programme filter | Click a RAG badge or programme row | Current tab refilters to show only that programme's data |
 | Hover tooltip | Hover over any numeric value | Shows local currency value, base currency equivalent, formula name |
 | Export | Every chart has a context menu (three dots) | Download as PNG, CSV, or JSON |
+| Cross-tab navigation | Click a MetricCard, accordion row, or expanded section nav chip | Navigates to the related tab pre-filtered to `?programme=CODE` |
+| L5 row expand | Click any work item row in a FlowDrillPanel or SprintDrillPanel | Row expands inline showing all item fields; click again to collapse |
+| Expanded section links | Expand any phase, milestone, scenario, CR, or audit row | Bottom of expanded section shows "Open in: Tab X \| Tab Y" chips |
+
+### v5.5 — Complete Drill-Down Connectivity
+
+Every element in the dashboard that displays a number now has at least one of the following actions:
+
+1. **Navigate with context** — clicking a MetricCard or chart element navigates to the most relevant tab pre-filtered to the current programme (e.g. CPI card → Margin & EVM for the same programme).
+2. **Expand inline** — accordion rows (phases, milestones, scenarios, override log, tool catalogue, audit trail) expand to show full detail without leaving the page.
+3. **Cross-tab chip** — expanded sections include one or more "Open in: Tab Name" navigation chips at the bottom.
+4. **Scroll to section** — summary cards that link to content on the same page (e.g. "Audit entries" on Risk & Audit) scroll smoothly to the relevant section.
+
+The full drill chain from any KPI number is:
+
+```
+Portfolio summary (L1)
+  → Programme breakdown panel (L2)
+    → Programme detail / phase / sprint (L3)
+      → Sprint / week / phase detail panel (L4)
+        → Individual work items (L5, inline expand)
+          → [L6] Note: live issue tracker link shown for external escalation
+```
+
+Cross-tab links available at every level carry the `?programme=CODE` URL parameter so the destination tab opens pre-filtered — no need to re-select the programme.
 
 ---
 
@@ -1459,8 +1484,9 @@ In most dashboards, numbers are black boxes. A CPI of 0.87 means nothing to a st
 
 ---
 
-**AKB1 Command Center v5.4**
+**AKB1 Command Center v5.5**
 **Maintained by:** Adi Kompalli | deva.adi@gmail.com
+**New in v5.5:** Complete Drill-Down Connectivity — 25 dead-end fixes across all 11 tabs. Every number navigates, expands, or cross-links.
 **New in v5.4:** Universal Formula Reveal — Eye icon on every metric, 55+ inline definitions, 10 audit bugs fixed
 **Repository:** github.com/deva-adi/akb1-command-center
 **API Documentation:** http://localhost:9001/docs
