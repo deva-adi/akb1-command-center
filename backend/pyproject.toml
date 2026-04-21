@@ -24,7 +24,7 @@ ignore = ["PLR0913", "PLR2004"]
 "app/api/**" = ["B008"]        # FastAPI `Depends(...)` in defaults is idiomatic
 "app/database.py" = ["PLW0603"] # module-level engine cache is deliberate
 "app/main.py" = ["PLC0415"]    # late imports break a FastAPI circular dep
-"tests/*" = ["PLR2004", "S101", "E402", "PLC0415", "SIM117"]
+"tests/*" = ["PLR2004", "S101", "E402", "PLC0415", "SIM117", "E501"]
 
 [tool.mypy]
 python_version = "3.12"

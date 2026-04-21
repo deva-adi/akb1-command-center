@@ -1,9 +1,25 @@
 import { useRef, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { CheckCircle2, Download, RotateCcw, Upload, UploadCloud } from "lucide-react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  CheckCircle2,
+  Download,
+  RefreshCw,
+  RotateCcw,
+  Upload,
+  UploadCloud,
+} from "lucide-react";
 import { Card, CardHeader } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
-import { fetchImportLog, fetchSettings, previewCsv } from "@/lib/api";
+import {
+  commitCsv,
+  fetchCurrencyRates,
+  fetchImportLog,
+  fetchImportSchemas,
+  fetchSettings,
+  previewCsv,
+  refreshCurrencyRates,
+  rollbackImport,
+} from "@/lib/api";
 import { formatDate } from "@/lib/format";
 
 type PreviewState = {
@@ -31,20 +47,72 @@ const templates = [
   "project_phases.csv",
 ];
 
+type CommitState = {
+  importId: number;
+  rowsImported: number;
+  affectedTables: string[];
+} | null;
+
 export function DataHub() {
   const inputRef = useRef<HTMLInputElement>(null);
   const [preview, setPreview] = useState<PreviewState>(null);
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
+  const [entityType, setEntityType] = useState<string>("");
   const [previewError, setPreviewError] = useState<string | null>(null);
+  const [commitResult, setCommitResult] = useState<CommitState>(null);
+  const [commitError, setCommitError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [dragOver, setDragOver] = useState(false);
 
+  const queryClient = useQueryClient();
   const settings = useQuery({ queryKey: ["settings"], queryFn: fetchSettings });
   const imports = useQuery({ queryKey: ["imports"], queryFn: fetchImportLog });
+  const rates = useQuery({
+    queryKey: ["currency-rates"],
+    queryFn: fetchCurrencyRates,
+  });
+  const schemas = useQuery({ queryKey: ["import-schemas"], queryFn: fetchImportSchemas });
 
   const settingMap = new Map((settings.data ?? []).map((s) => [s.key, s.value ?? "—"]));
 
+  const refreshRates = useMutation({
+    mutationFn: refreshCurrencyRates,
+    onSuccess: (fresh) => {
+      queryClient.setQueryData(["currency-rates"], fresh);
+    },
+  });
+
+  const doCommit = useMutation({
+    mutationFn: ({ file, type }: { file: File; type: string }) =>
+      commitCsv(file, type),
+    onSuccess: (result) => {
+      setCommitResult({
+        importId: result.import_id,
+        rowsImported: result.rows_imported,
+        affectedTables: result.affected_tables,
+      });
+      setCommitError(null);
+      setPreview(null);
+      setPendingFile(null);
+      setEntityType("");
+      void queryClient.invalidateQueries({ queryKey: ["imports"] });
+    },
+    onError: (err) => {
+      setCommitError((err as Error).message);
+    },
+  });
+
+  const doRollback = useMutation({
+    mutationFn: (importId: number) => rollbackImport(importId),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["imports"] });
+    },
+  });
+
   async function handleFile(file: File) {
     setPreviewError(null);
+    setCommitResult(null);
+    setCommitError(null);
     setUploading(true);
     try {
       const response = await previewCsv(file);
@@ -54,8 +122,10 @@ export function DataHub() {
         rowCount: response.row_count,
         sample: response.sample,
       });
+      setPendingFile(file);
     } catch (err) {
       setPreview(null);
+      setPendingFile(null);
       setPreviewError((err as Error).message);
     } finally {
       setUploading(false);
@@ -76,7 +146,7 @@ export function DataHub() {
         <Card className="lg:col-span-2">
           <CardHeader
             title="Ingest programme data"
-            subtitle="Preview parses headers client-side; committed imports arrive in Iteration 2."
+            subtitle="Preview → pick entity type → Commit. Rollback restores the pre-import snapshot."
           />
           <label
             htmlFor="csv-upload"
@@ -125,6 +195,20 @@ export function DataHub() {
             <p className="mt-3 text-sm text-danger-600">{previewError}</p>
           ) : null}
 
+          {commitResult ? (
+            <div className="mt-4 flex items-start gap-2 rounded-md border border-success-200 bg-success-50 p-3">
+              <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-success-600" aria-hidden="true" />
+              <p className="text-sm">
+                <strong>Committed</strong> — {commitResult.rowsImported} rows into{" "}
+                {commitResult.affectedTables.join(", ")} (import #{commitResult.importId})
+              </p>
+            </div>
+          ) : null}
+
+          {commitError ? (
+            <p className="mt-3 text-sm text-danger-600">{commitError}</p>
+          ) : null}
+
           {preview ? (
             <div className="mt-4 space-y-3">
               <div className="flex items-center gap-2">
@@ -158,10 +242,44 @@ export function DataHub() {
                   </tbody>
                 </table>
               </div>
-              <p className="text-xs text-navy/70">
-                Commit and rollback land with the{" "}
-                <code>data_import_snapshots</code> pipeline in Iteration 2.
-              </p>
+              <div className="flex items-center gap-3">
+                <select
+                  value={entityType}
+                  onChange={(e) => setEntityType(e.target.value)}
+                  className="rounded border border-ice-200 bg-white px-3 py-1.5 text-sm text-navy focus:outline-none focus:ring-2 focus:ring-amber-500"
+                  aria-label="Entity type"
+                >
+                  <option value="">— select entity type —</option>
+                  {Object.entries(schemas.data ?? {}).map(([key, cfg]) => (
+                    <option key={key} value={key}>
+                      {cfg.label}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  className="btn-primary text-sm"
+                  disabled={!entityType || !pendingFile || doCommit.isPending}
+                  onClick={() => {
+                    if (pendingFile && entityType) {
+                      doCommit.mutate({ file: pendingFile, type: entityType });
+                    }
+                  }}
+                >
+                  {doCommit.isPending ? "Committing…" : "Commit"}
+                </button>
+                <button
+                  type="button"
+                  className="btn-ghost text-sm"
+                  onClick={() => {
+                    setPreview(null);
+                    setPendingFile(null);
+                    setEntityType("");
+                  }}
+                >
+                  Discard
+                </button>
+              </div>
             </div>
           ) : null}
         </Card>
@@ -217,8 +335,19 @@ export function DataHub() {
                     <Badge tone={entry.status === "committed" ? "green" : "amber"}>
                       {entry.status ?? "pending"}
                     </Badge>
-                    <button className="btn-ghost" type="button" disabled>
-                      <RotateCcw className="size-3" /> Rollback
+                    <button
+                      className="btn-ghost"
+                      type="button"
+                      disabled={entry.status === "rolled_back" || doRollback.isPending}
+                      onClick={() => doRollback.mutate(entry.id)}
+                      title={
+                        entry.status === "rolled_back"
+                          ? "Already rolled back"
+                          : "Restore pre-import snapshot"
+                      }
+                    >
+                      <RotateCcw className="size-3" />{" "}
+                      {doRollback.isPending ? "…" : "Rollback"}
                     </button>
                   </div>
                 </li>
@@ -248,6 +377,76 @@ export function DataHub() {
           </p>
         </Card>
       </section>
+
+      <Card>
+        <CardHeader
+          title="Currency rates"
+          subtitle={
+            rates.data && rates.data.length > 0
+              ? `Last updated ${formatDate(rates.data[0].last_updated)} · source ${rates.data[0].source}`
+              : "No rates loaded yet"
+          }
+          action={
+            <button
+              type="button"
+              onClick={() => refreshRates.mutate()}
+              disabled={refreshRates.isPending}
+              className="btn-primary text-xs"
+            >
+              <RefreshCw
+                className={`size-3 ${refreshRates.isPending ? "animate-spin" : ""}`}
+                aria-hidden="true"
+              />{" "}
+              {refreshRates.isPending ? "Refreshing…" : "Refresh from ECB"}
+            </button>
+          }
+        />
+        {refreshRates.isError ? (
+          <p className="mb-2 text-xs text-danger-600">
+            {(refreshRates.error as Error).message}
+          </p>
+        ) : null}
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="text-left text-xs uppercase text-navy/70">
+              <th className="py-2">Code</th>
+              <th>Symbol</th>
+              <th className="text-right">Rate per 1 USD</th>
+              <th>Source</th>
+              <th>Last updated</th>
+            </tr>
+          </thead>
+          <tbody>
+            {(rates.data ?? []).map((r) => (
+              <tr key={r.code} className="border-t border-ice-100">
+                <td className="py-2 font-mono font-semibold">{r.code}</td>
+                <td>{r.symbol ?? "—"}</td>
+                <td className="text-right font-mono">
+                  {Number(r.rate_to_base).toFixed(4)}
+                </td>
+                <td className="font-mono text-xs">{r.source}</td>
+                <td className="text-xs text-navy/70">
+                  {formatDate(r.last_updated)}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        <p className="mt-3 text-xs text-navy/70">
+          Refresh hits{" "}
+          <a
+            className="underline"
+            href="https://www.frankfurter.app/"
+            target="_blank"
+            rel="noreferrer"
+          >
+            frankfurter.app
+          </a>{" "}
+          (European Central Bank mirror, no API key). If the container can't
+          reach the internet, the dashboard keeps using the last stored rates
+          and shows a 502 message here — no chart data is lost.
+        </p>
+      </Card>
 
       <Card>
         <CardHeader
