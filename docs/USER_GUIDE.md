@@ -1,6 +1,6 @@
 # AKB1 Command Center — User Guide
 
-**Version:** 5.5 | **Audience:** CTO, Associate Director, Delivery Lead, CFO, Account Director
+**Version:** 5.5.2 | **Audience:** CTO, Associate Director, Delivery Lead, CFO, Account Director
 **Last Updated:** 2026-04-21 | **Author:** Adi Kompalli
 
 ---
@@ -576,6 +576,16 @@ These patterns work consistently across all tabs:
 | Cross-tab navigation | Click a MetricCard, accordion row, or expanded section nav chip | Navigates to the related tab pre-filtered to `?programme=CODE` |
 | L5 row expand | Click any work item row in a FlowDrillPanel or SprintDrillPanel | Row expands inline showing all item fields; click again to collapse |
 | Expanded section links | Expand any phase, milestone, scenario, CR, or audit row | Bottom of expanded section shows "Open in: Tab X \| Tab Y" chips |
+
+### v5.5.2 — Complete Drill-Down Connectivity (35 fixes total)
+
+**Additional fixes in v5.5.2** (second audit pass — 6 bugs found and fixed):
+
+- **Delivery Health — EVM strip (eac, tcpi, % complete)**: The 3 remaining EVM MetricCards that were display-only are now wired. All 5 EVM strip cards navigate to Margin & EVM with programme context.
+- **Delivery Health — Sprint drill panel (burndown_pct, shortfall)**: The burndown % and shortfall MetricCards inside the SprintDrillPanel now open the story table. Burndown % → shows completed stories; Shortfall → shows all planned stories.
+- **Delivery Health — Waterfall phase/milestone MetricCards (HTML fix)**: Phase completion, schedule variance, and milestone slip MetricCards were nested inside `<button>` elements — invalid HTML that caused the Eye icon to trigger the accordion expand. Restructured to use `<div role="button">` for accordion rows so MetricCards are independent.
+- **Velocity & Flow — Blend-rule gate fallback**: Gate row onClick silently did nothing if programme code lookup returned undefined. Now always navigates — to `/delivery?programme=CODE` if found, or `/delivery` as fallback.
+- **Risk & Audit — Audit Readiness Scorecard programme context**: All 7 dimension rows (Financial Controls, AI Governance, Risk Management, Change Management, Quality Assurance, Process Adherence, Data Integrity) now preserve the active `?programme=CODE` query parameter when navigating to the destination tab.
 
 ### v5.5.1 — Complete Drill-Down Connectivity (29 fixes total)
 
@@ -1493,8 +1503,9 @@ In most dashboards, numbers are black boxes. A CPI of 0.87 means nothing to a st
 
 ---
 
-**AKB1 Command Center v5.5.1**
+**AKB1 Command Center v5.5.2**
 **Maintained by:** Adi Kompalli | deva.adi@gmail.com
+**New in v5.5.2:** 6 additional drill-down fixes — EVM strip, sprint drill panel, Waterfall button-inside-button fix, VelocityFlow fallback, RiskAudit programme context.
 **New in v5.5.1:** 4 additional drill-down fixes — Scrum/Kanban summary cards, bench cost scroll, CI communication tracker tiles.
 **New in v5.5:** Complete Drill-Down Connectivity — 25 dead-end fixes across all 11 tabs. Every number navigates, expands, or cross-links.
 **New in v5.4:** Universal Formula Reveal — Eye icon on every metric, 55+ inline definitions, 10 audit bugs fixed

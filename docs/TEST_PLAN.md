@@ -1,4 +1,4 @@
-# AKB1 Command Center v5.5.1 — Production Test Plan
+# AKB1 Command Center v5.5.2 — Production Test Plan
 
 **Document type:** Executive-level Quality Assurance Test Plan  
 **Version:** 1.1  
@@ -158,7 +158,7 @@ The seeded dataset simulates a portfolio called **NovaTech** — an IT services 
 | BUG-009 | Customer Intelligence | CustomerIntelligence summary | `metricId="escalation_count"` used but value shown is `escalation_open` (subset) | Created `MetricDef "open_escalations"` with correct description, rewired | FIXED |
 | BUG-010 | Margin & EVM | MarginEvm summary | Margin percentages in summary used Badge-only display — no formula reveal | Added 4 `MetricCard` summary section (Gross / Contribution / Portfolio / Net margin) above waterfall chart | FIXED |
 
-**v5.5 — Drill-Down Connectivity (29 fixes, A-1 through D-8 + BUG-NEW-1 through BUG-NEW-4)**
+**v5.5 — Drill-Down Connectivity (35 fixes, A-1 through D-8 + BUG-NEW-1 through BUG-NEW-4 + BUG-E1 through BUG-E6)**
 
 | ID | Tab | Location | Root Cause | Fix Applied | Status |
 |---|---|---|---|---|---|
@@ -193,6 +193,12 @@ The seeded dataset simulates a portfolio called **NovaTech** — an IT services 
 | BUG-NEW-2 | Delivery Health | KanbanView L3 summary MetricCards | 4 summary cards (throughput, wip, cycle_p50, blocked) had no `onClick` — display-only | All 4 cards wire to `setSelectedWeekIdx(sorted.length - 1)` to open FlowDrillPanel for the latest week | FIXED |
 | BUG-NEW-3 | Smart Ops | `bench_cost` summary MetricCard | `bench_cost` card had no `onClick` while the other 3 summary cards were wired | Added `resourcePoolRef` + smooth-scroll to Resource pool section on click | FIXED |
 | BUG-NEW-4 | Customer Intelligence | Communication tracker `Tile` components | 4 Tile elements (meetings, action items, closed, escalations) were plain divs — no interactivity | Updated `Tile` to accept `onClick`; meetings/action items/closed → scroll to Action items; escalations → `/raid` | FIXED |
+| BUG-E1 | Delivery Health | EvmStrip — `eac`, `tcpi`, `percent_complete` | 3 of 5 EVM strip MetricCards had no `onClick` — only CPI and SPI were wired | Added `onClick` to all 3; all navigate to `/margin?programme=CODE` via `onNavigate` prop | FIXED |
+| BUG-E2 | Delivery Health | SprintDrillPanel — `burndown_pct`, `shortfall` | 2 of 9 L4 drill-panel MetricCards were display-only despite being inside an interactive panel | `burndown_pct` → `toggleFilter("completed")`; `shortfall` → `toggleFilter("planned")` | FIXED |
+| BUG-E3 | Delivery Health | WaterfallView — phase accordion MetricCards | `phase_completion` + `schedule_variance_days` MetricCards nested inside `<button>` — invalid HTML, Eye icon broke accordion | Replaced outer `<button>` with `<div role="button">`; MetricCards wrapped in stopPropagation div; each navigates to `/delivery` | FIXED |
+| BUG-E4 | Delivery Health | WaterfallView — milestone accordion MetricCard | `milestone_slip` MetricCard nested inside `<button>` — same button-inside-button invalid HTML issue | Same fix as BUG-E3; MetricCard navigates to `/raid?programme=CODE` | FIXED |
+| BUG-E5 | Velocity & Flow | Blend-rule gate table rows | `onClick` silently did nothing when programme code lookup returned `undefined` — `if (code) navigate(...)` with no else branch | Added fallback `navigate('/delivery')` so click always navigates | FIXED |
+| BUG-E6 | Risk & Audit | Audit Readiness Scorecard rows | All 7 dimension rows navigated to bare paths (`/margin`, `/raid`, etc.) — dropped `?programme=CODE` context when filter active | All 7 `onClick` handlers now append `?programme=${filteredProgramme.code}` when `filteredProgramme` is set | FIXED |
 
 ### 3.2 Test Execution Results
 
@@ -541,7 +547,7 @@ This section verifies that the formula displayed in each MetricCard's Eye-icon p
 
 ## 6a. v5.5 Drill-Down Connectivity Test Cases
 
-Minimum test pass required before any v5.5 merge. All 29 fixes from A-1 → D-8 + BUG-NEW-1 through BUG-NEW-4 must pass.
+Minimum test pass required before any v5.5 merge. All 35 fixes from A-1 → D-8 + BUG-NEW-1 through BUG-NEW-4 + BUG-E1 through BUG-E6 must pass.
 
 | TC | Fix | Steps | Expected Result | Status |
 |---|---|---|---|---|
@@ -568,6 +574,12 @@ Minimum test pass required before any v5.5 merge. All 29 fixes from A-1 → D-8 
 | TC-CONN-021 | BUG-NEW-2 — KanbanView summary MetricCards | 1. Navigate to `/delivery`, select a Kanban project. 2. Click the "Throughput" MetricCard. 3. Click the "WIP" MetricCard. 4. Click the "Cycle P50" MetricCard. 5. Click the "Blocked" MetricCard. | All 4 clicks open the FlowDrillPanel for the latest week inline. No navigation away from the Delivery Health tab. | FIXED |
 | TC-CONN-022 | BUG-NEW-3 — SmartOps bench_cost scroll | 1. Navigate to `/smart-ops`. 2. Click the "Bench cost" (bench_cost) MetricCard in the summary row. | Page smooth-scrolls to the Resource pool table section. No navigation to another tab. | FIXED |
 | TC-CONN-023 | BUG-NEW-4 — CustomerIntelligence Tile interactivity | 1. Navigate to `/customer`, select any programme. 2. In the Communication tracker card, click "Meetings (this month)". 3. Click "Action items open". 4. Click "Closed". 5. Click "Escalations open". | Steps 2–4: page smooth-scrolls to the Action items card. Step 5: navigates to `/raid?programme=CODE` (or `/raid` without filter). Tile has `role="button"` and hover style. | FIXED |
+| TC-CONN-024 | BUG-E1 — EvmStrip dead MetricCards | 1. Navigate to `/delivery`, select any project (Scrum, Kanban, or Waterfall). 2. Scroll to the EVM strip at the bottom. 3. Click the "EAC" MetricCard. 4. Click the "TCPI" MetricCard. 5. Click the "% Complete" MetricCard. | All 3 clicks navigate to `/margin?programme=CODE`. Eye icons on all 5 EVM strip cards are functional. | FIXED |
+| TC-CONN-025 | BUG-E2 — SprintDrillPanel burndown_pct + shortfall | 1. On a Scrum project, click a bar or sprint row to open the SprintDrillPanel. 2. Click the "Burndown %" MetricCard. 3. Click the "Shortfall" MetricCard. | Step 2: story table filters to show completed items (same as clicking "Completed points"). Step 3: story table filters to show all planned items. Both cards have drill hint text and Eye icons. | FIXED |
+| TC-CONN-026 | BUG-E3 — WaterfallView phase MetricCards (button-inside-button fix) | 1. Navigate to `/delivery`, select a Waterfall project. 2. Click a phase row to expand it. 3. In the phase list (collapsed state), click the "Phase completion %" MetricCard. 4. Verify the Eye icon on the MetricCard works independently. | Step 2: phase row expands (accordion works). Step 3: navigates to `/delivery?programme=CODE`. Step 4: Eye icon opens formula panel without triggering the accordion. | FIXED |
+| TC-CONN-027 | BUG-E4 — WaterfallView milestone MetricCard | 1. On a Waterfall project with slipped milestones, scroll to the Milestones section. 2. Click the "milestone_slip" MetricCard (shown on rows where slipDays ≠ 0). | Navigates to `/raid?programme=CODE`. Eye icon opens formula panel independently without triggering the accordion expand. | FIXED |
+| TC-CONN-028 | BUG-E5 — VelocityFlow blend-rule fallback navigation | 1. Navigate to `/velocity` with NO programme filter. 2. Scroll to the blend-rule gates table. 3. Click any gate row. | Row always navigates — to `/delivery?programme=CODE` if the programme lookup succeeds, or to `/delivery` (generic) if it does not. Never silently does nothing. | FIXED |
+| TC-CONN-029 | BUG-E6 — RiskAudit scorecard preserves programme context | 1. Navigate to `/raid?programme=NVT-HRCL`. 2. Scroll to the Audit Readiness Scorecard. 3. Click "Financial Controls". 4. Navigate back. 5. Click "AI Governance". 6. Navigate back. 7. Click "Quality Assurance". | Step 3: navigates to `/margin?programme=NVT-HRCL`. Step 5: navigates to `/ai?programme=NVT-HRCL`. Step 7: navigates to `/delivery?programme=NVT-HRCL`. Programme context preserved on all 7 dimension rows. | FIXED |
 
 ---
 
@@ -593,6 +605,11 @@ Execute the following checklist after any code change to ensure no regression ha
 - [ ] On Delivery Health Kanban view, verify 4 summary MetricCards open FlowDrillPanel (BUG-NEW-2 regression risk)
 - [ ] On Smart Ops, verify bench_cost card scrolls to Resource pool (BUG-NEW-3 regression risk)
 - [ ] On Customer Intelligence, verify Tile components (meetings, action items, escalations) are interactive (BUG-NEW-4 regression risk)
+- [ ] On Delivery Health EVM strip, verify EAC/TCPI/% Complete cards navigate to Margin & EVM (BUG-E1 regression risk)
+- [ ] On Delivery Health Scrum sprint drill panel, verify burndown_pct and shortfall cards open story table (BUG-E2 regression risk)
+- [ ] On Delivery Health Waterfall view, verify phase/milestone MetricCard Eye icons work without triggering accordion expand (BUG-E3/E4 regression risk)
+- [ ] On Velocity & Flow blend-rule table, verify every row navigates even without programme filter (BUG-E5 regression risk)
+- [ ] On Risk & Audit scorecard with programme filter active, verify navigation preserves ?programme=CODE (BUG-E6 regression risk)
 
 ### 7.2 After MetricCard or KpiTile Component Changes
 
@@ -670,17 +687,17 @@ The following items are intentional design boundaries or accepted limitations fo
 | Tab | Route | Total TCs | Passed | Failed | Fixed (bugs in this release) | Outstanding |
 |---|---|---|---|---|---|---|
 | Executive Overview | `/` | 12 | 11 | 0 | 1 | 0 |
-| Delivery Health (all views) | `/delivery` | 31 | 25 | 0 | 4+9 (v5.5) | 0 |
-| Velocity & Flow | `/velocity` | 17 | 15 | 0 | 2+3 (v5.5) | 0 |
+| Delivery Health (all views) | `/delivery` | 35 | 29 | 0 | 4+9+4 (v5.5) | 0 |
+| Velocity & Flow | `/velocity` | 18 | 16 | 0 | 2+3+1 (v5.5) | 0 |
 | Margin & EVM | `/margin` | 14 | 13 | 0 | 1+2 (v5.5) | 0 |
 | Customer Intelligence | `/ci` | 16 | 14 | 0 | 1+4 (v5.5) | 0 |
 | AI Governance | `/ai` | 13 | 13 | 0 | 3 (v5.5) | 0 |
-| Risk & Audit | `/raid` | 11 | 11 | 0 | 3 (v5.5) | 0 |
+| Risk & Audit | `/raid` | 12 | 12 | 0 | 3+1 (v5.5) | 0 |
 | Smart Ops | `/smart-ops` | 14 | 12 | 0 | 1+4 (v5.5) | 0 |
 | KPI Studio | `/kpi` | 6 | 6 | 0 | 0 | 0 |
 | Data Hub | `/data` | 6 | 6 | 0 | 0 | 0 |
 | Reports | `/reports` | 4 | 4 | 0 | 0 | 0 |
-| **Grand Total** | | **144** | **134** | **0** | **10+29** | **0** |
+| **Grand Total** | | **150** | **140** | **0** | **10+35** | **0** |
 
 ### 9.2 Bug Classification
 
@@ -689,7 +706,7 @@ The following items are intentional design boundaries or accepted limitations fo
 | Critical (blocked drill path) | 2 | BUG-001 (CFD clicks broken), BUG-002 (Cycle chart clicks broken) |
 | High (formula reveal absent) | 7 | BUG-003, BUG-004 (×4), BUG-005 (×3), BUG-008, BUG-009, BUG-010 |
 | Medium (unit / metric mismatch) | 2 | BUG-006, BUG-007 |
-| **v5.5 High (dead-end drill paths)** | **29** | A-1 → D-8 + BUG-NEW-1 → BUG-NEW-4 — MetricCards, chart clicks, accordion rows, Tile components, L5 tables all connected |
+| **v5.5 High (dead-end drill paths)** | **35** | A-1 → D-8 + BUG-NEW-1 → BUG-NEW-4 + BUG-E1 → BUG-E6 — MetricCards, chart clicks, accordion rows, Tile components, L5 tables, button-inside-button, programme context all fixed |
 | Low | 0 | — |
 | **Total** | **40** | All fixed across v5.4 + v5.5 |
 
@@ -724,7 +741,7 @@ The following items are intentional design boundaries or accepted limitations fo
 
 | Criterion | Target | Achieved |
 |---|---|---|
-| Total test cases pass rate | 100% | 100% (144/144) |
+| Total test cases pass rate | 100% | 100% (150/150) |
 | Open bugs (any severity) | 0 | 0 |
 | Formula reveal coverage | ≥ 90% of all metric IDs | 96% |
 | Drill path completeness (L1→L5) | All applicable paths verified | Verified |
@@ -733,9 +750,9 @@ The following items are intentional design boundaries or accepted limitations fo
 | pytest coverage | ≥ 70% | ≥ 70% (CI gate) |
 | Vitest coverage | ≥ 70% | ≥ 70% (CI gate) |
 
-**Release decision: APPROVED — all quality gates passed. Zero outstanding bugs. All 144 test cases pass. All drill paths fully connected (L1→L5 + cross-tab). Formula accuracy confirmed against seeded NovaTech demo data.**
+**Release decision: APPROVED — all quality gates passed. Zero outstanding bugs. All 150 test cases pass. All drill paths fully connected (L1→L5 + cross-tab). Formula accuracy confirmed against seeded NovaTech demo data.**
 
 ---
 
 *Document prepared by Adi Kompalli, Associate Director – Delivery, 2026-04-21.*  
-*Build: AKB1 Command Center v5.5.1 · Branch: `main` · Repo: github.com/deva-adi/akb1-command-center*
+*Build: AKB1 Command Center v5.5.2 · Branch: `main` · Repo: github.com/deva-adi/akb1-command-center*
