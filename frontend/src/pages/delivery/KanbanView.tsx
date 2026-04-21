@@ -170,12 +170,12 @@ export function KanbanView({ project }: { project: ProjectListItem }) {
 
   return (
     <div className="flex flex-col gap-4">
-      {/* ── Summary row ── */}
+      {/* ── Summary row — click to open latest week drill panel ── */}
       <section className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        <MetricCard metricId="throughput" value={`${latest.throughput_items ?? 0}`} sub={`avg ${avgThroughput.toFixed(1)}`} />
-        <MetricCard metricId="wip" value={`${(latest.wip_avg ?? 0).toFixed(1)}`} sub={`limit ${latest.wip_limit ?? "—"}`} tone={wipBreach ? "red" : "green"} />
-        <MetricCard metricId="cycle_p50" value={`${(latest.cycle_time_p50 ?? 0).toFixed(1)}d`} sub={`p95 ${(latest.cycle_time_p95 ?? 0).toFixed(1)}d`} />
-        <MetricCard metricId="blocked" value={`${(latest.blocked_time_hours ?? 0).toFixed(1)}h`} tone={(latest.blocked_time_hours ?? 0) > 8 ? "red" : (latest.blocked_time_hours ?? 0) > 4 ? "amber" : "green"} />
+        <MetricCard metricId="throughput" value={`${latest.throughput_items ?? 0}`} sub={`avg ${avgThroughput.toFixed(1)}`} onClick={() => setSelectedWeekIdx(sorted.length - 1)} />
+        <MetricCard metricId="wip" value={`${(latest.wip_avg ?? 0).toFixed(1)}`} sub={`limit ${latest.wip_limit ?? "—"}`} tone={wipBreach ? "red" : "green"} onClick={() => setSelectedWeekIdx(sorted.length - 1)} />
+        <MetricCard metricId="cycle_p50" value={`${(latest.cycle_time_p50 ?? 0).toFixed(1)}d`} sub={`p95 ${(latest.cycle_time_p95 ?? 0).toFixed(1)}d`} onClick={() => setSelectedWeekIdx(sorted.length - 1)} />
+        <MetricCard metricId="blocked" value={`${(latest.blocked_time_hours ?? 0).toFixed(1)}h`} tone={(latest.blocked_time_hours ?? 0) > 8 ? "red" : (latest.blocked_time_hours ?? 0) > 4 ? "amber" : "green"} onClick={() => setSelectedWeekIdx(sorted.length - 1)} />
       </section>
 
       {/* ── CFD ── */}

@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useMemo, useState } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -65,6 +65,8 @@ export function CustomerIntelligence() {
   const [activeProgrammeId, setActiveProgrammeId] = useState<number | null>(null);
   const [expandedAction, setExpandedAction] = useState<number | null>(null);
   const [expandedIncident, setExpandedIncident] = useState<number | null>(null);
+  const actionItemsRef = useRef<HTMLDivElement>(null);
+  const slaIncidentsRef = useRef<HTMLDivElement>(null);
 
   const filteredProgramme = useMemo(
     () => programmes.data?.find((p) => p.code === programmeFilter) ?? null,
@@ -390,18 +392,22 @@ export function CustomerIntelligence() {
                 <Tile
                   label="Meetings (this month)"
                   value={`${latest.steering_meetings_held ?? 0} / ${latest.steering_meetings_planned ?? 0}`}
+                  onClick={() => actionItemsRef.current?.scrollIntoView({ behavior: 'smooth' })}
                 />
                 <Tile
                   label="Action items open"
                   value={`${latest.action_items_open ?? 0}`}
+                  onClick={() => actionItemsRef.current?.scrollIntoView({ behavior: 'smooth' })}
                 />
                 <Tile
                   label="Closed"
                   value={`${latest.action_items_closed ?? 0}`}
+                  onClick={() => actionItemsRef.current?.scrollIntoView({ behavior: 'smooth' })}
                 />
                 <Tile
                   label="Escalations open"
                   value={`${latest.escalation_open}`}
+                  onClick={() => navigate(activeProgramme ? `/raid?programme=${activeProgramme.code}` : '/raid')}
                 />
               </dl>
               <div className="mt-4 flex flex-col gap-2 text-sm">
@@ -425,6 +431,7 @@ export function CustomerIntelligence() {
         </Card>
       </section>
 
+      <div ref={actionItemsRef}>
       <Card>
         <CardHeader
           title="Action items"
@@ -509,7 +516,9 @@ export function CustomerIntelligence() {
           </ul>
         )}
       </Card>
+      </div>
 
+      <div ref={slaIncidentsRef}>
       <Card>
         <CardHeader
           title="SLA incident ledger"
@@ -641,6 +650,7 @@ export function CustomerIntelligence() {
           </div>
         )}
       </Card>
+      </div>
     </div>
   );
 }
@@ -655,9 +665,15 @@ function Detail({ label, value }: { label: string; value: string }) {
   );
 }
 
-function Tile({ label, value }: { label: string; value: string }) {
+function Tile({ label, value, onClick }: { label: string; value: string; onClick?: () => void }) {
   return (
-    <div className="flex flex-col">
+    <div
+      className={`flex flex-col${onClick ? " cursor-pointer rounded px-1 py-0.5 transition hover:bg-ice-50" : ""}`}
+      role={onClick ? "button" : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      onClick={onClick}
+      onKeyDown={onClick ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick(); } } : undefined}
+    >
       <span className="kpi-label">{label}</span>
       <span className="font-mono text-lg font-semibold text-navy">{value}</span>
     </div>

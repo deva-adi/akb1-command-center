@@ -29,6 +29,7 @@ import {
 import { formatDate } from "@/lib/format";
 
 export function ScrumView({ project, programmeCode }: { project: ProjectListItem; programmeCode?: string }) {
+  const navigate = useNavigate();
   const [expandedSprint, setExpandedSprint] = useState<number | null>(null);
   const [drillSprint, setDrillSprint] = useState<string | null>(null);
 
@@ -80,19 +81,26 @@ export function ScrumView({ project, programmeCode }: { project: ProjectListItem
   return (
     <div className="flex flex-col gap-4">
       <section className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        <MetricCard label="Last sprint" value={`#${lastSprint.sprint_number ?? "?"}`} />
+        <MetricCard
+          label="Last sprint"
+          value={`#${lastSprint.sprint_number ?? "?"}`}
+          onClick={() => setDrillSprint(`#${lastSprint.sprint_number}`)}
+        />
         <MetricCard
           metricId="velocity"
           value={`${(lastSprint.velocity ?? 0).toFixed(0)} pts`}
           sub={`avg ${avgVelocity.toFixed(0)}`}
+          onClick={() => navigate(programmeCode ? `/velocity?programme=${programmeCode}` : '/velocity')}
         />
         <MetricCard
           metricId="defects"
           value={`${lastSprint.defects_found ?? 0}`}
+          onClick={() => navigate(programmeCode ? `/raid?programme=${programmeCode}` : '/raid')}
         />
         <MetricCard
           metricId="rework_hours"
           value={`${(lastSprint.rework_hours ?? 0).toFixed(0)}h`}
+          onClick={() => navigate(programmeCode ? `/velocity?programme=${programmeCode}` : '/velocity')}
         />
       </section>
 

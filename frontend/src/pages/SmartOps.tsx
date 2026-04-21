@@ -1,4 +1,4 @@
-import { Fragment, useMemo, useState } from "react";
+import { Fragment, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -99,6 +99,8 @@ export function SmartOps() {
     return [...set].sort();
   }, [scenarios.data]);
 
+  const resourcePoolRef = useRef<HTMLDivElement>(null);
+
   const programmesMap = useMemo(
     () => new Map((programmes.data ?? []).map(p => [p.id, p.code])),
     [programmes.data],
@@ -142,6 +144,7 @@ export function SmartOps() {
           metricId="bench_cost"
           value={currency.format(benchCost, "INR")}
           sub={`${bench.length} FTE on bench`}
+          onClick={() => resourcePoolRef.current?.scrollIntoView({ behavior: 'smooth' })}
         />
       </section>
 
@@ -194,6 +197,7 @@ export function SmartOps() {
         )}
       </Card>
 
+      <div ref={resourcePoolRef}>
       <Card>
         <CardHeader
           title="Resource pool"
@@ -231,6 +235,7 @@ export function SmartOps() {
           </table>
         </div>
       </Card>
+      </div>
     </div>
   );
 }
