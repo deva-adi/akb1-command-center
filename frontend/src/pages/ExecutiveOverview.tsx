@@ -16,6 +16,7 @@ import { AlertsTicker } from "@/components/AlertsTicker";
 import { Card, CardHeader } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { KpiTile } from "@/components/ui/KpiTile";
+import { MetricCard } from "@/components/ui/MetricCard";
 import { TopRisksCard } from "@/components/TopRisksCard";
 import {
   useCpiSnapshots,
@@ -242,13 +243,15 @@ export function ExecutiveOverview() {
         <Card>
           <CardHeader title="Financials" subtitle="Click to see per-programme breakdown" />
           <div className="grid grid-cols-2 gap-3">
-            <KpiMini
+            <MetricCard
+              metricId="portfolio_revenue"
               label="Revenue"
               value={currency.format(totals.revenue, currency.baseCurrency)}
               active={drillTarget === "revenue"}
               onClick={() => openDrill("revenue")}
             />
-            <KpiMini
+            <MetricCard
+              metricId="blended_margin"
               label="Avg margin"
               value={formatPct(totals.avgMargin)}
               active={drillTarget === "margin"}
@@ -269,13 +272,14 @@ export function ExecutiveOverview() {
         <Card>
           <CardHeader title="Delivery" subtitle="Click to see per-programme breakdown" />
           <div className="grid grid-cols-2 gap-3">
-            <KpiMini
+            <MetricCard
+              metricId="avg_cpi"
               label="Avg CPI"
               value={formatRatio(totals.avgCpi)}
               active={drillTarget === "cpi"}
               onClick={() => openDrill("cpi")}
             />
-            <KpiMini
+            <MetricCard
               label="Programmes"
               value={`${rows.length}`}
               tone="neutral"
@@ -505,41 +509,6 @@ function RagStat({
       </Badge>
       <span className="text-xs text-navy/70">{label}</span>
     </button>
-  );
-}
-
-function KpiMini({
-  label,
-  value,
-  tone = "neutral",
-  active,
-  onClick,
-}: {
-  label: string;
-  value: string;
-  tone?: RagBucket | "neutral";
-  active?: boolean;
-  onClick?: () => void;
-}) {
-  const Tag = onClick ? "button" : "div";
-  return (
-    <Tag
-      type={onClick ? "button" : undefined}
-      onClick={onClick}
-      className={[
-        "flex flex-col gap-1",
-        onClick
-          ? "cursor-pointer rounded p-1 transition hover:bg-ice-50 dark:hover:bg-navy-600"
-          : "",
-        active ? "ring-2 ring-navy/30 rounded bg-navy/5" : "",
-      ].join(" ")}
-      aria-label={onClick ? `Drill into ${label}` : undefined}
-      aria-expanded={active}
-    >
-      <span className="kpi-label">{label}</span>
-      <Badge tone={tone}>{value}</Badge>
-      {active && <span className="mt-0.5 text-[10px] text-navy/60">▼ open below</span>}
-    </Tag>
   );
 }
 

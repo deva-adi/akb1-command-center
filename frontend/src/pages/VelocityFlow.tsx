@@ -20,6 +20,7 @@ import { ProgrammeFilterBar } from "@/components/ProgrammeFilterBar";
 import { PROGRAMME_CROSS_LINKS } from "@/components/programmeCrossLinks";
 import { Card, CardHeader } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
+import { MetricCard } from "@/components/ui/MetricCard";
 import {
   fetchBlendRules,
   fetchDualVelocity,
@@ -129,21 +130,21 @@ export function VelocityFlow() {
 
       {aggregate ? (
         <section className="grid grid-cols-2 gap-3 md:grid-cols-4">
-          <Stat
-            label="Standard velocity (sum)"
+          <MetricCard
+            metricId="standard_velocity"
             value={`${aggregate.totalStandard.toFixed(0)} pts`}
           />
-          <Stat
-            label="AI raw velocity (sum)"
+          <MetricCard
+            metricId="ai_raw_velocity"
             value={`${aggregate.totalAiRaw.toFixed(0)} pts`}
           />
-          <Stat
-            label="AI quality-adjusted"
+          <MetricCard
+            metricId="ai_adjusted_velocity"
             value={`${aggregate.totalAiAdj.toFixed(0)} pts`}
             sub={`${formatPct(aggregate.totalAiRaw > 0 ? aggregate.totalAiAdj / aggregate.totalAiRaw : null)} retained after rework`}
           />
-          <Stat
-            label="Merge-eligible sprints"
+          <MetricCard
+            metricId="merge_eligible"
             value={`${aggregate.mergeEligibleCount} / ${aggregate.totalRows}`}
             tone={aggregate.mergeEligibleCount === aggregate.totalRows ? "green" : "amber"}
           />
@@ -328,11 +329,11 @@ function DualVelocityChart({
             </button>
           </div>
           <dl className="mt-2 grid grid-cols-2 gap-3 md:grid-cols-4">
-            <VCell label="Standard velocity" value={`${(drillRow.standard_velocity ?? 0).toFixed(0)} pts`} />
-            <VCell label="AI raw velocity" value={`${(drillRow.ai_raw_velocity ?? 0).toFixed(0)} pts`} />
-            <VCell label="AI adjusted velocity" value={`${(drillRow.ai_quality_adjusted_velocity ?? 0).toFixed(0)} pts`} />
-            <VCell
-              label="Quality parity"
+            <MetricCard metricId="standard_velocity" value={`${(drillRow.standard_velocity ?? 0).toFixed(0)} pts`} />
+            <MetricCard metricId="ai_raw_velocity" value={`${(drillRow.ai_raw_velocity ?? 0).toFixed(0)} pts`} />
+            <MetricCard metricId="ai_adjusted_velocity" value={`${(drillRow.ai_quality_adjusted_velocity ?? 0).toFixed(0)} pts`} />
+            <MetricCard
+              metricId="quality_parity"
               value={formatPct(drillRow.quality_parity_ratio)}
               tone={
                 (drillRow.quality_parity_ratio ?? 0) >= 0.95
@@ -342,10 +343,10 @@ function DualVelocityChart({
                     : "red"
               }
             />
-            <VCell label="AI rework points" value={`${(drillRow.ai_rework_points ?? 0).toFixed(0)} pts`} />
-            <VCell label="Combined velocity" value={`${(drillRow.combined_velocity ?? 0).toFixed(0)} pts`} />
-            <VCell
-              label="Merge eligible"
+            <MetricCard metricId="rework_hours" label="AI rework points" value={`${(drillRow.ai_rework_points ?? 0).toFixed(0)} pts`} />
+            <MetricCard metricId="velocity" label="Combined velocity" value={`${(drillRow.combined_velocity ?? 0).toFixed(0)} pts`} />
+            <MetricCard
+              metricId="merge_eligible"
               value={drillRow.merge_eligible ? "Yes" : "No"}
               tone={drillRow.merge_eligible ? "green" : "red"}
             />
@@ -414,44 +415,3 @@ function DualVelocityChart({
   );
 }
 
-function VCell({
-  label,
-  value,
-  tone = "neutral",
-}: {
-  label: string;
-  value: string;
-  tone?: "green" | "amber" | "red" | "neutral";
-}) {
-  return (
-    <div className="flex flex-col gap-0.5">
-      <span className="kpi-label">{label}</span>
-      <span className={`font-mono text-sm font-semibold ${tone === "red" ? "text-red-600" : tone === "green" ? "text-success-600" : tone === "amber" ? "text-amber-600" : "text-navy"}`}>
-        {value}
-      </span>
-    </div>
-  );
-}
-
-function Stat({
-  label,
-  value,
-  sub,
-  tone,
-}: {
-  label: string;
-  value: string;
-  sub?: string;
-  tone?: "green" | "amber" | "red" | "neutral";
-}) {
-  return (
-    <div className="rounded border border-ice-100 bg-white px-3 py-2">
-      <span className="kpi-label">{label}</span>
-      <div className="flex items-center gap-2">
-        <p className="font-mono text-xl font-semibold text-navy">{value}</p>
-        {tone && tone !== "neutral" ? <Badge tone={tone}>·</Badge> : null}
-      </div>
-      {sub ? <p className="text-xs text-navy/70">{sub}</p> : null}
-    </div>
-  );
-}

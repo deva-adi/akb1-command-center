@@ -22,6 +22,7 @@ import { ProgrammeFilterBar } from "@/components/ProgrammeFilterBar";
 import { PROGRAMME_CROSS_LINKS } from "@/components/programmeCrossLinks";
 import { Card, CardHeader } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
+import { MetricCard } from "@/components/ui/MetricCard";
 import {
   fetchAiGovernance,
   fetchAiOverrides,
@@ -210,18 +211,18 @@ export function AiGovernance() {
       />
 
       <section className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        <Stat
+        <MetricCard
           label="AI tools in use"
           value={`${tools.data?.length ?? 0}`}
           sub={`${(tools.data ?? []).filter((t) => t.status === "Active").length} active`}
         />
-        <Stat
-          label="Time saved"
+        <MetricCard
+          metricId="time_saved"
           value={`${totalTimeSaved.toFixed(0)}h`}
           sub="Accepted suggestions × hrs saved"
         />
-        <Stat
-          label="Acceptance rate"
+        <MetricCard
+          metricId="acceptance_rate"
           value={avgAcceptance === null ? "—" : formatPct(avgAcceptance)}
           tone={
             avgAcceptance === null
@@ -233,8 +234,8 @@ export function AiGovernance() {
                   : "red"
           }
         />
-        <Stat
-          label="AI spend"
+        <MetricCard
+          metricId="ai_spend"
           value={`$${totalCost.toLocaleString()}`}
           sub="Monthly seat + usage cost"
         />
@@ -488,25 +489,3 @@ export function AiGovernance() {
 
 const RADAR_COLORS = ["#1B2A4A", "#F59E0B", "#10B981", "#3B82F6", "#8B5CF6"];
 
-function Stat({
-  label,
-  value,
-  sub,
-  tone,
-}: {
-  label: string;
-  value: string;
-  sub?: string;
-  tone?: "green" | "amber" | "red" | "neutral";
-}) {
-  return (
-    <div className="rounded border border-ice-100 bg-white px-3 py-2">
-      <span className="kpi-label">{label}</span>
-      <div className="flex items-center gap-2">
-        <p className="font-mono text-xl font-semibold text-navy">{value}</p>
-        {tone && tone !== "neutral" ? <Badge tone={tone}>·</Badge> : null}
-      </div>
-      {sub ? <p className="text-xs text-navy/70">{sub}</p> : null}
-    </div>
-  );
-}

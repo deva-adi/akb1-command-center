@@ -15,6 +15,7 @@ import {
 import { ChevronDown, ChevronUp, X } from "lucide-react";
 import { Card, CardHeader } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
+import { MetricCard } from "@/components/ui/MetricCard";
 import {
   fetchSprints,
   fetchBacklogItems,
@@ -76,18 +77,18 @@ export function ScrumView({ project }: { project: ProjectListItem }) {
   return (
     <div className="flex flex-col gap-4">
       <section className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        <SprintStat label="Last sprint" value={`#${lastSprint.sprint_number ?? "?"}`} />
-        <SprintStat
-          label="Velocity"
+        <MetricCard label="Last sprint" value={`#${lastSprint.sprint_number ?? "?"}`} />
+        <MetricCard
+          metricId="velocity"
           value={`${(lastSprint.velocity ?? 0).toFixed(0)} pts`}
           sub={`avg ${avgVelocity.toFixed(0)}`}
         />
-        <SprintStat
-          label="Defects found"
+        <MetricCard
+          metricId="defects"
           value={`${lastSprint.defects_found ?? 0}`}
         />
-        <SprintStat
-          label="Rework hrs"
+        <MetricCard
+          metricId="rework_hours"
           value={`${(lastSprint.rework_hours ?? 0).toFixed(0)}h`}
         />
       </section>
@@ -347,65 +348,65 @@ function SprintDrillPanel({
       </div>
 
       <dl className="mt-3 grid grid-cols-2 gap-3 md:grid-cols-4">
-        <DrillCell
-          label="Planned points"
+        <MetricCard
+          metricId="planned_points"
           value={`${sprint.planned_points ?? 0}`}
           tone="neutral"
           active={storyFilter === "planned"}
           onClick={() => toggleFilter("planned")}
-          hint="Click → see planned stories"
+          drillFilter="planned"
         />
-        <DrillCell
-          label="Completed points"
+        <MetricCard
+          metricId="completed_points"
           value={`${sprint.completed_points ?? 0}`}
           tone={burndownPct >= 90 ? "green" : burndownPct >= 70 ? "amber" : "red"}
           active={storyFilter === "completed"}
           onClick={() => toggleFilter("completed")}
-          hint="Click → see completed stories"
+          drillFilter="completed"
         />
-        <DrillCell
-          label="Burndown"
+        <MetricCard
+          metricId="burndown_pct"
           value={`${burndownPct}%`}
           tone={burndownPct >= 90 ? "green" : burndownPct >= 70 ? "amber" : "red"}
         />
-        <DrillCell
-          label="Shortfall"
+        <MetricCard
+          metricId="shortfall"
           value={shortfall > 0 ? `${shortfall} pts behind` : "On target"}
           tone={shortfall > 0 ? "red" : "green"}
         />
-        <DrillCell
-          label="Velocity"
+        <MetricCard
+          metricId="velocity"
           value={`${(sprint.velocity ?? 0).toFixed(0)} pts`}
           tone="neutral"
           active={storyFilter === "velocity"}
           onClick={() => toggleFilter("velocity")}
-          hint="Click → see all completed work"
+          drillFilter="completed"
         />
-        <DrillCell
-          label="Team size"
+        <MetricCard
+          metricId="team_size"
           value={`${sprint.team_size ?? "—"} people`}
           tone="neutral"
         />
-        <DrillCell
-          label="Rework hours"
+        <MetricCard
+          metricId="rework_hours"
           value={`${(sprint.rework_hours ?? 0).toFixed(1)}h`}
           tone={(sprint.rework_hours ?? 0) > 20 ? "red" : (sprint.rework_hours ?? 0) > 10 ? "amber" : "green"}
           active={storyFilter === "rework"}
           onClick={() => toggleFilter("rework")}
-          hint="Click → see stories with rework"
+          drillFilter="rework"
         />
-        <DrillCell
-          label="Defects found / fixed"
+        <MetricCard
+          metricId="defects"
           value={`${sprint.defects_found ?? 0} found · ${sprint.defects_fixed ?? 0} fixed`}
           tone={(sprint.defects_found ?? 0) > (sprint.defects_fixed ?? 0) ? "amber" : "green"}
         />
-        <DrillCell
-          label="AI-assisted points"
+        <MetricCard
+          metricId="ai_assisted_points"
           value={`${sprint.ai_assisted_points} pts (${aiPct}% of completed)`}
           tone="neutral"
           active={storyFilter === "ai"}
           onClick={() => toggleFilter("ai")}
-          hint="Click → see AI-assisted stories"
+          drillFilter="ai_assisted"
         />
       </dl>
 
@@ -517,63 +518,11 @@ function BacklogItemsTable({ items }: { items: BacklogItem[] }) {
 
 // ---------- helpers ----------
 
-function DrillCell({
-  label,
-  value,
-  tone,
-  active,
-  onClick,
-  hint,
-}: {
-  label: string;
-  value: string;
-  tone: "green" | "amber" | "red" | "neutral";
-  active?: boolean;
-  onClick?: () => void;
-  hint?: string;
-}) {
-  const isClickable = !!onClick;
-  return (
-    <div
-      className={`flex flex-col gap-1 rounded p-1 transition ${isClickable ? "cursor-pointer hover:bg-navy/5" : ""} ${active ? "bg-navy/10 ring-1 ring-navy/20" : ""}`}
-      onClick={onClick}
-      role={isClickable ? "button" : undefined}
-      tabIndex={isClickable ? 0 : undefined}
-      onKeyDown={isClickable ? (e) => e.key === "Enter" && onClick?.() : undefined}
-      aria-pressed={isClickable ? active : undefined}
-    >
-      <span className="kpi-label">{label}</span>
-      <Badge tone={tone}>{value}</Badge>
-      {isClickable && (
-        <span className="text-[10px] text-navy/40">{active ? "▲ close table" : hint}</span>
-      )}
-    </div>
-  );
-}
-
 function DetailCell({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex flex-col">
       <span className="kpi-label">{label}</span>
       <span className="font-mono text-sm text-navy">{value}</span>
-    </div>
-  );
-}
-
-function SprintStat({
-  label,
-  value,
-  sub,
-}: {
-  label: string;
-  value: string;
-  sub?: string;
-}) {
-  return (
-    <div className="rounded border border-ice-100 bg-white px-3 py-2">
-      <span className="kpi-label">{label}</span>
-      <p className="font-mono text-xl font-semibold text-navy">{value}</p>
-      {sub ? <p className="text-xs text-navy/70">{sub}</p> : null}
     </div>
   );
 }

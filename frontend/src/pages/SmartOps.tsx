@@ -15,6 +15,7 @@ import { ProgrammeFilterBar } from "@/components/ProgrammeFilterBar";
 import { PROGRAMME_CROSS_LINKS } from "@/components/programmeCrossLinks";
 import { Card, CardHeader } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
+import { MetricCard } from "@/components/ui/MetricCard";
 import {
   fetchResources,
   fetchScenarios,
@@ -121,15 +122,16 @@ export function SmartOps() {
       />
 
       <section className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        <Stat label="Active alerts" value={`${activeCount}`} tone={activeCount === 0 ? "green" : "red"} />
-        <Stat label="Mitigating" value={`${mitigatingCount}`} tone={mitigatingCount > 0 ? "amber" : "green"} />
-        <Stat
+        <MetricCard metricId="scenario_alerts" label="Active alerts" value={`${activeCount}`} tone={activeCount === 0 ? "green" : "red"} />
+        <MetricCard label="Mitigating" value={`${mitigatingCount}`} tone={mitigatingCount > 0 ? "amber" : "green"} />
+        <MetricCard
+          metricId="risk_exposure"
           label="Financial impact"
           value={currency.format(totalFinancialImpact, "INR")}
           sub="Sum across visible alerts"
         />
-        <Stat
-          label="Bench cost"
+        <MetricCard
+          metricId="bench_cost"
           value={currency.format(benchCost, "INR")}
           sub={`${bench.length} FTE on bench`}
         />
@@ -401,25 +403,3 @@ function Detail({ label, value }: { label: string; value: string }) {
   );
 }
 
-function Stat({
-  label,
-  value,
-  sub,
-  tone,
-}: {
-  label: string;
-  value: string;
-  sub?: string;
-  tone?: "green" | "amber" | "red" | "neutral";
-}) {
-  return (
-    <div className="rounded border border-ice-100 bg-white px-3 py-2">
-      <span className="kpi-label">{label}</span>
-      <div className="flex items-center gap-2">
-        <p className="font-mono text-xl font-semibold text-navy">{value}</p>
-        {tone && tone !== "neutral" ? <Badge tone={tone}>·</Badge> : null}
-      </div>
-      {sub ? <p className="text-xs text-navy/70">{sub}</p> : null}
-    </div>
-  );
-}

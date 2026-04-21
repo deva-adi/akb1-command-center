@@ -22,6 +22,7 @@ import { ProgrammeFilterBar } from "@/components/ProgrammeFilterBar";
 import { PROGRAMME_CROSS_LINKS } from "@/components/programmeCrossLinks";
 import { Card, CardHeader } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
+import { MetricCard } from "@/components/ui/MetricCard";
 import {
   fetchCustomerActions,
   fetchCustomerExpectations,
@@ -230,25 +231,26 @@ export function CustomerIntelligence() {
       ) : null}
 
       <section className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        <Stat
-          label="CSAT"
+        <MetricCard
+          metricId="csat"
           value={latest?.csat_score != null ? latest.csat_score.toFixed(1) : "—"}
           tone={csatTone(latest?.csat_score ?? null)}
           sub="0-10"
         />
-        <Stat
-          label="NPS"
+        <MetricCard
+          metricId="nps"
           value={latest?.nps_score != null ? latest.nps_score.toFixed(0) : "—"}
           tone={npsTone(latest?.nps_score ?? null)}
         />
-        <Stat
+        <MetricCard
+          metricId="escalation_count"
           label="Open escalations"
           value={`${latest?.escalation_open ?? 0}`}
           tone={(latest?.escalation_open ?? 0) === 0 ? "green" : (latest?.escalation_open ?? 0) > 3 ? "red" : "amber"}
           sub={`total ${latest?.escalation_count ?? 0}`}
         />
-        <Stat
-          label="Renewal probability"
+        <MetricCard
+          metricId="renewal_probability"
           value={latest?.renewal_score != null ? `${latest.renewal_score.toFixed(0)}%` : "—"}
           tone={renewalTone(latest?.renewal_score ?? null)}
         />
@@ -627,28 +629,6 @@ export function CustomerIntelligence() {
   );
 }
 
-function Stat({
-  label,
-  value,
-  sub,
-  tone = "neutral",
-}: {
-  label: string;
-  value: string;
-  sub?: string;
-  tone?: "green" | "amber" | "red" | "neutral";
-}) {
-  return (
-    <div className="rounded border border-ice-100 bg-white px-3 py-2">
-      <span className="kpi-label">{label}</span>
-      <div className="flex items-center gap-2">
-        <p className="font-mono text-xl font-semibold text-navy">{value}</p>
-        {tone !== "neutral" ? <Badge tone={tone}>·</Badge> : null}
-      </div>
-      {sub ? <p className="text-xs text-navy/70">{sub}</p> : null}
-    </div>
-  );
-}
 
 function Detail({ label, value }: { label: string; value: string }) {
   return (
