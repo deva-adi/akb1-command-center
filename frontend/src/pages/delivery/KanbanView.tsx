@@ -4,10 +4,11 @@ import ReactECharts from "echarts-for-react";
 import { X } from "lucide-react";
 import { Card, CardHeader } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
-import { fetchFlow, type ProjectListItem } from "@/lib/api";
+import { fetchFlow, fetchBacklogItems, type ProjectListItem, type BacklogItem } from "@/lib/api";
 
 export function KanbanView({ project }: { project: ProjectListItem }) {
   const [selectedWeekIdx, setSelectedWeekIdx] = useState<number | null>(null);
+  const selectedWeekNumber = selectedWeekIdx !== null ? selectedWeekIdx + 1 : null;
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["flow", project.id],
@@ -99,7 +100,12 @@ export function KanbanView({ project }: { project: ProjectListItem }) {
           />
         </div>
         {selectedWeek && (
-          <FlowDrillPanel row={selectedWeek} onClose={() => setSelectedWeekIdx(null)} />
+          <FlowDrillPanel
+            row={selectedWeek}
+            projectId={project.id}
+            weekNumber={selectedWeekNumber!}
+            onClose={() => setSelectedWeekIdx(null)}
+          />
         )}
         <p className="mt-2 text-xs text-navy/70">
           CFD = stacked backlog + in-progress + done. Widening bands →
@@ -122,7 +128,12 @@ export function KanbanView({ project }: { project: ProjectListItem }) {
           />
         </div>
         {selectedWeek && (
-          <FlowDrillPanel row={selectedWeek} onClose={() => setSelectedWeekIdx(null)} />
+          <FlowDrillPanel
+            row={selectedWeek}
+            projectId={project.id}
+            weekNumber={selectedWeekNumber!}
+            onClose={() => setSelectedWeekIdx(null)}
+          />
         )}
       </Card>
     </div>
@@ -143,18 +154,35 @@ type FlowRow = {
   blocked_time_hours: number | null;
 };
 
-function FlowDrillPanel({ row, onClose }: { row: FlowRow; onClose: () => void }) {
+function FlowDrillPanel({
+  row,
+  projectId,
+  weekNumber,
+  onClose,
+}: {
+  row: FlowRow;
+  projectId: number;
+  weekNumber: number;
+  onClose: () => void;
+}) {
   const wipBreach =
     row.wip_avg !== null && row.wip_limit !== null && row.wip_avg > row.wip_limit;
+
+  const { data: flowItems } = useQuery({
+    queryKey: ["flow-items", projectId, weekNumber],
+    queryFn: () => fetchBacklogItems(projectId, weekNumber),
+  });
 
   return (
     <div className="mt-3 rounded-lg border border-navy/20 bg-navy/[0.03] p-3">
       <div className="flex items-center justify-between">
         <div>
           <p className="text-sm font-semibold text-navy">
-            Week of {row.period_start?.slice(0, 10) ?? "—"} — Level 4 detail
+            Week {weekNumber} · {row.period_start?.slice(0, 10) ?? "—"} — Level 4 detail
           </p>
-          <p className="text-xs text-navy/60">Flow metrics for this period</p>
+          <p className="text-xs text-navy/60">
+            Flow metrics · click a metric to see work items
+          </p>
         </div>
         <button
           type="button"
@@ -204,9 +232,113 @@ function FlowDrillPanel({ row, onClose }: { row: FlowRow; onClose: () => void })
         />
       </dl>
 
-      <p className="mt-3 text-xs text-navy/50">
-        Level 4 of 4 · Lowest granularity · Raw flow metrics for this week
+      {flowItems && flowItems.length > 0 ? (
+        <FlowItemsTable items={flowItems} />
+      ) : (
+        <p className="mt-3 text-xs text-navy/40">
+          No work items seeded for this week — upload via CSV to enable L5 drill.
+        </p>
+      )}
+
+      <p className="mt-3 text-xs text-navy/40">
+        L4 flow metrics + L5 work items · Week {weekNumber} of {row.period_start?.slice(0, 10) ?? "—"}
       </p>
+    </div>
+  );
+}
+
+// ---------- L5 Flow items table ----------
+
+const FLOW_STATUS_TONE: Record<string, "green" | "amber" | "red" | "neutral"> = {
+  completed: "green",
+  in_progress: "amber",
+  planned: "neutral",
+  carried_over: "amber",
+  added: "green",
+};
+
+const FLOW_TYPE_TONE: Record<string, "green" | "amber" | "red" | "neutral"> = {
+  bug: "red",
+  spike: "amber",
+  story: "neutral",
+  task: "neutral",
+};
+
+function FlowItemsTable({ items }: { items: BacklogItem[] }) {
+  const doneItems = items.filter((i) => i.status === "completed" || i.status === "added");
+  const wipItems = items.filter((i) => i.status === "in_progress");
+  const totalPoints = items.reduce((s, i) => s + (i.story_points ?? 0), 0);
+  const donePoints = doneItems.reduce((s, i) => s + (i.story_points ?? 0), 0);
+
+  return (
+    <div className="mt-4 border-t border-navy/10 pt-3">
+      <div className="mb-2 flex items-center justify-between">
+        <p className="text-xs font-semibold text-navy">
+          Level 5 — Work items this week
+        </p>
+        <span className="text-xs text-navy/60">
+          {doneItems.length} done · {wipItems.length} WIP · {donePoints}/{totalPoints} pts
+        </span>
+      </div>
+      <div className="overflow-x-auto">
+        <table className="w-full text-xs">
+          <thead>
+            <tr className="border-b border-navy/10 text-left text-navy/50">
+              <th className="pb-1 pr-3 font-medium">Type</th>
+              <th className="pb-1 pr-3 font-medium">Title</th>
+              <th className="pb-1 pr-3 font-medium">Pts</th>
+              <th className="pb-1 pr-3 font-medium">Assignee</th>
+              <th className="pb-1 pr-3 font-medium">Status</th>
+              <th className="pb-1 pr-3 font-medium">AI</th>
+              <th className="pb-1 pr-3 font-medium">Defects</th>
+              <th className="pb-1 font-medium">Priority</th>
+            </tr>
+          </thead>
+          <tbody>
+            {items.map((item) => (
+              <tr key={item.id} className="border-b border-navy/5 hover:bg-ice-50">
+                <td className="py-1 pr-3">
+                  <Badge tone={FLOW_TYPE_TONE[item.item_type] ?? "neutral"}>
+                    {item.item_type}
+                  </Badge>
+                </td>
+                <td className="max-w-[260px] truncate py-1 pr-3 font-medium text-navy">
+                  {item.title}
+                </td>
+                <td className="py-1 pr-3 font-mono text-navy">
+                  {item.story_points ?? "—"}
+                </td>
+                <td className="py-1 pr-3 text-navy/70">{item.assignee ?? "—"}</td>
+                <td className="py-1 pr-3">
+                  <Badge tone={FLOW_STATUS_TONE[item.status] ?? "neutral"}>
+                    {item.status.replace("_", " ")}
+                  </Badge>
+                </td>
+                <td className="py-1 pr-3 text-navy/70">
+                  {item.is_ai_assisted ? (
+                    <span className="text-[#7C3AED] font-semibold">AI</span>
+                  ) : (
+                    "—"
+                  )}
+                </td>
+                <td className="py-1 pr-3 text-navy/70">{item.defects_raised}</td>
+                <td className="py-1 text-navy/70">{item.priority ?? "—"}</td>
+              </tr>
+            ))}
+          </tbody>
+          <tfoot>
+            <tr className="border-t border-navy/20 font-semibold text-navy">
+              <td colSpan={2} className="pt-1 pr-3 text-navy/60">
+                Totals
+              </td>
+              <td className="pt-1 pr-3 font-mono">{totalPoints}</td>
+              <td colSpan={5} className="pt-1 text-navy/60">
+                {doneItems.length} done · {wipItems.length} in progress
+              </td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
     </div>
   );
 }

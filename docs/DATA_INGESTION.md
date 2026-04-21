@@ -31,8 +31,11 @@ The demo ships with a complete narrative portfolio — NovaTech Solutions:
 | Sentinel Quality Engineering | ₹5M | 12 | AI pilot: velocity +14%, defects 1.15x | 12 |
 | Orion Data Platform | ₹12M | 30 | Cash cow but bench tax absorbing ₹1.4M | 12 |
 | Titan Digital Commerce | ₹6M | 15 | SLA breaches, 25% attrition, CSAT dropping | 12 |
+| **Hercules Workload Consolidation** | ₹9.5M | 22 | New programme: infra + data lake + service mgmt | 3 |
 
-Each programme includes: monthly KPI snapshots, sprint data, financial data, risk register, EVM data, AI metrics (for Sentinel), resource pool, bench tracking, customer satisfaction scores, and loss exposure records.
+Each programme includes: monthly KPI snapshots, sprint/flow data, financial data, risk register, EVM data, AI metrics, resource pool, bench tracking, customer satisfaction, and loss exposure records.
+
+**L5 item coverage (v5.3+):** Every project has work items at story/task level seeded with assignee names, story points, AI flag, defects, and rework hours — enabling full drill-down from portfolio → programme → project → sprint/week → individual story.
 
 ### Reset Behaviour
 

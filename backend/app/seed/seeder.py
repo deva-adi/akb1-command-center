@@ -77,14 +77,30 @@ from app.seed.delivery_data import (
     BACKLOG_ITEMS,
     EVM_SNAPSHOTS,
     FLOW_METRICS,
+    KANBAN_FLOW_ITEMS,
     MILESTONES,
     PROJECT_PHASES,
     SPRINTS,
+    TTN_STORE_ITEMS,
 )
 from app.seed.ops_data import (
     AUDIT_LOG,
     RESOURCE_POOL,
     SCENARIO_EXECUTIONS,
+)
+from app.seed.hercules_data import (
+    HERC_BACKLOG_ITEMS,
+    HERC_COMMERCIAL_SCENARIOS,
+    HERC_EVM_SNAPSHOTS,
+    HERC_FLOW_METRICS,
+    HERC_MGT_FLOW_ITEMS,
+    HERC_MILESTONES,
+    HERC_MONTH_STARTS,
+    HERC_MONTHLY_KPI_VALUES,
+    HERC_PROGRAMME,
+    HERC_PROJECTS,
+    HERC_RISKS,
+    HERC_SPRINTS,
 )
 
 log = get_logger(__name__)
@@ -136,10 +152,23 @@ async def seed_demo_data(session: AsyncSession, *, force: bool = False) -> bool:
     await _seed_resource_pool(session, program_ids, project_ids)
     await _seed_audit_log(session)
 
+    # ── Hercules programme (added in v5.3 — separate from base NovaTech seed) ──
+    herc_prog_ids = await _seed_hercules_programme(session)
+    herc_proj_ids = await _seed_hercules_projects(session, herc_prog_ids)
+    await _seed_hercules_kpis(session, herc_prog_ids, kpi_ids)
+    await _seed_hercules_risks(session, herc_prog_ids)
+    await _seed_hercules_sprints(session, herc_prog_ids, herc_proj_ids)
+    await _seed_hercules_backlog(session, herc_proj_ids)
+    await _seed_hercules_flow(session, herc_proj_ids)
+    await _seed_hercules_mgt_flow_items(session, herc_proj_ids)
+    await _seed_hercules_evm(session, herc_proj_ids)
+    await _seed_hercules_milestones(session, herc_proj_ids)
+    await _seed_hercules_commercial(session, herc_prog_ids)
+
     await session.commit()
     log.info(
         "seed.done",
-        backlog_items=len(BACKLOG_ITEMS),
+        backlog_items=len(BACKLOG_ITEMS) + len(KANBAN_FLOW_ITEMS) + len(TTN_STORE_ITEMS),
         programmes=len(program_ids),
         projects=len(project_ids),
         kpis=len(kpi_ids),
@@ -673,7 +702,8 @@ async def _seed_backlog_items(
     session: AsyncSession,
     project_ids: dict[str, int],
 ) -> None:
-    for data in BACKLOG_ITEMS:
+    all_items = list(BACKLOG_ITEMS) + list(KANBAN_FLOW_ITEMS) + list(TTN_STORE_ITEMS)
+    for data in all_items:
         payload = dict(data)
         project_code = payload.pop("project_code")
         project_id = project_ids.get(project_code)
@@ -685,3 +715,153 @@ async def _seed_backlog_items(
 async def _seed_audit_log(session: AsyncSession) -> None:
     for data in AUDIT_LOG:
         session.add(AuditLog(**data))
+
+
+# ── Hercules helpers ──────────────────────────────────────────────────────
+
+async def _seed_hercules_programme(session: AsyncSession) -> dict[str, int]:
+    programme = Program(**HERC_PROGRAMME)
+    session.add(programme)
+    await session.flush()
+    return {programme.code: programme.id}
+
+
+async def _seed_hercules_projects(
+    session: AsyncSession,
+    program_ids: dict[str, int],
+) -> dict[str, int]:
+    project_ids: dict[str, int] = {}
+    for data in HERC_PROJECTS:
+        payload = dict(data)
+        program_code = payload.pop("program_code")
+        program_id = program_ids.get(program_code)
+        if program_id is None:
+            continue
+        project = Project(program_id=program_id, **payload)
+        session.add(project)
+        await session.flush()
+        project_ids[project.code] = project.id
+    return project_ids
+
+
+async def _seed_hercules_kpis(
+    session: AsyncSession,
+    program_ids: dict[str, int],
+    kpi_ids: dict[str, int],
+) -> None:
+    for (program_code, kpi_code), values in HERC_MONTHLY_KPI_VALUES.items():
+        program_id = program_ids.get(program_code)
+        kpi_id = kpi_ids.get(kpi_code)
+        if program_id is None or kpi_id is None:
+            continue
+        for month_start, value in zip(HERC_MONTH_STARTS, values, strict=False):
+            session.add(
+                KpiSnapshot(
+                    program_id=program_id,
+                    kpi_id=kpi_id,
+                    snapshot_date=month_start,
+                    value=value,
+                    trend=_trend_label(values),
+                )
+            )
+
+
+async def _seed_hercules_risks(
+    session: AsyncSession,
+    program_ids: dict[str, int],
+) -> None:
+    for data in HERC_RISKS:
+        payload = dict(data)
+        program_id = program_ids.get(payload.pop("program_code"))
+        if program_id is None:
+            continue
+        session.add(Risk(program_id=program_id, **payload))
+
+
+async def _seed_hercules_sprints(
+    session: AsyncSession,
+    program_ids: dict[str, int],
+    project_ids: dict[str, int],
+) -> None:
+    herc_projects = {p["code"]: p["program_code"] for p in HERC_PROJECTS}
+    for data in HERC_SPRINTS:
+        payload = dict(data)
+        project_code = payload.pop("project_code")
+        project_id = project_ids.get(project_code)
+        program_code = herc_projects.get(project_code)
+        program_id = program_ids.get(program_code) if program_code else None
+        if project_id is None:
+            continue
+        session.add(SprintData(program_id=program_id, project_id=project_id, **payload))
+
+
+async def _seed_hercules_backlog(
+    session: AsyncSession,
+    project_ids: dict[str, int],
+) -> None:
+    for data in HERC_BACKLOG_ITEMS:
+        payload = dict(data)
+        project_id = project_ids.get(payload.pop("project_code"))
+        if project_id is None:
+            continue
+        session.add(BacklogItem(project_id=project_id, **payload))
+
+
+async def _seed_hercules_flow(
+    session: AsyncSession,
+    project_ids: dict[str, int],
+) -> None:
+    for data in HERC_FLOW_METRICS:
+        payload = dict(data)
+        project_id = project_ids.get(payload.pop("project_code"))
+        if project_id is None:
+            continue
+        session.add(FlowMetrics(project_id=project_id, **payload))
+
+
+async def _seed_hercules_commercial(
+    session: AsyncSession,
+    program_ids: dict[str, int],
+) -> None:
+    for data in HERC_COMMERCIAL_SCENARIOS:
+        payload = dict(data)
+        program_id = program_ids.get(payload.pop("program_code"))
+        if program_id is None:
+            continue
+        session.add(CommercialScenario(program_id=program_id, **payload))
+
+
+async def _seed_hercules_mgt_flow_items(
+    session: AsyncSession,
+    project_ids: dict[str, int],
+) -> None:
+    for data in HERC_MGT_FLOW_ITEMS:
+        payload = dict(data)
+        project_id = project_ids.get(payload.pop("project_code"))
+        if project_id is None:
+            continue
+        session.add(BacklogItem(project_id=project_id, **payload))
+
+
+async def _seed_hercules_evm(
+    session: AsyncSession,
+    project_ids: dict[str, int],
+) -> None:
+    for data in HERC_EVM_SNAPSHOTS:
+        payload = dict(data)
+        project_id = project_ids.get(payload.pop("project_code"))
+        if project_id is None:
+            continue
+        session.add(EvmSnapshot(project_id=project_id, **payload))
+
+
+async def _seed_hercules_milestones(
+    session: AsyncSession,
+    project_ids: dict[str, int],
+) -> None:
+    for data in HERC_MILESTONES:
+        payload = dict(data)
+        project_id = project_ids.get(payload.pop("project_code"))
+        if project_id is None:
+            continue
+        session.add(Milestone(project_id=project_id, **payload))

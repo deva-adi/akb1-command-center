@@ -411,8 +411,11 @@ AKB1 does not force a single delivery methodology. Each project declares its `de
 | **Sentinel** — AI Test Automation | ₹5M | 12 | AI pilot: velocity +14%, defects 1.15x |
 | **Orion** — Data Platform | ₹12M | 30 | Cash cow but bench tax absorbing ₹1.4M |
 | **Titan** — Digital Commerce | ₹6M | 15 | SLA breaches, 25% attrition, CSAT dropping |
+| **Hercules** — Workload Consolidation | ₹9.5M | 22 | Multi-cloud infra + data lake + ITSM (Heavy AI) |
 
 Each programme has a distinct problem. The demo data tells a story — it teaches you how to interpret the dashboard.
+
+**Full 5-level drill-down** (v5.3+): Every number in the dashboard traces back to individual stories/tasks. Click any sprint bar, KPI card, or flow metric to drill to L5 — assignee, points, AI flag, defects, rework hours. 403 work items across 9 projects, all invariant-verified.
 
 ---
 
