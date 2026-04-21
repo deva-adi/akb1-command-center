@@ -13,6 +13,7 @@ from app.models.ai import (
 from app.models.auth import User, UserRole
 from app.models.base import Base
 from app.models.core import (
+    BacklogItem,
     CommercialScenario,
     EvmSnapshot,
     Initiative,
@@ -50,7 +51,7 @@ from app.models.velocity import SprintVelocityBlendRule, SprintVelocityDual
 
 __all__ = [
     "Base",
-    # Core (10)
+    # Core (11)
     "Program",
     "Project",
     "KpiDefinition",
@@ -59,6 +60,7 @@ __all__ = [
     "RiskHistory",
     "Initiative",
     "SprintData",
+    "BacklogItem",
     "CommercialScenario",
     "EvmSnapshot",
     # Intelligence (9)
@@ -105,4 +107,4 @@ __all__ = [
     "UserRole",
 ]
 
-TABLE_COUNT = 44
+TABLE_COUNT = 45

@@ -15,7 +15,13 @@ import {
 import { ChevronDown, ChevronUp, X } from "lucide-react";
 import { Card, CardHeader } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
-import { fetchSprints, type Sprint, type ProjectListItem } from "@/lib/api";
+import {
+  fetchSprints,
+  fetchBacklogItems,
+  type Sprint,
+  type BacklogItem,
+  type ProjectListItem,
+} from "@/lib/api";
 import { formatDate } from "@/lib/format";
 
 export function ScrumView({ project }: { project: ProjectListItem }) {
@@ -273,7 +279,9 @@ export function ScrumView({ project }: { project: ProjectListItem }) {
   );
 }
 
-// ---------- Sprint drill panel (Level 4 raw data) ----------
+// ---------- Sprint drill panel (Level 4) + Story table (Level 5) ----------
+
+type StoryFilter = "planned" | "completed" | "velocity" | "ai" | "rework" | null;
 
 function SprintDrillPanel({
   sprint,
@@ -282,6 +290,8 @@ function SprintDrillPanel({
   sprint: Sprint;
   onClose: () => void;
 }) {
+  const [storyFilter, setStoryFilter] = useState<StoryFilter>(null);
+
   const burndownPct =
     sprint.planned_points && sprint.planned_points > 0
       ? Math.round(((sprint.completed_points ?? 0) / sprint.planned_points) * 100)
@@ -291,6 +301,28 @@ function SprintDrillPanel({
     sprint.completed_points && sprint.completed_points > 0
       ? ((sprint.ai_assisted_points / sprint.completed_points) * 100).toFixed(0)
       : "0";
+
+  const { data: backlogItems, isLoading: backlogLoading } = useQuery({
+    queryKey: ["backlog", sprint.project_id, sprint.sprint_number],
+    queryFn: () =>
+      sprint.project_id != null
+        ? fetchBacklogItems(sprint.project_id, sprint.sprint_number ?? undefined)
+        : Promise.resolve([]),
+    enabled: storyFilter !== null && sprint.project_id != null,
+  });
+
+  function toggleFilter(f: StoryFilter) {
+    setStoryFilter((prev) => (prev === f ? null : f));
+  }
+
+  const filteredItems = (backlogItems ?? []).filter((item) => {
+    if (storyFilter === "planned") return item.status !== "added";
+    if (storyFilter === "completed") return item.status === "completed" || item.status === "added";
+    if (storyFilter === "velocity") return item.status === "completed" || item.status === "added";
+    if (storyFilter === "ai") return item.is_ai_assisted;
+    if (storyFilter === "rework") return item.rework_hours > 0;
+    return true;
+  });
 
   return (
     <div className="mt-3 rounded-lg border border-navy/20 bg-navy/[0.03] p-3">
@@ -319,11 +351,17 @@ function SprintDrillPanel({
           label="Planned points"
           value={`${sprint.planned_points ?? 0}`}
           tone="neutral"
+          active={storyFilter === "planned"}
+          onClick={() => toggleFilter("planned")}
+          hint="Click → see planned stories"
         />
         <DrillCell
           label="Completed points"
           value={`${sprint.completed_points ?? 0}`}
           tone={burndownPct >= 90 ? "green" : burndownPct >= 70 ? "amber" : "red"}
+          active={storyFilter === "completed"}
+          onClick={() => toggleFilter("completed")}
+          hint="Click → see completed stories"
         />
         <DrillCell
           label="Burndown"
@@ -339,6 +377,9 @@ function SprintDrillPanel({
           label="Velocity"
           value={`${(sprint.velocity ?? 0).toFixed(0)} pts`}
           tone="neutral"
+          active={storyFilter === "velocity"}
+          onClick={() => toggleFilter("velocity")}
+          hint="Click → see all completed work"
         />
         <DrillCell
           label="Team size"
@@ -349,6 +390,9 @@ function SprintDrillPanel({
           label="Rework hours"
           value={`${(sprint.rework_hours ?? 0).toFixed(1)}h`}
           tone={(sprint.rework_hours ?? 0) > 20 ? "red" : (sprint.rework_hours ?? 0) > 10 ? "amber" : "green"}
+          active={storyFilter === "rework"}
+          onClick={() => toggleFilter("rework")}
+          hint="Click → see stories with rework"
         />
         <DrillCell
           label="Defects found / fixed"
@@ -359,12 +403,114 @@ function SprintDrillPanel({
           label="AI-assisted points"
           value={`${sprint.ai_assisted_points} pts (${aiPct}% of completed)`}
           tone="neutral"
+          active={storyFilter === "ai"}
+          onClick={() => toggleFilter("ai")}
+          hint="Click → see AI-assisted stories"
         />
       </dl>
 
+      {storyFilter !== null && (
+        <div className="mt-4">
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-navy/60">
+            Level 5 · Story / Task breakdown — {filteredItems.length} items
+            {backlogLoading && " (loading…)"}
+          </p>
+          <BacklogItemsTable items={filteredItems} />
+        </div>
+      )}
+
       <p className="mt-3 text-xs text-navy/50">
-        Level 4 of 4 · Lowest granularity · Sprint #{sprint.sprint_number} raw data
+        Level 4 of 5 · Click any metric above to drill into individual stories/tasks
       </p>
+    </div>
+  );
+}
+
+function BacklogItemsTable({ items }: { items: BacklogItem[] }) {
+  if (items.length === 0) {
+    return <p className="text-xs text-navy/50 italic">No items match this filter.</p>;
+  }
+
+  const totalPts = items.reduce((s, i) => s + (i.story_points ?? 0), 0);
+  const totalRework = items.reduce((s, i) => s + i.rework_hours, 0);
+
+  const typeBadge = (t: string) => {
+    if (t === "bug") return "red";
+    if (t === "spike") return "amber";
+    if (t === "task") return "neutral";
+    return "neutral";
+  };
+
+  const statusBadge = (s: string): "green" | "amber" | "red" | "neutral" => {
+    if (s === "completed") return "green";
+    if (s === "added") return "green";
+    if (s === "carried_over") return "amber";
+    return "neutral";
+  };
+
+  return (
+    <div className="overflow-x-auto rounded border border-navy/10">
+      <table className="w-full text-xs">
+        <thead>
+          <tr className="bg-navy/5 text-left text-navy/60">
+            <th className="px-2 py-1.5 font-medium">Type</th>
+            <th className="px-2 py-1.5 font-medium">Title</th>
+            <th className="px-2 py-1.5 font-medium">Pts</th>
+            <th className="px-2 py-1.5 font-medium">Assignee</th>
+            <th className="px-2 py-1.5 font-medium">Status</th>
+            <th className="px-2 py-1.5 font-medium">AI</th>
+            <th className="px-2 py-1.5 font-medium">Defects</th>
+            <th className="px-2 py-1.5 font-medium">Rework h</th>
+            <th className="px-2 py-1.5 font-medium">Priority</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-navy/5">
+          {items.map((item) => (
+            <tr key={item.id} className="bg-white hover:bg-ice-50">
+              <td className="px-2 py-1.5">
+                <Badge tone={typeBadge(item.item_type) as "green" | "amber" | "red" | "neutral"}>
+                  {item.item_type}
+                </Badge>
+              </td>
+              <td className="px-2 py-1.5 font-medium text-navy">{item.title}</td>
+              <td className="px-2 py-1.5 font-mono text-navy">{item.story_points ?? "—"}</td>
+              <td className="px-2 py-1.5 text-navy/80">{item.assignee ?? "—"}</td>
+              <td className="px-2 py-1.5">
+                <Badge tone={statusBadge(item.status)}>{item.status}</Badge>
+              </td>
+              <td className="px-2 py-1.5">
+                {item.is_ai_assisted ? <Badge tone="amber">AI</Badge> : <span className="text-navy/30">—</span>}
+              </td>
+              <td className="px-2 py-1.5 font-mono text-navy">{item.defects_raised}</td>
+              <td className="px-2 py-1.5 font-mono text-navy">{item.rework_hours.toFixed(1)}</td>
+              <td className="px-2 py-1.5">
+                <Badge
+                  tone={
+                    item.priority === "critical"
+                      ? "red"
+                      : item.priority === "high"
+                        ? "amber"
+                        : "neutral"
+                  }
+                >
+                  {item.priority ?? "—"}
+                </Badge>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+        <tfoot>
+          <tr className="bg-navy/5 font-semibold text-navy">
+            <td className="px-2 py-1.5" colSpan={2}>
+              Totals ({items.length} items)
+            </td>
+            <td className="px-2 py-1.5 font-mono">{totalPts}</td>
+            <td colSpan={4} />
+            <td className="px-2 py-1.5 font-mono">{totalRework.toFixed(1)}</td>
+            <td />
+          </tr>
+        </tfoot>
+      </table>
     </div>
   );
 }
@@ -375,15 +521,32 @@ function DrillCell({
   label,
   value,
   tone,
+  active,
+  onClick,
+  hint,
 }: {
   label: string;
   value: string;
   tone: "green" | "amber" | "red" | "neutral";
+  active?: boolean;
+  onClick?: () => void;
+  hint?: string;
 }) {
+  const isClickable = !!onClick;
   return (
-    <div className="flex flex-col gap-1">
+    <div
+      className={`flex flex-col gap-1 rounded p-1 transition ${isClickable ? "cursor-pointer hover:bg-navy/5" : ""} ${active ? "bg-navy/10 ring-1 ring-navy/20" : ""}`}
+      onClick={onClick}
+      role={isClickable ? "button" : undefined}
+      tabIndex={isClickable ? 0 : undefined}
+      onKeyDown={isClickable ? (e) => e.key === "Enter" && onClick?.() : undefined}
+      aria-pressed={isClickable ? active : undefined}
+    >
       <span className="kpi-label">{label}</span>
       <Badge tone={tone}>{value}</Badge>
+      {isClickable && (
+        <span className="text-[10px] text-navy/40">{active ? "▲ close table" : hint}</span>
+      )}
     </div>
   );
 }

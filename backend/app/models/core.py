@@ -184,6 +184,29 @@ class CommercialScenario(Base):
     notes: Mapped[str | None] = mapped_column(Text)
 
 
+class BacklogItem(Base):
+    """Individual story / task / bug / spike inside a sprint.
+
+    Points on completed rows sum to SprintData.completed_points.
+    Points on all rows sum to SprintData.planned_points (plus any mid-sprint
+    additions whose status = 'added').
+    """
+    __tablename__ = "backlog_items"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    project_id: Mapped[int | None] = mapped_column(ForeignKey("projects.id"), index=True)
+    sprint_number: Mapped[int | None] = mapped_column(Integer, index=True)
+    item_type: Mapped[str] = mapped_column(String(50), default="story")
+    title: Mapped[str] = mapped_column(String(200))
+    story_points: Mapped[int | None] = mapped_column(Integer)
+    status: Mapped[str] = mapped_column(String(50), default="planned")
+    assignee: Mapped[str | None] = mapped_column(String(100))
+    is_ai_assisted: Mapped[bool] = mapped_column(Boolean, default=False)
+    defects_raised: Mapped[int] = mapped_column(Integer, default=0)
+    rework_hours: Mapped[float] = mapped_column(Float, default=0.0)
+    priority: Mapped[str | None] = mapped_column(String(20))
+
+
 class EvmSnapshot(Base):
     __tablename__ = "evm_snapshots"
 

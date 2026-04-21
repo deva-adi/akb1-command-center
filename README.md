@@ -175,20 +175,43 @@ Just 2 files to see a meaningful dashboard: **programmes.csv** + **kpi_monthly.c
 
 ---
 
-## Database Schema (44 Tables)
+## Data Hierarchy — 5-Level Drill-Down Architecture
+
+Every number in the dashboard is traceable from portfolio level all the way down to the individual story or task that created it. The hierarchy works as follows:
+
+```
+Level 1 — Portfolio      All programmes combined (Executive Overview, KPI Trend, EVM Portfolio)
+    └── Level 2 — Programme   Per-programme breakdown panel (inline drill from L1)
+            └── Level 3 — Project    Delivery Health / Velocity / Kanban tabs (filtered by project)
+                    └── Level 4 — Sprint     Sprint-level aggregate: velocity, planned pts, defects, rework
+                            └── Level 5 — Story/Task   Individual backlog items with assignee, points, AI flag, defects
+```
+
+**How it works in practice:**
+
+1. Click a KPI tile on the Executive Overview → see per-programme breakdown (L2)
+2. Click a programme → navigate to Delivery Health tab filtered to that project (L3)
+3. Click any bar in the "Planned vs completed" chart → Sprint L4 detail panel opens inline
+4. Click "Planned points 90", "Velocity 85", "AI-assisted points", or "Rework hours" inside the L4 panel → the full story/task table expands (L5) showing every item, assignee, points, status, AI flag, and rework hours with totals that sum to the aggregate number you clicked
+
+The backend computes all roll-ups: `sum(story_points WHERE status='completed' OR status='added') = sprint.completed_points`. The frontend queries `/api/v1/backlog-items?project_id=X&sprint_number=Y` and filters client-side by the metric clicked.
+
+---
+
+## Database Schema (45 Tables)
 
 | Domain | Tables | Purpose |
 |--------|--------|---------|
-| Core (10) | programs, projects, kpi_definitions, kpi_snapshots, risks, risk_history, initiatives, sprint_data, commercial_scenarios, evm_snapshots | Main delivery data |
+| Core (11) | programs, projects, kpi_definitions, kpi_snapshots, risks, risk_history, initiatives, sprint_data, **backlog_items**, commercial_scenarios, evm_snapshots | Main delivery data + story/task granularity |
 | Extended (7) | milestones, sla_incidents, rate_cards, utilization_detail, customer_satisfaction, kpi_forecasts, narrative_cache | Predictive, customer, audit |
 | AI Governance (8) | ai_tools, ai_tool_assignments, ai_usage_metrics, ai_code_metrics, ai_sdlc_metrics, ai_trust_scores, ai_governance_config, ai_override_log | AI tracking |
 | Smart Ops (2) | resource_pool, scenario_executions | Proactive detection |
 | Financial (3) | bench_tracking, scope_creep_log, loss_exposure | Loss tracking |
 | Dual Velocity (2) | sprint_velocity_dual, sprint_velocity_blend_rules | AI velocity |
-| System (3) | data_imports, app_settings, audit_log | Configuration |
-| New in v5.2 (5) | flow_metrics, project_phases, currency_rates, data_import_snapshots, schema_version | Kanban flow, Waterfall gates, multi-currency, import rollback, migration versioning |
+| System (6) | data_imports, app_settings, audit_log, currency_rates, data_import_snapshots, schema_version | Configuration, multi-currency, import rollback, migration versioning |
+| Methodology (2) | flow_metrics, project_phases | Kanban flow, Waterfall gates |
 | Security (2) | users, user_roles | Auth & RBAC stubs (populated when Tier 3 auth enabled) |
-| v5.2 Column Additions | `projects.delivery_methodology`, `sprints.iteration_type`, `sprints.estimation_unit` | SDLC framework compatibility |
+| v5.3 Column Additions | `backlog_items.status` values: `completed` \| `carried_over` \| `added` | AI over-delivery modelling (completed > planned) |
 
 Schema migrations managed via Alembic. Full DDL: see [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) Section 5.
 

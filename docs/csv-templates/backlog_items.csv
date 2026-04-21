@@ -1,0 +1,19 @@
+project_code,sprint_number,item_type,title,story_points,status,assignee,is_ai_assisted,defects_raised,rework_hours,priority
+PHOE-CBM,19,story,Account Balance Refresh API,13,completed,Arjun Kumar,false,2,3.0,high
+PHOE-CBM,19,story,Transaction History Pagination,10,completed,Priya Sharma,false,1,2.0,high
+PHOE-CBM,19,story,KYC Document Upload Service,13,completed,Rahul Verma,false,2,4.0,critical
+PHOE-CBM,19,task,Audit Trail Logging Module,8,completed,Deepika Nair,false,0,1.5,medium
+PHOE-CBM,19,story,Interest Calculation Engine,13,completed,Suresh Patel,false,2,4.0,high
+PHOE-CBM,19,story,Account Statement PDF Export,10,completed,Kavitha Menon,false,0,1.5,medium
+PHOE-CBM,19,story,Multi-currency Balance View,8,completed,Nitin Joshi,false,1,2.0,medium
+PHOE-CBM,19,task,IFSC/SWIFT Code Validator,10,completed,Lakshmi Iyer,false,0,0.0,low
+PHOE-CBM,19,story,Standing Order Automation,5,carried_over,Arjun Kumar,false,0,0.0,low
+SNTL-AUTO,17,story,Full Platform Regression Suite,13,completed,Siva Krishnan,true,0,0.0,high
+SNTL-AUTO,17,story,Automated DR Test Runner,10,completed,Pooja Reddy,true,0,0.5,high
+SNTL-AUTO,17,story,Zero-config Test Discovery (AI),13,completed,Krishna Murthy,true,0,0.0,high
+SNTL-AUTO,17,story,Incident Root-cause Tagger (AI),8,completed,Nandini Sharma,true,0,0.0,high
+SNTL-AUTO,17,story,Cross-browser Test Matrix,10,completed,Arun Kapoor,false,0,1.0,medium
+SNTL-AUTO,17,story,Test Cost Analytics Dashboard,8,completed,Divya Pillai,true,0,0.0,medium
+SNTL-AUTO,17,task,Test Platform Capacity Planning,8,completed,Rajesh Nair,false,0,1.0,low
+SNTL-AUTO,17,story,AI-generated E2E Scenarios,13,added,Siva Krishnan,true,0,0.0,medium
+SNTL-AUTO,17,story,Copilot Pair-programming Sessions,9,added,Krishna Murthy,true,0,0.0,medium

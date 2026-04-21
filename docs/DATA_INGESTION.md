@@ -146,7 +146,7 @@ Before uploading an Excel file, check these common pitfalls:
 - **Duplicate detection** on composite keys — duplicates rejected with clear error messages
 - **Original file preserved** — AKB1 never modifies your source file
 
-### 15 CSV/Excel Templates
+### 16 CSV/Excel Templates
 
 Templates with headers + 2-3 sample rows are in `docs/csv-templates/`:
 
@@ -158,17 +158,93 @@ Templates with headers + 2-3 sample rows are in `docs/csv-templates/`:
 | 4 | **evm_monthly.csv** | evm_snapshots | program_code, snapshot_date, planned_value, earned_value, actual_cost | project_code, bac, percent_complete |
 | 5 | **risks.csv** | risks | program_code, title, probability, impact, severity, status | project_code, category, owner, mitigation_plan, description |
 | 6 | **sprints.csv** | sprint_data | program_code, sprint_number, planned_points, completed_points | project_code, start_date, end_date, defects_found, defects_fixed, rework_hours, team_size, ai_assisted_points, **iteration_type**, **estimation_unit** |
-| 7 | **financials.csv** | commercial_scenarios | program_code, snapshot_date, planned_revenue, actual_revenue, planned_cost, actual_cost | project_code, gross_margin_pct, contribution_margin_pct, portfolio_margin_pct, net_margin_pct, **currency** |
-| 8 | **ai_tools.csv** | ai_tools | name, vendor, category | version, license_type, cost_per_seat, status |
-| 9 | **ai_metrics.csv** | ai_code_metrics | program_code, sprint_number, ai_lines_generated, ai_defect_count, ai_test_coverage_pct | project_code, ai_lines_accepted, ai_review_rejection_pct, human_defect_count, human_test_coverage_pct |
-| 10 | **resources.csv** | resource_pool | name, role, role_tier, current_program_code, utilization_pct | current_project_code, skill_set, bench_days, loaded_cost_annual, status |
-| 11 | **bench.csv** | bench_tracking | program_code, snapshot_date, planned_headcount, actual_headcount, bench_headcount | loaded_cost_per_head, shadow_allocation_cost, allocation_method |
-| 12 | **change_requests.csv** | scope_creep_log | program_code, cr_date, cr_description, effort_hours, cr_value | project_code, processing_cost, status, margin_impact, is_billable |
-| 13 | **losses.csv** | loss_exposure | program_code, snapshot_date, loss_category, amount | percentage_of_revenue, detection_method, mitigation_status |
-| 14 | **flow_metrics.csv** (NEW) | flow_metrics | project_code, period_start, period_end, throughput_items, cycle_time_p50 | wip_avg, wip_limit, cycle_time_p85, cycle_time_p95, lead_time_avg, blocked_time_hours |
-| 15 | **project_phases.csv** (NEW) | project_phases | project_code, phase_name, phase_sequence, planned_start, planned_end | actual_start, actual_end, percent_complete, gate_status, gate_approver, gate_date, notes |
+| 7 | **backlog_items.csv** (**NEW v5.3**) | backlog_items | project_code, sprint_number, title, story_points, status, assignee | item_type, is_ai_assisted, defects_raised, rework_hours, priority |
+| 8 | **financials.csv** | commercial_scenarios | program_code, snapshot_date, planned_revenue, actual_revenue, planned_cost, actual_cost | project_code, gross_margin_pct, contribution_margin_pct, portfolio_margin_pct, net_margin_pct, **currency** |
+| 9 | **ai_tools.csv** | ai_tools | name, vendor, category | version, license_type, cost_per_seat, status |
+| 10 | **ai_metrics.csv** | ai_code_metrics | program_code, sprint_number, ai_lines_generated, ai_defect_count, ai_test_coverage_pct | project_code, ai_lines_accepted, ai_review_rejection_pct, human_defect_count, human_test_coverage_pct |
+| 11 | **resources.csv** | resource_pool | name, role, role_tier, current_program_code, utilization_pct | current_project_code, skill_set, bench_days, loaded_cost_annual, status |
+| 12 | **bench.csv** | bench_tracking | program_code, snapshot_date, planned_headcount, actual_headcount, bench_headcount | loaded_cost_per_head, shadow_allocation_cost, allocation_method |
+| 13 | **change_requests.csv** | scope_creep_log | program_code, cr_date, cr_description, effort_hours, cr_value | project_code, processing_cost, status, margin_impact, is_billable |
+| 14 | **losses.csv** | loss_exposure | program_code, snapshot_date, loss_category, amount | percentage_of_revenue, detection_method, mitigation_status |
+| 15 | **flow_metrics.csv** | flow_metrics | project_code, period_start, period_end, throughput_items, cycle_time_p50 | wip_avg, wip_limit, cycle_time_p85, cycle_time_p95, lead_time_avg, blocked_time_hours |
+| 16 | **project_phases.csv** | project_phases | project_code, phase_name, phase_sequence, planned_start, planned_end | actual_start, actual_end, percent_complete, gate_status, gate_approver, gate_date, notes |
 
 > **Bold columns** (`delivery_methodology`, `iteration_type`, `estimation_unit`, `currency`) are new in v5.2 for SDLC framework and multi-currency support.
+
+---
+
+## Understanding the Data Hierarchy (5 Levels)
+
+AKB1 is designed with a strict bottom-up data architecture. Every aggregate number on the dashboard is composed from lower-level records, and you can drill into each level to see the raw data.
+
+```
+Level 1 — Portfolio
+    Aggregate across all programmes. Example: "Total portfolio CPI = 0.87"
+
+    Level 2 — Programme
+        Per-programme breakdown. Example: "Phoenix CPI 0.81 / Atlas CPI 0.93"
+
+        Level 3 — Project
+            Delivery tab filtered by project. Example: "PHOE-CBM sprints"
+
+            Level 4 — Sprint
+                Sprint aggregate. Example: "Sprint 24: planned=90, completed=68, velocity=68"
+
+                Level 5 — Story / Task / Bug / Spike
+                    Individual backlog items. Example:
+                    "Payment Orchestration Layer — 13pts — Arjun Kumar — completed — 11h rework"
+                    "CBDC Integration Module — 22pts — Lakshmi Iyer — carried_over"
+```
+
+### How L5 (backlog_items) connects to L4 (sprint_data)
+
+The database enforces this invariant:
+
+```
+sum(story_points WHERE status IN ('completed', 'added'))  ==  sprint_data.completed_points
+sum(story_points WHERE status != 'added')                 ==  sprint_data.planned_points
+```
+
+`status = 'added'` represents stories added mid-sprint (not in the original plan) — this is how AI-augmented teams like SNTL-AUTO show velocity > planned (e.g., completed=92 against planned=70).
+
+### What to upload for each level
+
+| You want to see... | Upload this | Minimum data |
+|--------------------|------------|--------------|
+| Portfolio KPIs & margins | programmes.csv + kpi_monthly.csv | 1 programme + 1 month KPIs |
+| Sprint velocity charts | sprints.csv | 1 project + 1 sprint |
+| Story-level drill-down | backlog_items.csv | project_code + sprint_number + title + story_points + status |
+| Kanban flow metrics | flow_metrics.csv | 1 Kanban project + 4 weeks |
+| EVM & cost tracking | evm_monthly.csv | 1 programme + 1 EVM snapshot |
+| Risk register | risks.csv | 1 programme + 1 risk |
+
+### backlog_items.csv — detailed column guide
+
+| Column | Type | Required | Values / Notes |
+|--------|------|----------|----------------|
+| `project_code` | string | ✅ | Must match a code in projects.csv (e.g., `PHOE-CBM`) |
+| `sprint_number` | integer | ✅ | Must match a sprint in sprints.csv for the same project |
+| `title` | string | ✅ | Story / task name (max 200 chars) |
+| `story_points` | integer | ✅ | Fibonacci values typical: 1, 2, 3, 5, 8, 13, 21 |
+| `status` | string | ✅ | `completed` — done this sprint; `carried_over` — not done, rolls to next; `added` — added mid-sprint and completed (explains AI over-delivery) |
+| `assignee` | string | ✅ | Full name as it appears in your org (e.g., "Arjun Kumar") |
+| `item_type` | string | ❌ | `story` (default) / `bug` / `task` / `spike` |
+| `is_ai_assisted` | boolean | ❌ | `true` / `false` / `1` / `0`. Default: false |
+| `defects_raised` | integer | ❌ | Number of bugs/defects found during this item. Default: 0 |
+| `rework_hours` | decimal | ❌ | Hours spent on rework for this item. Default: 0.0 |
+| `priority` | string | ❌ | `critical` / `high` / `medium` / `low` |
+
+### Validation rules for backlog_items
+
+Before import, the system checks:
+1. `project_code` exists in projects table
+2. `sprint_number` exists in sprint_data for that project
+3. `sum(story_points WHERE status != 'added')` within ±5% of `sprint_data.planned_points` (warning, not block)
+4. `sum(story_points WHERE status IN ('completed','added'))` within ±5% of `sprint_data.completed_points` (warning, not block)
+5. `assignee` free text — no FK constraint (team members aren't a separate table yet)
+6. `story_points` range 0–99 (warning if above)
+
+The ±5% tolerance is intentional: real data is messy and partial uploads are valid. The warning appears in the import report but does not block the import.
 
 ### Column Naming Convention
 

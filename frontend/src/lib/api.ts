@@ -303,6 +303,31 @@ export async function fetchMilestones(projectId: number): Promise<Milestone[]> {
   return data;
 }
 
+export type BacklogItem = {
+  id: number;
+  project_id: number | null;
+  sprint_number: number | null;
+  item_type: string;
+  title: string;
+  story_points: number | null;
+  status: string;
+  assignee: string | null;
+  is_ai_assisted: boolean;
+  defects_raised: number;
+  rework_hours: number;
+  priority: string | null;
+};
+
+export async function fetchBacklogItems(
+  projectId: number,
+  sprintNumber?: number,
+): Promise<BacklogItem[]> {
+  const { data } = await api.get<BacklogItem[]>("/api/v1/backlog-items", {
+    params: { project_id: projectId, sprint_number: sprintNumber },
+  });
+  return data;
+}
+
 // ---------- Velocity & Flow / Margin & EVM ----------
 
 export type DualVelocity = {

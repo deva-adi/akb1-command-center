@@ -17,6 +17,7 @@ from app.models import (
     AiUsageMetrics,
     AppSetting,
     AuditLog,
+    BacklogItem,
     CommercialScenario,
     CurrencyRate,
     CustomerAction,
@@ -73,6 +74,7 @@ from app.seed.data import (
     RISKS,
 )
 from app.seed.delivery_data import (
+    BACKLOG_ITEMS,
     EVM_SNAPSHOTS,
     FLOW_METRICS,
     MILESTONES,
@@ -109,6 +111,7 @@ async def seed_demo_data(session: AsyncSession, *, force: bool = False) -> bool:
     await _seed_customer_expectations(session, program_ids)
     await _seed_customer_actions(session, program_ids)
     await _seed_sprints(session, program_ids, project_ids)
+    await _seed_backlog_items(session, project_ids)
     await _seed_flow_metrics(session, project_ids)
     await _seed_project_phases(session, project_ids)
     await _seed_evm_snapshots(session, program_ids, project_ids)
@@ -136,6 +139,7 @@ async def seed_demo_data(session: AsyncSession, *, force: bool = False) -> bool:
     await session.commit()
     log.info(
         "seed.done",
+        backlog_items=len(BACKLOG_ITEMS),
         programmes=len(program_ids),
         projects=len(project_ids),
         kpis=len(kpi_ids),
@@ -663,6 +667,19 @@ async def _seed_resource_pool(
                 **payload,
             )
         )
+
+
+async def _seed_backlog_items(
+    session: AsyncSession,
+    project_ids: dict[str, int],
+) -> None:
+    for data in BACKLOG_ITEMS:
+        payload = dict(data)
+        project_code = payload.pop("project_code")
+        project_id = project_ids.get(project_code)
+        if project_id is None:
+            continue
+        session.add(BacklogItem(project_id=project_id, **payload))
 
 
 async def _seed_audit_log(session: AsyncSession) -> None:

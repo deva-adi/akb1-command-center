@@ -49,7 +49,7 @@ AKB1 Command Center v5.2 is a Docker-containerized, open-source delivery intelli
 - **Edge Browser Support:** Added to browser compatibility list.
 - **Number Format Localisation:** Indian lakh (₹1,00,000), US standard ($1,000.00), European (€1.000,00).
 - **Sprint data extended:** `iteration_type` field for non-Scrum entries. `estimation_unit` field (story_points, hours, function_points).
-- **Expanded from 37 → 42 → 44 tables, 40 → 45 formulas, 50 → 58 CTO questions, 13 → 15 CSV templates**
+- **Expanded from 37 → 42 → 45 tables, 40 → 45 formulas, 50 → 58 CTO questions, 13 → 16 CSV templates**
 
 ---
 
@@ -658,6 +658,24 @@ CREATE TABLE sprint_data (
     notes TEXT
 );
 
+CREATE TABLE backlog_items (
+    -- Level 5 granularity: individual story / task / bug / spike inside a sprint.
+    -- Invariant: sum(story_points WHERE status IN ('completed','added')) = sprint_data.completed_points
+    --            sum(story_points WHERE status != 'added')               = sprint_data.planned_points
+    id INTEGER PRIMARY KEY,
+    project_id INTEGER REFERENCES projects(id),
+    sprint_number INTEGER,
+    item_type TEXT DEFAULT 'story',       -- story | bug | task | spike
+    title TEXT NOT NULL,
+    story_points INTEGER,
+    status TEXT DEFAULT 'planned',        -- completed | carried_over | added
+    assignee TEXT,
+    is_ai_assisted BOOLEAN DEFAULT 0,
+    defects_raised INTEGER DEFAULT 0,
+    rework_hours REAL DEFAULT 0.0,
+    priority TEXT                         -- critical | high | medium | low
+);
+
 CREATE TABLE commercial_scenarios (
     id INTEGER PRIMARY KEY,
     program_id INTEGER REFERENCES programs(id),
@@ -1189,7 +1207,7 @@ CREATE INDEX idx_user_roles_user ON user_roles(user_id);
 CREATE INDEX idx_users_email ON users(email);
 ```
 
-**Total: 44 tables** (10 core + 7 new + 8 AI governance + 2 Smart Ops + 3 financial + 2 dual velocity + 3 system + 2 intelligence + 5 v5.2 + 2 security stub)
+**Total: 45 tables** (11 core + 7 new + 8 AI governance + 2 Smart Ops + 3 financial + 2 dual velocity + 3 system + 2 intelligence + 5 v5.2 + 2 security stub)
 
 ### NEW v5.2 PROJECTS.delivery_methodology
 
@@ -1851,7 +1869,7 @@ The demo data tells this story. Every chart, every alert, every narrative is gro
 | License | MIT — open-source, fork-friendly |
 | **Localisation** | **Multi-currency, industry presets, editable thresholds, date/number format** |
 | Brand | Navy #1B2A4A / Ice Blue #D5E8F0 / Amber #F59E0B exclusively |
-| **Tables** | **44 (was 37 → 42 → 44 — added flow_metrics, project_phases, currency_rates, data_import_snapshots, schema_version, users, user_roles)** |
+| **Tables** | **45 (was 37 → 42 → 44 → 45 — added flow_metrics, project_phases, currency_rates, data_import_snapshots, schema_version, users, user_roles)** |
 | **Formulas** | **45 (was 40 — added currency conversion + Kanban throughput/cycle/lead/WIP-aging)** |
 | **CTO questions** | **58 (was 50 — added 8 for Kanban/Waterfall/currency/FY)** |
 | **CSV templates** | **15 (was 13 — added flow_metrics.csv + project_phases.csv)** |

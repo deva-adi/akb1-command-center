@@ -12,6 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_session
 from app.models import (
+    BacklogItem,
     EvmSnapshot,
     FlowMetrics,
     Milestone,
@@ -19,6 +20,7 @@ from app.models import (
     SprintData,
 )
 from app.schemas.delivery import (
+    BacklogItemOut,
     EvmSnapshotOut,
     FlowMetricsOut,
     MilestoneOut,
@@ -27,6 +29,7 @@ from app.schemas.delivery import (
 )
 
 sprints_router = APIRouter(prefix="/sprints", tags=["delivery"])
+backlog_router = APIRouter(prefix="/backlog-items", tags=["delivery"])
 evm_router = APIRouter(prefix="/evm", tags=["delivery"])
 flow_router = APIRouter(prefix="/flow", tags=["delivery"])
 phases_router = APIRouter(prefix="/phases", tags=["delivery"])
@@ -84,6 +87,26 @@ async def list_phases(
     if project_id is not None:
         stmt = stmt.where(ProjectPhase.project_id == project_id)
     stmt = stmt.order_by(ProjectPhase.phase_sequence.asc())
+    return list((await session.execute(stmt)).scalars().all())
+
+
+@backlog_router.get("", response_model=list[BacklogItemOut])
+async def list_backlog_items(
+    project_id: int | None = Query(default=None),
+    sprint_number: int | None = Query(default=None),
+    session: AsyncSession = Depends(get_session),
+) -> list[BacklogItem]:
+    """Return individual backlog items (stories/tasks/bugs/spikes).
+
+    Filter by project_id and optionally by sprint_number to get the raw
+    records that compose SprintData.planned_points / completed_points.
+    """
+    stmt = select(BacklogItem)
+    if project_id is not None:
+        stmt = stmt.where(BacklogItem.project_id == project_id)
+    if sprint_number is not None:
+        stmt = stmt.where(BacklogItem.sprint_number == sprint_number)
+    stmt = stmt.order_by(BacklogItem.sprint_number.asc(), BacklogItem.id.asc())
     return list((await session.execute(stmt)).scalars().all())
 
 

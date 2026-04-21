@@ -196,7 +196,15 @@
       "Bash(npx vitest *)",
       "Bash(python -m ruff check app/api/v1/reports.py app/services/reports.py)",
       "Bash(python3 -m ruff check app/api/v1/reports.py app/services/reports.py)",
-      "Bash(awk -F: '{print $1, $3}')"
+      "Bash(awk -F: '{print $1, $3}')",
+      "Bash(python3 -m json.tool)",
+      "Bash(docker volume *)",
+      "Bash(curl -s http://localhost:9001/health)",
+      "Bash(curl -s \"http://localhost:9001/api/v1/backlog-items?project_id=1&sprint_number=19\")",
+      "Bash(python3 -c ' *)",
+      "Bash(curl -s \"http://localhost:9001/api/v1/backlog-items\")",
+      "Bash(python3 -c \"import json,sys; items=json.load\\(sys.stdin\\); print\\(f'Total backlog items: {len\\(items\\)}'\\)\")",
+      "Bash(curl -s \"http://localhost:9001/api/v1/backlog-items?project_id=4&sprint_number=17\")"
     ]
   }
 }

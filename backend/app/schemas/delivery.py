@@ -82,6 +82,23 @@ class ProjectPhaseOut(BaseModel):
     notes: str | None = None
 
 
+class BacklogItemOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    project_id: int | None = None
+    sprint_number: int | None = None
+    item_type: str
+    title: str
+    story_points: int | None = None
+    status: str
+    assignee: str | None = None
+    is_ai_assisted: bool
+    defects_raised: int
+    rework_hours: float
+    priority: str | None = None
+
+
 class MilestoneOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
