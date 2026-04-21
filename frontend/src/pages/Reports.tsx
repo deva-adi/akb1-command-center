@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { FileDown, Home, Package, Sparkles, TrendingUp } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -31,6 +32,7 @@ const FORECAST_KPIS = [
 ];
 
 export function Reports() {
+  const navigate = useNavigate();
   const programmes = useProgrammes();
   const [forecastKpi, setForecastKpi] = useState("CPI");
   const [forecastProgramme, setForecastProgramme] = useState<string | "">(
@@ -179,6 +181,10 @@ export function Reports() {
               <LineChart
                 data={buildChartData(forecast.data)}
                 margin={{ top: 8, right: 24, left: 0, bottom: 8 }}
+                onClick={() => {
+                  navigate(forecastProgramme ? `/kpi?programme=${forecastProgramme}` : "/kpi");
+                }}
+                style={{ cursor: "pointer" }}
               >
                 <CartesianGrid stroke="#E4EEF4" strokeDasharray="4 4" />
                 <XAxis

@@ -357,7 +357,7 @@ export function KpiStudio() {
             <Card>
               <CardHeader
                 title="Trend"
-                subtitle="12-month snapshots, per programme"
+                subtitle="Click any data point to drill into that programme's Delivery Health"
               />
               <div className="h-80">
                 {chartData.length === 0 ? (
@@ -366,7 +366,15 @@ export function KpiStudio() {
                   </p>
                 ) : (
                   <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={chartData} margin={{ top: 8, right: 24, left: 0, bottom: 8 }}>
+                    <LineChart
+                      data={chartData}
+                      margin={{ top: 8, right: 24, left: 0, bottom: 8 }}
+                      onClick={(chartData) => {
+                        const code = chartData?.activePayload?.[0]?.dataKey as string | undefined;
+                        if (code) navigate(`/delivery?programme=${code}`);
+                      }}
+                      style={{ cursor: "pointer" }}
+                    >
                       <CartesianGrid stroke="#E4EEF4" strokeDasharray="4 4" />
                       <XAxis dataKey="monthLabel" stroke="#1B2A4A" tick={{ fontSize: 12 }} />
                       <YAxis
@@ -427,6 +435,7 @@ export function KpiStudio() {
                           strokeWidth={2}
                           dot={false}
                           name={p.code}
+                          activeDot={{ r: 6, style: { cursor: "pointer" } }}
                         />
                       ))}
                     </LineChart>

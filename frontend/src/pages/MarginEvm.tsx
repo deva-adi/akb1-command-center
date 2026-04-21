@@ -1,5 +1,5 @@
 import { Fragment, useMemo, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import {
   Bar,
@@ -29,6 +29,7 @@ import { useCurrency } from "@/hooks/useCurrency";
 import { formatPct } from "@/lib/format";
 
 export function MarginEvm() {
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const programmeFilter = searchParams.get("programme");
   const programmes = useProgrammes();
@@ -158,6 +159,8 @@ export function MarginEvm() {
               <BarChart
                 data={marginWaterfall}
                 margin={{ top: 8, right: 24, left: 0, bottom: 8 }}
+                onClick={() => navigate("/kpi")}
+                style={{ cursor: "pointer" }}
               >
                 <CartesianGrid stroke="#E4EEF4" strokeDasharray="4 4" />
                 <XAxis dataKey="label" stroke="#1B2A4A" tick={{ fontSize: 12 }} />
@@ -184,7 +187,7 @@ export function MarginEvm() {
       <Card>
         <CardHeader
           title="7 delivery losses"
-          subtitle={`Total exposure ${currency.format(totalLosses, sourceCurrency)} across seven categories (ARCHITECTURE.md §6)`}
+          subtitle={`Total exposure ${currency.format(totalLosses, sourceCurrency)} — click a bar to drill into Risk & Audit for this programme`}
         />
         {(losses.data ?? []).length === 0 ? (
           <p className="text-sm text-navy/70">No loss exposure rows seeded.</p>
@@ -224,7 +227,17 @@ export function MarginEvm() {
                   contentStyle={{ border: "1px solid #D5E8F0" }}
                 />
                 <Legend wrapperStyle={{ fontSize: 11 }} />
-                <Bar dataKey="amount" name="Loss amount" fill="#EF4444" />
+                <Bar
+                  dataKey="amount"
+                  name="Loss amount"
+                  fill="#EF4444"
+                  cursor="pointer"
+                  onClick={(data: { programmeCode?: string }) => {
+                    const code = data.programmeCode ?? programmeFilter;
+                    if (code) navigate(`/raid?programme=${code}`);
+                    else navigate("/raid");
+                  }}
+                />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -234,7 +247,7 @@ export function MarginEvm() {
       <Card>
         <CardHeader
           title="Rate-card drift"
-          subtitle="Planned vs actual blended rate per role tier"
+          subtitle="Click a row to drill into that programme's Delivery Health"
         />
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
@@ -250,7 +263,20 @@ export function MarginEvm() {
             </thead>
             <tbody>
               {rateCardRows.map((row) => (
-                <tr key={row.id} className="border-t border-ice-100">
+                <tr
+                  key={row.id}
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => navigate(`/delivery?programme=${row.programmeCode}`)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      navigate(`/delivery?programme=${row.programmeCode}`);
+                    }
+                  }}
+                  className="cursor-pointer border-t border-ice-100 transition hover:bg-ice-50 focus-visible:bg-ice-50"
+                  aria-label={`Drill into ${row.programmeCode} Delivery Health`}
+                >
                   <td className="py-2 font-medium">{row.programmeCode}</td>
                   <td>{row.role_tier}</td>
                   <td className="text-right font-mono">

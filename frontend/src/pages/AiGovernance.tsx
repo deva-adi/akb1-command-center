@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import {
   Bar,
@@ -49,6 +49,7 @@ const MATURITY_TONE: Record<string, RagBucket> = {
 };
 
 export function AiGovernance() {
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const programmeFilter = searchParams.get("programme");
   const programmes = useProgrammes();
@@ -242,7 +243,7 @@ export function AiGovernance() {
       <Card>
         <CardHeader
           title="Trust composite — 6 factors per programme"
-          subtitle="Provenance / Review / Coverage / Drift / Override / Defect, 0–100"
+          subtitle="Click the score badges below to drill into that programme's AI detail"
         />
         {programmeCodes.length === 0 ? (
           <p className="text-sm text-navy/70">
@@ -251,7 +252,14 @@ export function AiGovernance() {
         ) : (
           <div className="h-96">
             <ResponsiveContainer width="100%" height="100%">
-              <RadarChart data={trustRadarShaped}>
+              <RadarChart
+                data={trustRadarShaped}
+                onClick={(chartData) => {
+                  const code = chartData?.activePayload?.[0]?.dataKey as string | undefined;
+                  if (code && code !== "factor") navigate(`/ai?programme=${code}`);
+                }}
+                style={{ cursor: "pointer" }}
+              >
                 <PolarGrid stroke="#D5E8F0" />
                 <PolarAngleAxis dataKey="factor" tick={{ fontSize: 11 }} />
                 <PolarRadiusAxis domain={[0, 100]} tick={{ fontSize: 10 }} />
@@ -273,15 +281,21 @@ export function AiGovernance() {
         )}
         <ul className="mt-3 flex flex-wrap gap-2 text-xs">
           {(trust.data ?? []).map((t) => {
-            const programmeName =
-              t.program_id !== null
-                ? programmeByName.get(t.program_id)?.code ?? "—"
-                : "—";
+            const prog =
+              t.program_id !== null ? programmeByName.get(t.program_id) : null;
+            const programmeName = prog?.code ?? "—";
             return (
               <li key={t.id} className="flex items-center gap-1">
-                <Badge tone={trustTone(t.composite_score)}>
-                  {programmeName}: {t.composite_score?.toFixed(0) ?? "—"}
-                </Badge>
+                <button
+                  type="button"
+                  onClick={() => prog ? navigate(`/ai?programme=${prog.code}`) : undefined}
+                  className={prog ? "cursor-pointer" : undefined}
+                  aria-label={prog ? `Drill into ${prog.code} AI detail` : undefined}
+                >
+                  <Badge tone={trustTone(t.composite_score)}>
+                    {programmeName}: {t.composite_score?.toFixed(0) ?? "—"} ↗
+                  </Badge>
+                </button>
                 <Badge tone={MATURITY_TONE[t.maturity_level ?? ""] ?? "neutral"}>
                   {t.maturity_level ?? "—"}
                 </Badge>
@@ -295,13 +309,18 @@ export function AiGovernance() {
         <Card>
           <CardHeader
             title="Productivity tax — with AI vs without AI"
-            subtitle="Average across sprints in scope"
+            subtitle="Click a bar to drill into Velocity & Flow for this programme"
           />
           <div className="h-72">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
                 data={sdlcComparison}
                 margin={{ top: 8, right: 24, left: 0, bottom: 8 }}
+                onClick={() => {
+                  const code = filteredProgramme?.code;
+                  navigate(code ? `/velocity?programme=${code}` : "/velocity");
+                }}
+                style={{ cursor: "pointer" }}
               >
                 <CartesianGrid stroke="#E4EEF4" strokeDasharray="4 4" />
                 <XAxis dataKey="metric" stroke="#1B2A4A" tick={{ fontSize: 11 }} />

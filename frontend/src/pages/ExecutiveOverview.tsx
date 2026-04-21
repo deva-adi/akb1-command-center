@@ -206,11 +206,12 @@ export function ExecutiveOverview() {
         </Card>
 
         <Card>
-          <CardHeader title="Financials" subtitle="Annualised portfolio revenue" />
+          <CardHeader title="Financials" subtitle="Click any number to drill into Margin & EVM" />
           <div className="grid grid-cols-2 gap-3">
             <KpiMini
               label="Revenue"
               value={currency.format(totals.revenue, currency.baseCurrency)}
+              onClick={() => navigate("/margin")}
             />
             <KpiMini
               label="Avg margin"
@@ -224,18 +225,24 @@ export function ExecutiveOverview() {
                       ? "amber"
                       : "red"
               }
+              onClick={() => navigate("/margin")}
             />
           </div>
         </Card>
 
         <Card>
-          <CardHeader title="Delivery" subtitle="Earned-value indicators" />
+          <CardHeader title="Delivery" subtitle="Click any number to drill further" />
           <div className="grid grid-cols-2 gap-3">
-            <KpiMini label="Avg CPI" value={formatRatio(totals.avgCpi)} />
+            <KpiMini
+              label="Avg CPI"
+              value={formatRatio(totals.avgCpi)}
+              onClick={() => navigate("/margin")}
+            />
             <KpiMini
               label="Programmes"
               value={`${rows.length}`}
               tone="neutral"
+              onClick={() => navigate("/kpi")}
             />
           </div>
         </Card>
@@ -245,26 +252,29 @@ export function ExecutiveOverview() {
         <KpiTile
           label="Revenue realised"
           value={currency.format(totals.revenue, currency.baseCurrency)}
-          sub="YTD across 5 programmes"
+          sub="YTD across 5 programmes — click to drill into Margin & EVM"
+          onClick={() => navigate("/margin")}
         />
         <KpiTile
           label="Blended margin"
           value={formatPct(totals.avgMargin)}
-          sub="Target 22% · Amber 15%"
+          sub="Target 22% · Amber 15% — click to drill into Margin & EVM"
           trend={totals.avgMargin !== null && totals.avgMargin < 0.18 ? "down" : "flat"}
+          onClick={() => navigate("/margin")}
         />
         <KpiTile
           label="Avg Cost Performance Index"
           value={formatRatio(totals.avgCpi)}
-          sub="Green ≥ 1.00 · Amber 0.90"
+          sub="Green ≥ 1.00 · Amber 0.90 — click to drill into KPI Studio"
           trend={totals.avgCpi !== null && totals.avgCpi < 0.95 ? "down" : "flat"}
+          onClick={() => navigate("/kpi")}
         />
       </section>
 
       <Card>
         <CardHeader
           title="12-month margin trend"
-          subtitle="Programme-level gross margin (seeded data)"
+          subtitle="Click any data point to drill into that programme's Margin & EVM detail"
         />
         <div className="h-72">
           {marginSeries.length === 0 ? (
@@ -273,7 +283,15 @@ export function ExecutiveOverview() {
             </p>
           ) : (
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={marginSeries} margin={{ top: 8, right: 24, left: 0, bottom: 8 }}>
+              <LineChart
+                data={marginSeries}
+                margin={{ top: 8, right: 24, left: 0, bottom: 8 }}
+                onClick={(chartData) => {
+                  const code = chartData?.activePayload?.[0]?.dataKey as string | undefined;
+                  if (code) navigate(`/margin?programme=${code}`);
+                }}
+                style={{ cursor: "pointer" }}
+              >
                 <CartesianGrid stroke="#E4EEF4" strokeDasharray="4 4" />
                 <XAxis
                   dataKey="monthLabel"
@@ -289,6 +307,7 @@ export function ExecutiveOverview() {
                 <Tooltip
                   formatter={(value: number) => `${(value * 100).toFixed(1)}%`}
                   contentStyle={{ border: "1px solid #D5E8F0" }}
+                  labelFormatter={(label) => `${label} — click to drill into programme`}
                 />
                 <Legend wrapperStyle={{ fontSize: 12 }} />
                 {(programmes.data ?? []).map((p, idx) => (
@@ -300,6 +319,10 @@ export function ExecutiveOverview() {
                     strokeWidth={2}
                     dot={false}
                     name={p.code}
+                    activeDot={{
+                      r: 6,
+                      style: { cursor: "pointer" },
+                    }}
                   />
                 ))}
               </LineChart>
@@ -439,16 +462,24 @@ function KpiMini({
   label,
   value,
   tone = "neutral",
+  onClick,
 }: {
   label: string;
   value: string;
   tone?: RagBucket | "neutral";
+  onClick?: () => void;
 }) {
+  const Tag = onClick ? "button" : "div";
   return (
-    <div className="flex flex-col gap-1">
+    <Tag
+      type={onClick ? "button" : undefined}
+      onClick={onClick}
+      className={`flex flex-col gap-1 ${onClick ? "cursor-pointer rounded p-1 transition hover:bg-ice-50 dark:hover:bg-navy-600" : ""}`}
+      aria-label={onClick ? `Drill into ${label}` : undefined}
+    >
       <span className="kpi-label">{label}</span>
       <Badge tone={tone}>{value}</Badge>
-    </div>
+    </Tag>
   );
 }
 

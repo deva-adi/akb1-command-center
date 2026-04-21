@@ -1,5 +1,5 @@
 import { Fragment, useEffect, useMemo, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import {
   CartesianGrid,
@@ -55,6 +55,7 @@ function npsTone(score: number | null): RagBucket {
 }
 
 export function CustomerIntelligence() {
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const programmeFilter = searchParams.get("programme");
   const programmes = useProgrammes();
@@ -256,7 +257,7 @@ export function CustomerIntelligence() {
       <Card>
         <CardHeader
           title="CSAT / NPS / Renewal trend"
-          subtitle="12-month moving picture"
+          subtitle="Click any data point to drill into that programme's Risk & Audit log"
         />
         <div className="h-72">
           {trendData.length === 0 ? (
@@ -265,7 +266,18 @@ export function CustomerIntelligence() {
             </p>
           ) : (
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={trendData} margin={{ top: 8, right: 24, left: 0, bottom: 8 }}>
+              <LineChart
+                data={trendData}
+                margin={{ top: 8, right: 24, left: 0, bottom: 8 }}
+                onClick={() => {
+                  const code = filteredProgramme?.code
+                    ?? (activeProgrammeId
+                        ? programmes.data?.find((p) => p.id === activeProgrammeId)?.code
+                        : undefined);
+                  navigate(code ? `/raid?programme=${code}` : "/raid");
+                }}
+                style={{ cursor: "pointer" }}
+              >
                 <CartesianGrid stroke="#E4EEF4" strokeDasharray="4 4" />
                 <XAxis dataKey="monthLabel" stroke="#1B2A4A" tick={{ fontSize: 12 }} />
                 <YAxis
@@ -291,6 +303,7 @@ export function CustomerIntelligence() {
                   stroke="#10B981"
                   strokeWidth={2}
                   dot={false}
+                  activeDot={{ r: 6, style: { cursor: "pointer" } }}
                 />
                 <Line
                   yAxisId="right"
@@ -300,6 +313,7 @@ export function CustomerIntelligence() {
                   stroke="#1B2A4A"
                   strokeWidth={2}
                   dot={false}
+                  activeDot={{ r: 6, style: { cursor: "pointer" } }}
                 />
                 <Line
                   yAxisId="left"
@@ -309,6 +323,7 @@ export function CustomerIntelligence() {
                   stroke="#F59E0B"
                   strokeWidth={2}
                   dot={false}
+                  activeDot={{ r: 6, style: { cursor: "pointer" } }}
                 />
               </LineChart>
             </ResponsiveContainer>

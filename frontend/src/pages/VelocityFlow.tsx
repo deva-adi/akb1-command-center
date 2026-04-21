@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import {
   Bar,
@@ -29,6 +29,7 @@ import { useProgrammes } from "@/hooks/usePortfolio";
 import { formatPct, formatRatio } from "@/lib/format";
 
 export function VelocityFlow() {
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const programmeFilter = searchParams.get("programme");
   const programmes = useProgrammes();
@@ -152,7 +153,7 @@ export function VelocityFlow() {
       <Card>
         <CardHeader
           title="Dual velocity per project"
-          subtitle="Standard vs AI-raw vs AI-quality-adjusted, per sprint"
+          subtitle="Click any bar to drill into that programme's Delivery Health"
         />
         {projectSeries.length === 0 ? (
           <p className="text-sm text-navy/70">
@@ -166,6 +167,8 @@ export function VelocityFlow() {
                 key={projectId}
                 projectId={projectId}
                 rows={rows}
+                programmeCode={filteredProgramme?.code}
+                onDrillDown={(code) => navigate(`/delivery?programme=${code}`)}
               />
             ))}
           </div>
@@ -243,9 +246,13 @@ export function VelocityFlow() {
 function DualVelocityChart({
   projectId,
   rows,
+  programmeCode,
+  onDrillDown,
 }: {
   projectId: number;
   rows: DualVelocity[];
+  programmeCode?: string;
+  onDrillDown?: (code: string) => void;
 }) {
   const data = rows.map((r) => ({
     sprint: `#${r.sprint_number ?? "?"}`,
@@ -270,11 +277,19 @@ function DualVelocityChart({
       </div>
       <div className="h-60">
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={data} margin={{ top: 8, right: 20, left: 0, bottom: 8 }}>
+          <BarChart
+            data={data}
+            margin={{ top: 8, right: 20, left: 0, bottom: 8 }}
+            onClick={() => { if (programmeCode && onDrillDown) onDrillDown(programmeCode); }}
+            style={programmeCode ? { cursor: "pointer" } : undefined}
+          >
             <CartesianGrid stroke="#E4EEF4" strokeDasharray="4 4" />
             <XAxis dataKey="sprint" stroke="#1B2A4A" tick={{ fontSize: 12 }} />
             <YAxis stroke="#1B2A4A" tick={{ fontSize: 12 }} />
-            <Tooltip contentStyle={{ border: "1px solid #D5E8F0" }} />
+            <Tooltip
+              contentStyle={{ border: "1px solid #D5E8F0" }}
+              labelFormatter={(label) => programmeCode ? `${label} — click to drill into Delivery` : label}
+            />
             <Legend wrapperStyle={{ fontSize: 12 }} />
             <Bar dataKey="standard" name="Standard" fill="#1B2A4A" />
             <Bar dataKey="aiRaw" name="AI raw" fill="#F59E0B" />
