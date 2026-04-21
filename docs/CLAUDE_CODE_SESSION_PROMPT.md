@@ -12,7 +12,7 @@ You are building AKB1 Command Center v5.2 — a Docker-containerized, open-sourc
 
 ## WHO I AM
 
-Adi Kompalli — Senior Delivery & Program Manager, ~20 years enterprise software, Hyderabad India. This app is my portfolio showcase for Director/CTO-track roles. Target repo: github.com/deva-adi/akb1-command-center (public, MIT license). GitHub username: deva-adi. Email: deva.adi@gmail.com.
+Adi Kompalli — Associate Director - Delivery, ~20 years enterprise software, Hyderabad India. This app is my portfolio showcase for Director/CTO-track roles. Target repo: github.com/deva-adi/akb1-command-center (public, MIT license). GitHub username: deva-adi. Email: deva.adi@gmail.com.
 
 ## WHAT THE APP IS
 

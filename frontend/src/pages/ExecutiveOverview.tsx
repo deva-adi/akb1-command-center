@@ -12,6 +12,7 @@ import {
 } from "recharts";
 import { ChevronRight, FileDown, Home, Sparkles } from "lucide-react";
 import { Breadcrumb } from "@/components/Breadcrumb";
+import { AlertsTicker } from "@/components/AlertsTicker";
 import { Card, CardHeader } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { KpiTile } from "@/components/ui/KpiTile";
@@ -157,8 +158,8 @@ export function ExecutiveOverview() {
       />
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold text-navy">Executive Summary</h1>
-          <p className="mt-1 text-sm text-navy/70">
+          <h1 className="text-2xl font-semibold text-navy dark:text-navy-50">Executive Summary</h1>
+          <p className="mt-1 text-sm text-navy/70 dark:text-navy-100/70">
             Portfolio snapshot — answers CEO/COO pre-board questions. Data is
             live from the seeded NovaTech demo (5 programmes × 12 months).
           </p>
@@ -167,6 +168,8 @@ export function ExecutiveOverview() {
           <FileDown className="size-4" /> Generate QBR Brief
         </button>
       </div>
+
+      <AlertsTicker />
 
       <section className="grid grid-cols-1 gap-4 md:grid-cols-3">
         <Card>

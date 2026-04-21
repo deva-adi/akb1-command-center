@@ -1,8 +1,8 @@
-# AKB1 Command Center v5.2
+# AKB1 Command Center v5.3
 
 **The open-source delivery intelligence platform that answers every question your CTO, CIO, or CEO would ask — driven entirely by your data.**
 
-Built by a Senior Delivery Manager with ~20 years of enterprise IT experience. Not a toy dashboard — a real delivery operating system with 45 formulas, 7 loss detection categories, AI governance, predictive analytics, customer intelligence, proactive scenario detection, multi-currency support, and full SDLC framework compatibility (Scrum / Kanban / Waterfall / SAFe / Hybrid).
+Built by an Associate Director - Delivery with ~20 years of enterprise IT experience. Not a toy dashboard — a real delivery operating system with 45 formulas, 7 loss detection categories, AI governance, predictive analytics, customer intelligence, proactive scenario detection, live SSE alerts, live FX rate refresh, dark/light mode, multi-currency support, and full SDLC framework compatibility (Scrum / Kanban / Waterfall / SAFe / Hybrid).
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?logo=docker)](docker-compose.yml)
@@ -26,9 +26,11 @@ A Docker-containerized portfolio delivery dashboard that provides:
 - **Auto-Generated Narratives:** Template-based "so what?" summaries for every major metric — copy-paste ready for steering committees
 - **58 CTO/CIO/CEO Questions Answered:** Every question a senior leader would ask maps to a specific dashboard section, formula, and data source
 - **SDLC Framework Compatible:** Works with Scrum, Kanban, Waterfall, SAFe, and Hybrid methodologies — upload your data regardless of how your teams work
-- **Multi-Currency Engine:** Base currency aggregation with real-time conversion (INR, USD, EUR, GBP + any ISO 4217), fiscal year configuration, locale-aware number and date formatting
+- **Multi-Currency Engine:** Base currency aggregation with live FX rate refresh via frankfurter.dev (INR, USD, EUR, GBP + any ISO 4217), fiscal year configuration, locale-aware number and date formatting
+- **Live SSE Alerts Ticker:** Executive Overview shows a real-time scrollable chip strip of Active/Monitoring Smart Ops scenarios, pushed via Server-Sent Events every 10 s — no page refresh needed
+- **Dark / Light Mode Toggle:** Sun/Moon button in the header; theme persisted to localStorage and applied instantly across all 11 tabs via Tailwind CSS `dark:` class strategy
 
-Ships with realistic demo data for 5 programmes × 12 months (NovaTech Solutions narrative). Bring your own data via guided onboarding wizard, Excel (.xlsx) or CSV upload with auto-mapping, manual entry, or REST API. **First real data in 15 minutes.**
+Ships with realistic demo data for 5 programmes × 12 months (NovaTech Solutions narrative). Bring your own data via guided onboarding wizard, Excel (.xlsx) or CSV upload with auto-mapping, manual entry, or REST API. Every import creates an instant rollback snapshot. **First real data in 15 minutes.**
 
 ---
 
@@ -91,12 +93,15 @@ The setup script checks Docker, builds containers, starts services, and waits fo
 | State | React Query + Zustand | Server-state caching, lightweight client store |
 | Database | SQLite WAL mode (zero-config, volume-mounted) | Portable, single-file backup, concurrent reads, no setup |
 | Migrations | Alembic + SQLAlchemy 2.0 | Versioned schema migrations, rollback support |
-| Data Import | openpyxl + pandas | Native Excel (.xlsx) + CSV dual import |
+| Data Import | openpyxl + pandas | Native Excel (.xlsx) + CSV dual import with instant rollback |
+| Live Data | SSE (`text/event-stream`) + EventSource | Real-time Smart Ops alerts on Tab 1 without WebSocket complexity |
+| FX Rates | frankfurter.dev API | Live currency conversion, refreshed on demand |
+| Theming | Tailwind `darkMode: "class"` + Zustand + localStorage | Persistent dark/light toggle, zero flash on reload |
 | Container | Docker Compose (v1 + v2 compatible) | Single-command deployment, cross-platform |
 | Logging | structlog | Structured JSON logging for observability |
 | Forecast | NumPy + scipy (built-in) | Linear regression, moving averages — no ML overhead |
 | Linting | Ruff + Black + MyPy | Fast lint, format, type checking |
-| Testing | pytest + Vitest + Playwright | Backend, frontend, and E2E coverage |
+| Testing | pytest + Vitest + Playwright + axe-core | Backend, frontend, E2E, and WCAG AA accessibility coverage |
 | Port | 9000 (dashboard) / 9001 (API) | Isolated from existing apps |
 
 For full benchmark against 18 open-source applications (Plausible, Grafana, Metabase, Focalboard, etc.): see [`docs/TECH_STACK_BENCHMARK.md`](docs/TECH_STACK_BENCHMARK.md).
@@ -107,7 +112,7 @@ For full benchmark against 18 open-source applications (Plausible, Grafana, Meta
 
 | # | Tab | Purpose | Key Question |
 |---|-----|---------|-------------|
-| 1 | Executive Summary | Portfolio health, financials, delivery, 12-month trend, top 5 risks, this week's decisions, auto-narrative | "How are we performing right now?" |
+| 1 | Executive Summary | Portfolio health, financials, delivery, 12-month trend, top 5 risks, this week's decisions, auto-narrative, **live SSE alerts ticker** | "How are we performing right now?" |
 | 2 | Programme Portfolio | Programme cards with methodology badges (Scrum/Kanban/Waterfall/SAFe/Hybrid), SPI/CPI/NPS/Trust | "Which programmes need attention?" |
 | 3 | Delivery Health | 3 sub-views: **3A** Scrum/SAFe (burndown, cumulative flow, SPI/CPI), **3B** Kanban (CFD, WIP aging, throughput/cycle time), **3C** Waterfall (milestone timeline, phase variance, gate approval) | "Are we on track?" |
 | 4 | Velocity & Flow | Dual velocity chart (standard vs AI-augmented), 6-gate confidence merge protocol | "Is AI making us faster?" |
@@ -117,7 +122,7 @@ For full benchmark against 18 open-source applications (Plausible, Grafana, Meta
 | 8 | Smart Ops | 8 proactive detection scenarios with financial impact + webhook alerts (email/Slack/Teams) | "What should I fix right now?" |
 | 9 | Risk & Audit | RAID register, SLA incidents, governance maturity, AI audit trail, data lineage, exportable audit package | "What can go wrong? Are we audit-ready?" |
 | 10 | Reports & Exports | Auto-generated narratives, steering committee packs, PDF/Excel export, scheduled reports | "Give me the board pack." |
-| 11 | Data Hub & Settings | Guided onboarding wizard, drag-drop Excel/CSV upload, auto-mapper, base currency, fiscal year, locale, backup/restore | "How do I get my data in?" |
+| 11 | Data Hub & Settings | Guided onboarding wizard, drag-drop Excel/CSV upload, auto-mapper, **live commit + one-click rollback**, base currency, fiscal year, locale, backup/restore | "How do I get my data in?" |
 
 For detailed wireframes of every tab with metric dictionaries: see [`docs/WIREFRAMES.md`](docs/WIREFRAMES.md).
 
@@ -131,8 +136,16 @@ Pre-loaded on first run. 5 programmes (NovaTech Solutions), 12 months of narrati
 ### 2. Guided Onboarding Wizard
 Step-by-step: base currency + fiscal year → add programmes → set delivery methodology per project → upload first KPIs → see dashboard. Target: **15 minutes to first real data.**
 
-### 3. Excel (.xlsx) or CSV Upload with Auto-Mapping
-Drag-and-drop Excel or CSV files — the app reads your headers, suggests column mappings with confidence scores, you confirm. Mapping saved for future uploads. Pre-flight validation checks data types, required fields, and referential integrity before import. Every import creates a snapshot for one-click rollback.
+### 3. Excel (.xlsx) or CSV Upload with Auto-Mapping + Commit/Rollback
+Drag-and-drop Excel or CSV files — the app reads your headers, suggests column mappings with confidence scores, you confirm. Mapping saved for future uploads. Pre-flight validation checks data types, required fields, and referential integrity before import.
+
+**Commit/Rollback workflow (Tab 11):**
+1. Select entity type (`programmes`, `kpi_monthly`, or any registered type)
+2. Choose your CSV file — a preview appears
+3. Click **Commit** — rows are inserted, a snapshot is saved
+4. If you need to undo, click **Rollback** on any ledger entry — the import is reversed instantly
+
+Every import creates a snapshot (`data_import_snapshots` table) so you can roll back any import individually without affecting others.
 
 | # | Template | What It Populates | Frequency |
 |---|----------|-------------------|-----------|
@@ -272,7 +285,7 @@ Tracks merge into a single velocity only after passing all 6 confidence gates:
 | 7 | Customer Satisfaction Drift | CSAT drops > 0.5 pts over 2 surveys | Flag relationship risk, surface complaint themes |
 | 8 | Pyramid Inversion Alert | Blended rate drifts > 3% from planned for 2+ months | Flag rate card drift, show margin impact |
 
-Background scheduler evaluates all triggers every 15 minutes. Active alerts visible on Tab 1 ticker and Tab 7 alert badge.
+Background scheduler evaluates all triggers every 15 minutes. Active/Monitoring alerts are **pushed live via Server-Sent Events to the Tab 1 ticker** — no page refresh needed. Alert chips show status (Active = red, Monitoring = amber), scenario name, and financial impact.
 
 ---
 
@@ -333,11 +346,12 @@ Full mapping: see [`docs/CTO_QUESTIONS.md`](docs/CTO_QUESTIONS.md).
 
 Industry presets load default thresholds. All values fully editable after setup.
 
-### Multi-Currency Engine (NEW in v5.2)
+### Multi-Currency Engine (v5.2) + Live FX Refresh (v5.3)
 
 - **Base currency** set during onboarding (any ISO 4217 code: INR, USD, EUR, GBP, AUD, SGD, etc.)
 - **Per-project local currency** stored alongside base currency equivalent
-- **currency_rates** table with effective dates — manual entry or future API integration
+- **Live FX rates** via [frankfurter.dev](https://www.frankfurter.dev/) — click "Refresh Rates" in Tab 11 to pull the latest ECB exchange rates on demand
+- **currency_rates** table with effective dates — auto-populated from live API or manual entry
 - **Portfolio aggregation** always in base currency; drill-down shows local amounts
 - Mixed-currency portfolio example: GBP £1.2M + EUR €3.4M + INR ₹28 Cr → aggregated in USD at configured rates
 
@@ -412,6 +426,7 @@ akb1-command-center/
 │   ├── DEMO_GUIDE.md            # NovaTech narrative walkthrough
 │   ├── ROADMAP.md               # Build phases + iteration plan
 │   ├── CONTRIBUTING.md          # Contributor guide (Win/Mac/Linux)
+│   ├── DAILY_OPS.md             # Daily startup, troubleshooting decision tree, LaunchAgent guide
 │   ├── postmortems/             # Public Sev-1 postmortems (YYYY-MM-DD-<slug>.md)
 │   └── csv-templates/           # 15 CSV templates with sample data
 │       ├── programmes.csv
@@ -438,10 +453,11 @@ akb1-command-center/
 │   └── src/
 │       ├── pages/               # 11 tab pages
 │       ├── components/          # Reusable chart/card/wizard components
-│       ├── stores/              # Zustand state
-│       └── hooks/               # React Query hooks
+│       ├── stores/              # Zustand state (uiStore: currency, theme, fiscal year)
+│       └── hooks/               # React Query hooks + useAlertsStream (SSE)
 ├── scripts/
 │   ├── setup.sh                 # First-time setup (Mac/Linux)
+│   ├── autostart.sh             # macOS LaunchAgent startup script
 │   ├── seed.sh                  # Reset demo data
 │   ├── backup.sh                # Manual backup trigger
 │   └── export-db.sh             # Export workspace
@@ -466,7 +482,8 @@ akb1-command-center/
 | [`DATA_INGESTION.md`](docs/DATA_INGESTION.md) | Excel/CSV templates, auto-mapping, source-tool walkthroughs (Jira/ADO/ServiceNow/SAP), API integration |
 | [`DEMO_GUIDE.md`](docs/DEMO_GUIDE.md) | NovaTech narrative walkthrough |
 | [`CONTRIBUTING.md`](docs/CONTRIBUTING.md) | Code style, PR process, testing, brand guidelines, Windows/Mac/Linux dev setup |
-| [`ROADMAP.md`](docs/ROADMAP.md) | 4-iteration build plan, release gates, v5.3 horizon |
+| [`ROADMAP.md`](docs/ROADMAP.md) | 4-iteration build plan, release gates, v5.4 horizon |
+| [`DAILY_OPS.md`](docs/DAILY_OPS.md) | Daily startup guide, manual startup, health checks, troubleshooting decision tree, LaunchAgent management |
 
 ---
 
@@ -581,7 +598,7 @@ MIT License. Use it, fork it, adapt it. Attribution appreciated but not required
 
 ## Author
 
-**Adi Kompalli** — Senior Delivery & Program Manager | ~20 years enterprise software delivery
+**Adi Kompalli** — Associate Director - Delivery | ~20 years enterprise software delivery
 - LinkedIn: [/in/adikompalli](https://linkedin.com/in/adikompalli)
 - GitHub: [deva-adi](https://github.com/deva-adi)
 - Framework: AKB1 v5.2

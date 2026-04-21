@@ -2,19 +2,60 @@
 
 All notable changes to **AKB1 Command Center** are recorded here. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning is calendar-style because this is a solo-maintained portfolio build, not a library.
 
-## [Unreleased] — Iteration 4 (in flight)
+## 2026-04-21 — v5.3 (Iteration 5 complete — PRs #11 + #12)
+
+### Added — I-5a: Live FX Rate Refresh
+- `GET /api/v1/settings/fx-rates/refresh` — fetches latest ECB exchange rates from frankfurter.dev and upserts `currency_rates` table rows
+- "Refresh Rates" button in Tab 11 Data Hub; shows last-refreshed timestamp
+
+### Added — I-5b: CSV Commit + Rollback
+- `POST /api/v1/import/csv/commit` (multipart: `entity_type` + file) — inserts rows and records a snapshot in `data_import_snapshots`
+- `POST /api/v1/import/{id}/rollback` — reverses a specific import atomically
+- `GET /api/v1/import/schemas` — returns expected columns per entity type
+- Tab 11 UI: entity-type dropdown, Commit button, live import ledger with per-row Rollback button and success banner
+- `docs/csv-templates/hercules-programme.csv` — sample CSV for the Hercules Workload Consolidation programme
+
+### Added — I-5c: SSE Smart Ops Alerts Ticker
+- `GET /api/v1/smart-ops/alerts/stream` — `text/event-stream` endpoint; pushes Active/Monitoring scenario payloads every 10 s using a fresh DB session per poll cycle
+- nginx `location =` exact-match block with `proxy_buffering off`, `proxy_read_timeout 86400s`
+- `useAlertsStream.ts` React hook (`EventSource`, auto-reconnects on error)
+- `AlertsTicker.tsx` — horizontal scrollable chip strip on Tab 1 Executive Overview; WCAG AA compliant (`role="status"`, `aria-live="polite"`, keyboard-accessible scroll region)
+
+### Added — I-5d: Dark / Light Mode Toggle
+- `tailwind.config.js`: `darkMode: "class"` strategy
+- `uiStore.ts`: `theme` field + `toggleTheme` action; persisted to `localStorage` key `akb1-theme`
+- `ThemeToggle.tsx`: Sun/Moon icon button in header, toggles `dark` class on `<html>`
+- `index.css`: dark-mode overrides for `.card`, `.btn-ghost`, `.kpi-*`, `.status-*`
+- `Layout.tsx`, `Card.tsx`, `CardHeader.tsx`, `ExecutiveOverview.tsx`: `dark:` Tailwind variants on all surfaces
+
+### Added — Operations
+- `docs/DAILY_OPS.md` — step-by-step daily startup guide, manual startup procedure, health verification, 9 troubleshooting scenarios, LaunchAgent management, and decision tree
+
+### Quality Gates
+- pytest: 55/55 tests, coverage 70.22%
+- vitest: 17/17
+- Playwright E2E: 8/8 (including Hercules drill regression, axe-core WCAG AA)
+- Ruff + MyPy: zero errors
+
+---
+
+## 2026-04-20 — Iteration 4b (PR #10)
+
+### Added
+- Playwright golden-path E2E test suite (8 scenarios)
+- axe-core WCAG AA accessibility scan across all 11 tabs
+- CycloneDX SBOM generation for backend + frontend at release
+- Cold-start timing script — clone → `docker compose up` → dashboard in under 3 minutes
+
+---
+
+## 2026-04-20 — Iteration 4a (PR #9)
 
 ### Added
 - **Tab 10 Reports & Exports** (`/reports`): per-programme QBR PDF (ReportLab), portfolio-wide and per-programme audit evidence ZIP (JSON dumps + README), configurable 3-month forecast chart with three parallel models.
 - `GET /api/v1/reports/qbr/{program_id}.pdf` and `/api/v1/reports/audit-package.zip` endpoints.
 - `GET /api/v1/forecasts` — wraps `app/services/forecast.py` primitives (linear trend, weighted moving average, exponential smoothing) into an HTTP surface.
 - ReportLab runtime dependency.
-
-### Planned for the same iteration (see ROADMAP)
-- Playwright E2E golden-path test
-- axe-core accessibility pass across every tab
-- CycloneDX SBOM for backend + frontend
-- Cold-start timing script — clone → `docker compose up` → dashboard in under 3 minutes
 
 ---
 
