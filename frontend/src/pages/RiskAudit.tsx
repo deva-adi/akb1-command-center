@@ -1,5 +1,5 @@
 import { Fragment, useMemo, useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import {
   Bar,
@@ -41,6 +41,7 @@ function riskSeverityTone(severity: string | null): RagBucket {
 }
 
 export function RiskAudit() {
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const programmeFilter = searchParams.get("programme");
   const [tableFilter, setTableFilter] = useState<string | null>(null);
@@ -284,13 +285,18 @@ export function RiskAudit() {
         <Card>
           <CardHeader
             title="Risk exposure by programme"
-            subtitle="Count + summed impact"
+            subtitle="Click a bar to drill into that programme's filtered risk register"
           />
           <div className="h-72">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
                 data={risksByProgramme}
                 margin={{ top: 8, right: 24, left: 0, bottom: 8 }}
+                onClick={(chartData) => {
+                  const code = chartData?.activePayload?.[0]?.payload?.code as string | undefined;
+                  if (code) navigate(`/raid?programme=${code}`);
+                }}
+                style={{ cursor: "pointer" }}
               >
                 <CartesianGrid stroke="#E4EEF4" strokeDasharray="4 4" />
                 <XAxis dataKey="code" stroke="#1B2A4A" tick={{ fontSize: 12 }} />

@@ -1,5 +1,5 @@
 import { useMemo, useState, useEffect } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import {
   CartesianGrid,
@@ -37,6 +37,7 @@ const METHODOLOGY_TONE: Record<string, "green" | "amber" | "red" | "neutral"> = 
 };
 
 export function DeliveryHealth() {
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const programmeFilter = searchParams.get("programme");
   const programmes = useProgrammes();
@@ -286,7 +287,7 @@ export function DeliveryHealth() {
           <Card>
             <CardHeader
               title="EVM trend"
-              subtitle="12-month CPI and SPI"
+              subtitle="Click any data point to drill into Margin & EVM for this programme"
             />
             <div className="h-72">
               {evmTrend.length === 0 ? (
@@ -298,6 +299,11 @@ export function DeliveryHealth() {
                   <LineChart
                     data={evmTrend}
                     margin={{ top: 8, right: 24, left: 0, bottom: 8 }}
+                    onClick={() => {
+                      const prog = programmeFilter;
+                      navigate(prog ? `/margin?programme=${prog}` : "/margin");
+                    }}
+                    style={{ cursor: "pointer" }}
                   >
                     <CartesianGrid stroke="#E4EEF4" strokeDasharray="4 4" />
                     <XAxis dataKey="monthLabel" stroke="#1B2A4A" tick={{ fontSize: 12 }} />
@@ -318,6 +324,7 @@ export function DeliveryHealth() {
                       stroke="#1B2A4A"
                       strokeWidth={2}
                       dot={false}
+                      activeDot={{ r: 6, style: { cursor: "pointer" } }}
                     />
                     <Line
                       type="monotone"
@@ -326,6 +333,7 @@ export function DeliveryHealth() {
                       stroke="#F59E0B"
                       strokeWidth={2}
                       dot={false}
+                      activeDot={{ r: 6, style: { cursor: "pointer" } }}
                     />
                   </LineChart>
                 </ResponsiveContainer>
