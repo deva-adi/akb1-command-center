@@ -17,6 +17,7 @@ import { ProgrammeFilterBar } from "@/components/ProgrammeFilterBar";
 import { PROGRAMME_CROSS_LINKS } from "@/components/programmeCrossLinks";
 import { Card, CardHeader } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
+import { MetricCard } from "@/components/ui/MetricCard";
 import {
   fetchChangeRequests,
   fetchCommercial,
@@ -156,13 +157,41 @@ export function MarginEvm() {
         crossLinks={PROGRAMME_CROSS_LINKS}
       />
 
+      {marginWaterfall.length > 0 && (
+        <section className="grid grid-cols-2 gap-3 md:grid-cols-4">
+          {marginWaterfall.map((w) => {
+            const metricIdMap: Record<string, string> = {
+              Gross: "gross_margin",
+              Contribution: "gross_margin",
+              Portfolio: "blended_margin",
+              Net: "net_margin",
+            };
+            return (
+              <MetricCard
+                key={w.label}
+                metricId={metricIdMap[w.label]}
+                label={`${w.label} margin`}
+                value={`${((w.value ?? 0) * 100).toFixed(1)}%`}
+                tone={
+                  (w.value ?? 0) >= 0.22
+                    ? "green"
+                    : (w.value ?? 0) >= 0.15
+                      ? "amber"
+                      : "red"
+                }
+              />
+            );
+          })}
+        </section>
+      )}
+
       <Card>
         <CardHeader
           title="4-layer margin waterfall"
           subtitle={
             filteredProgramme
               ? `Latest scenario for ${filteredProgramme.name}`
-              : "Latest portfolio average across programmes"
+              : "Latest portfolio average across programmes — click a bar to drill into per-programme breakdown"
           }
         />
         {marginWaterfall.length === 0 ? (

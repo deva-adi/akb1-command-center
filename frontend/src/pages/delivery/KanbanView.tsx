@@ -4,6 +4,7 @@ import ReactECharts from "echarts-for-react";
 import { Eye, EyeOff, X } from "lucide-react";
 import { Card, CardHeader } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
+import { MetricCard } from "@/components/ui/MetricCard";
 import { fetchFlow, fetchBacklogItems, type ProjectListItem, type BacklogItem } from "@/lib/api";
 
 // ─── types ───────────────────────────────────────────────────────────────────
@@ -170,10 +171,10 @@ export function KanbanView({ project }: { project: ProjectListItem }) {
     <div className="flex flex-col gap-4">
       {/* ── Summary row ── */}
       <section className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        <FlowStat label="Throughput (this wk)" value={`${latest.throughput_items ?? 0}`} sub={`avg ${avgThroughput.toFixed(1)}`} />
-        <FlowStat label="WIP avg" value={`${(latest.wip_avg ?? 0).toFixed(1)}`} sub={`limit ${latest.wip_limit ?? "—"}`} tone={wipBreach ? "red" : "green"} />
-        <FlowStat label="Cycle time p50" value={`${(latest.cycle_time_p50 ?? 0).toFixed(1)}d`} sub={`p95 ${(latest.cycle_time_p95 ?? 0).toFixed(1)}d`} />
-        <FlowStat label="Blocked" value={`${(latest.blocked_time_hours ?? 0).toFixed(1)}h`} />
+        <MetricCard metricId="throughput" value={`${latest.throughput_items ?? 0}`} sub={`avg ${avgThroughput.toFixed(1)}`} />
+        <MetricCard metricId="wip" value={`${(latest.wip_avg ?? 0).toFixed(1)}`} sub={`limit ${latest.wip_limit ?? "—"}`} tone={wipBreach ? "red" : "green"} />
+        <MetricCard metricId="cycle_p50" value={`${(latest.cycle_time_p50 ?? 0).toFixed(1)}d`} sub={`p95 ${(latest.cycle_time_p95 ?? 0).toFixed(1)}d`} />
+        <MetricCard metricId="blocked" value={`${(latest.blocked_time_hours ?? 0).toFixed(1)}h`} tone={(latest.blocked_time_hours ?? 0) > 8 ? "red" : (latest.blocked_time_hours ?? 0) > 4 ? "amber" : "green"} />
       </section>
 
       {/* ── CFD ── */}
@@ -610,31 +611,6 @@ function FlowItemsTable({
           </tfoot>
         </table>
       </div>
-    </div>
-  );
-}
-
-// ─── Static components ────────────────────────────────────────────────────────
-
-function FlowStat({
-  label,
-  value,
-  sub,
-  tone = "neutral",
-}: {
-  label: string;
-  value: string;
-  sub?: string;
-  tone?: "green" | "amber" | "red" | "neutral";
-}) {
-  return (
-    <div className="rounded border border-ice-100 bg-white px-3 py-2">
-      <span className="kpi-label">{label}</span>
-      <div className="flex items-center gap-2">
-        <p className="font-mono text-xl font-semibold text-navy">{value}</p>
-        {tone !== "neutral" ? <Badge tone={tone}>·</Badge> : null}
-      </div>
-      {sub ? <p className="text-xs text-navy/70">{sub}</p> : null}
     </div>
   );
 }

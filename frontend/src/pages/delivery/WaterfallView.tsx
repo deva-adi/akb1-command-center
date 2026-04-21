@@ -3,6 +3,7 @@ import { useState } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { Card, CardHeader } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
+import { MetricCard } from "@/components/ui/MetricCard";
 import { fetchPhases, fetchMilestones, type ProjectListItem } from "@/lib/api";
 import { formatDate, type RagBucket } from "@/lib/format";
 
@@ -96,16 +97,26 @@ export function WaterfallView({ project }: { project: ProjectListItem }) {
                       {formatDate(phase.planned_end)}
                     </div>
                   </div>
-                  <div className="flex flex-col items-end gap-1">
-                    <span className="font-mono text-lg font-semibold text-navy">
-                      {(phase.percent_complete ?? 0).toFixed(0)}%
-                    </span>
+                  <div className="flex flex-col items-end gap-2 min-w-[140px]">
+                    <MetricCard
+                      metricId="phase_completion"
+                      value={`${(phase.percent_complete ?? 0).toFixed(0)}%`}
+                      tone={
+                        (phase.percent_complete ?? 0) >= 80
+                          ? "green"
+                          : (phase.percent_complete ?? 0) >= 60
+                            ? "amber"
+                            : "red"
+                      }
+                      className="w-full"
+                    />
                     {varianceDays !== null ? (
-                      <span
-                        className={`text-xs ${varianceDays > 0 ? "text-danger-600" : "text-success-600"}`}
-                      >
-                        {varianceDays > 0 ? `+${varianceDays}d slip` : `${varianceDays}d ahead`}
-                      </span>
+                      <MetricCard
+                        metricId="schedule_variance_days"
+                        value={varianceDays > 0 ? `+${varianceDays}d slip` : `${Math.abs(varianceDays)}d ahead`}
+                        tone={varianceDays > 7 ? "red" : varianceDays > 0 ? "amber" : "green"}
+                        className="w-full"
+                      />
                     ) : null}
                   </div>
                   <span className="self-center pr-1 text-navy/40">
@@ -188,11 +199,12 @@ export function WaterfallView({ project }: { project: ProjectListItem }) {
                   <div className="flex items-center gap-2">
                     <Badge tone={STATUS_TONE[m.status] ?? "neutral"}>{m.status}</Badge>
                     {slipDays !== null && slipDays !== 0 ? (
-                      <span
-                        className={`text-xs ${slipDays > 0 ? "text-danger-600" : "text-success-600"}`}
-                      >
-                        {slipDays > 0 ? `+${slipDays}d` : `${slipDays}d`}
-                      </span>
+                      <MetricCard
+                        metricId="milestone_slip"
+                        value={slipDays > 0 ? `+${slipDays}d` : `${slipDays}d`}
+                        tone={slipDays > 5 ? "red" : slipDays > 0 ? "amber" : "green"}
+                        className="px-2 py-1"
+                      />
                     ) : null}
                     {isOpen ? (
                       <ChevronUp className="size-4 text-navy/40" aria-hidden="true" />

@@ -123,7 +123,7 @@ export function SmartOps() {
 
       <section className="grid grid-cols-2 gap-3 md:grid-cols-4">
         <MetricCard metricId="scenario_alerts" label="Active alerts" value={`${activeCount}`} tone={activeCount === 0 ? "green" : "red"} />
-        <MetricCard label="Mitigating" value={`${mitigatingCount}`} tone={mitigatingCount > 0 ? "amber" : "green"} />
+        <MetricCard metricId="mitigating_scenarios" value={`${mitigatingCount}`} tone={mitigatingCount > 0 ? "amber" : "green"} />
         <MetricCard
           metricId="risk_exposure"
           label="Financial impact"

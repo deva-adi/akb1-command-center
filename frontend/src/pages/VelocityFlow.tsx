@@ -343,8 +343,8 @@ function DualVelocityChart({
                     : "red"
               }
             />
-            <MetricCard metricId="rework_hours" label="AI rework points" value={`${(drillRow.ai_rework_points ?? 0).toFixed(0)} pts`} />
-            <MetricCard metricId="velocity" label="Combined velocity" value={`${(drillRow.combined_velocity ?? 0).toFixed(0)} pts`} />
+            <MetricCard metricId="ai_rework_points" value={`${(drillRow.ai_rework_points ?? 0).toFixed(0)} pts`} />
+            <MetricCard metricId="combined_velocity" value={`${(drillRow.combined_velocity ?? 0).toFixed(0)} pts`} />
             <MetricCard
               metricId="merge_eligible"
               value={drillRow.merge_eligible ? "Yes" : "No"}

@@ -243,11 +243,10 @@ export function CustomerIntelligence() {
           tone={npsTone(latest?.nps_score ?? null)}
         />
         <MetricCard
-          metricId="escalation_count"
-          label="Open escalations"
+          metricId="open_escalations"
           value={`${latest?.escalation_open ?? 0}`}
           tone={(latest?.escalation_open ?? 0) === 0 ? "green" : (latest?.escalation_open ?? 0) > 3 ? "red" : "amber"}
-          sub={`total ${latest?.escalation_count ?? 0}`}
+          sub={`total ${latest?.escalation_count ?? 0} this month`}
         />
         <MetricCard
           metricId="renewal_probability"

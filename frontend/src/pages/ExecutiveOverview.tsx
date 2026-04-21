@@ -295,6 +295,7 @@ export function ExecutiveOverview() {
           value={currency.format(totals.revenue, currency.baseCurrency)}
           sub={drillTarget === "revenue" ? "▼ Per-programme breakdown open below" : "YTD across all programmes — click to see per-programme breakdown"}
           onClick={() => openDrill("revenue")}
+          metricId="portfolio_revenue"
         />
         <KpiTile
           label="Blended margin"
@@ -302,6 +303,7 @@ export function ExecutiveOverview() {
           sub={drillTarget === "margin" ? "▼ Per-programme breakdown open below" : "Target 22% · Amber 15% — click to see per-programme breakdown"}
           trend={totals.avgMargin !== null && totals.avgMargin < 0.18 ? "down" : "flat"}
           onClick={() => openDrill("margin")}
+          metricId="blended_margin"
         />
         <KpiTile
           label="Avg Cost Performance Index"
@@ -309,6 +311,7 @@ export function ExecutiveOverview() {
           sub={drillTarget === "cpi" ? "▼ Per-programme breakdown open below" : "Green ≥ 1.00 · Amber 0.90 — click to see per-programme breakdown"}
           trend={totals.avgCpi !== null && totals.avgCpi < 0.95 ? "down" : "flat"}
           onClick={() => openDrill("cpi")}
+          metricId="avg_cpi"
         />
       </section>
 

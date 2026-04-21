@@ -329,6 +329,28 @@ export const AI_VELOCITY_METRICS: Record<string, MetricDef> = {
     unit: "ratio",
     thresholds: { green: "≥0.90", amber: "0.75–0.89", red: "<0.75" },
   },
+  ai_rework_points: {
+    id: "ai_rework_points",
+    label: "AI rework points",
+    formula: "SUM(story_points WHERE is_ai_assisted = true AND rework_hours > 0)",
+    description:
+      "Story points on AI-assisted stories that generated rework in the same or following sprint. Indicates AI output that was accepted but later found to need correction.",
+    interpretation:
+      "AI rework points should stay below 10% of total AI velocity. High AI rework means either the review process for AI suggestions is too permissive, or the AI is being applied to areas where it lacks sufficient context. Compare to non-AI rework rate to isolate the AI-specific penalty.",
+    unit: "story points",
+    thresholds: { green: "<10% of AI velocity", amber: "10–20% of AI velocity", red: ">20% of AI velocity" },
+  },
+  combined_velocity: {
+    id: "combined_velocity",
+    label: "Combined velocity",
+    formula: "standard_velocity + ai_quality_adjusted_velocity",
+    description:
+      "Total velocity for the sprint including both standard (non-AI) and quality-adjusted AI-assisted points. This is the number that feeds into release forecasting.",
+    interpretation:
+      "Use combined velocity for sprint forecasting, but always show it next to its breakdown (standard + AI adjusted). If combined velocity is growing but the AI-adjusted component is shrinking as a fraction, the AI contribution is decelerating — investigate whether AI tooling or adoption is regressing.",
+    unit: "story points",
+    thresholds: { green: "Growing vs 3-sprint avg", amber: "Flat", red: "Declining" },
+  },
   merge_eligible: {
     id: "merge_eligible",
     label: "Merge eligible",
@@ -382,6 +404,17 @@ export const MARGIN_METRICS: Record<string, MetricDef> = {
 // ─── Customer Intelligence ─────────────────────────────────────────────────
 
 export const CUSTOMER_METRICS: Record<string, MetricDef> = {
+  open_escalations: {
+    id: "open_escalations",
+    label: "Open escalations",
+    formula: "COUNT(escalation_events WHERE status = 'open' AND period = N)",
+    description:
+      "Number of client escalations currently open and unresolved — issues that bypassed normal delivery channels and were raised directly with senior management.",
+    interpretation:
+      "Even one open escalation is a relationship signal. Zero is the target at all times. Open escalations older than 2 weeks without a closure plan are a retention risk. Drill to the escalation log to see owner, severity, and resolution date.",
+    unit: "count",
+    thresholds: { green: "0 open", amber: "1 open", red: "≥2 open or >2 weeks unresolved" },
+  },
   csat: {
     id: "csat",
     label: "CSAT score",
@@ -507,6 +540,17 @@ export const AI_GOVERNANCE_METRICS: Record<string, MetricDef> = {
 // ─── Smart Ops ─────────────────────────────────────────────────────────────
 
 export const SMARTOPS_METRICS: Record<string, MetricDef> = {
+  mitigating_scenarios: {
+    id: "mitigating_scenarios",
+    label: "Mitigating",
+    formula: "COUNT(scenarios WHERE status = 'Mitigating')",
+    description:
+      "Number of active scenario alerts currently in a mitigation state — an owner has acknowledged the risk and a corrective action is in progress.",
+    interpretation:
+      "Mitigating scenarios are positive: they show the team is actively managing risk rather than ignoring it. Watch whether they resolve within the agreed SLA (typically 2 sprints). If mitigating count grows without resolution, escalate the action owners.",
+    unit: "count",
+    thresholds: { green: "Resolving within SLA", amber: "SLA at risk (>2 sprints)", red: "Stale — no progress" },
+  },
   scenario_alerts: {
     id: "scenario_alerts",
     label: "Scenario alerts",
@@ -569,6 +613,44 @@ export const PORTFOLIO_METRICS: Record<string, MetricDef> = {
   },
 };
 
+// ─── Waterfall / Phase ─────────────────────────────────────────────────────
+
+export const WATERFALL_METRICS: Record<string, MetricDef> = {
+  phase_completion: {
+    id: "phase_completion",
+    label: "Phase complete",
+    formula: "EV / BAC × 100 within this phase (or deliverable count ratio)",
+    description:
+      "Percentage of the current phase's scope that has been delivered and accepted through the phase gate. Measured as earned value within phase budget, or as completed deliverable count / total planned deliverables.",
+    interpretation:
+      "In waterfall delivery, phase completion below 80% at the planned gate date is a red flag. The phase gate cannot be signed off until completion reaches 100% — so any shortfall directly delays the downstream phases. Escalate to the Programme Director if completion falls more than 10% behind at the 60% time mark of the phase.",
+    unit: "%",
+    thresholds: { green: "On track (completion ≥ time elapsed %)", amber: "5–10% behind time-curve", red: ">10% behind or gate risk" },
+  },
+  schedule_variance_days: {
+    id: "schedule_variance_days",
+    label: "Schedule variance",
+    formula: "actual_duration_days − planned_duration_days",
+    description:
+      "Difference in calendar days between the actual time spent on a phase and the planned duration. Positive = running late (slip); negative = ahead of schedule.",
+    interpretation:
+      "Each day of phase slip adds directly to the project end date unless recovery is built into subsequent phases. A slip of more than 10% of phase duration without a recovery plan should be escalated and reflected in the EAC forecast immediately.",
+    unit: "days",
+    thresholds: { green: "0 to −∞ (on time or ahead)", amber: "+1 to +7 days slip", red: ">7 days slip or gate missed" },
+  },
+  milestone_slip: {
+    id: "milestone_slip",
+    label: "Milestone slip",
+    formula: "actual_date − planned_date  (days, positive = late)",
+    description:
+      "Days by which a milestone delivery was delayed from the planned date. Milestones represent key contractual or programme commitments — slip has direct commercial consequences.",
+    interpretation:
+      "Any milestone slip triggers a change notification to the client under most fixed-price contracts. Slip of more than 5 days requires the Programme Manager to issue a revised delivery baseline. Slip above 14 days usually triggers a commercial impact assessment.",
+    unit: "days",
+    thresholds: { green: "0 (on time)", amber: "1–5 days", red: ">5 days or contractual breach risk" },
+  },
+};
+
 // ─── Master lookup ──────────────────────────────────────────────────────────
 
 export const ALL_METRICS: Record<string, MetricDef> = {
@@ -582,6 +664,7 @@ export const ALL_METRICS: Record<string, MetricDef> = {
   ...AI_GOVERNANCE_METRICS,
   ...SMARTOPS_METRICS,
   ...PORTFOLIO_METRICS,
+  ...WATERFALL_METRICS,
 };
 
 export function getMetric(id: string): MetricDef | undefined {
