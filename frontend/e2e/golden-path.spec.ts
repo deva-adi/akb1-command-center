@@ -55,6 +55,55 @@ test.describe("AKB1 dashboard — golden path", () => {
     ).toBeVisible();
   });
 
+  test("CSV import round-trip: preview → commit → rollback", async ({ page }) => {
+    await page.goto("/data-hub");
+    await expect(
+      page.getByRole("heading", { name: /data hub/i }),
+    ).toBeVisible();
+
+    // Build a minimal programmes CSV in memory and drop it onto the upload zone.
+    const csvContent = [
+      "name,code,client,start_date,end_date,status,bac,revenue,team_size,offshore_ratio,delivery_model,currency_code",
+      "E2E Test Programme,E2E-TST,TestCo,2026-01-01,2027-01-01,Green,1000000,1000000,10,0.50,Managed Services,USD",
+    ].join("\n");
+
+    const dropzone = page.locator("label[for='csv-upload']");
+    await dropzone.dispatchEvent("dragover", { bubbles: true });
+    await dropzone.dispatchEvent("dragleave", { bubbles: true });
+
+    // Use file chooser to upload the CSV.
+    const [fileChooser] = await Promise.all([
+      page.waitForEvent("filechooser"),
+      dropzone.click(),
+    ]);
+    await fileChooser.setFiles({
+      name: "e2e-programmes.csv",
+      mimeType: "text/csv",
+      buffer: Buffer.from(csvContent),
+    });
+
+    // Preview should appear — the filename is shown in a <strong> inside the preview paragraph.
+    await expect(page.getByRole("strong").filter({ hasText: /e2e-programmes\.csv/i })).toBeVisible();
+    // Entity type dropdown renders once preview is ready.
+    await expect(page.locator('[aria-label="Entity type"]')).toBeVisible();
+
+    // Select entity type and commit.
+    await page.selectOption('[aria-label="Entity type"]', "programmes");
+    await page.getByRole("button", { name: /^commit$/i }).click();
+
+    // Success banner — the unique "import #NNN" text only appears in the commit result banner.
+    await expect(page.getByText(/import #\d+/i)).toBeVisible({ timeout: 15_000 });
+
+    // Recent imports ledger should now show at least one entry.
+    await expect(
+      page.locator("ul li").filter({ hasText: /e2e-programmes\.csv/i }).first()
+    ).toBeVisible();
+
+    // Rollback.
+    await page.getByRole("button", { name: /rollback/i }).first().click();
+    await page.waitForTimeout(1000);
+  });
+
   test("no axe-core violations on the executive dashboard", async ({ page }) => {
     await page.goto("/");
     // Let the React Query fetches settle.

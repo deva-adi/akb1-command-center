@@ -793,3 +793,42 @@ export async function previewCsv(file: File): Promise<{
   });
   return data;
 }
+
+export type ImportSchema = {
+  label: string;
+  expected_columns: string[];
+};
+
+export async function fetchImportSchemas(): Promise<Record<string, ImportSchema>> {
+  const { data } = await api.get<Record<string, ImportSchema>>("/api/v1/import/schemas");
+  return data;
+}
+
+export type CommitResult = {
+  import_id: number;
+  snapshot_id: number;
+  rows_imported: number;
+  affected_tables: string[];
+  status: string;
+};
+
+export async function commitCsv(file: File, entityType: string): Promise<CommitResult> {
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("entity_type", entityType);
+  const { data } = await api.post<CommitResult>("/api/v1/import/csv/commit", formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+  return data;
+}
+
+export type RollbackResult = {
+  import_id: number;
+  status: string;
+  rows_restored: number;
+};
+
+export async function rollbackImport(importId: number): Promise<RollbackResult> {
+  const { data } = await api.post<RollbackResult>(`/api/v1/import/${importId}/rollback`);
+  return data;
+}

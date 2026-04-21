@@ -74,6 +74,37 @@ async def test_risks_sorted_by_impact_desc(
 
 
 @pytest.mark.asyncio
+async def test_risks_filter_by_program_and_status(
+    session: AsyncSession, app_client: AsyncClient
+) -> None:
+    prog_id = await _seed_one_programme(session)
+    r = await app_client.get("/api/v1/risks", params={"program_id": prog_id, "status": "Open"})
+    assert r.status_code == 200
+    assert len(r.json()) == 2
+
+
+@pytest.mark.asyncio
+async def test_risks_sort_by_probability(
+    session: AsyncSession, app_client: AsyncClient
+) -> None:
+    await _seed_one_programme(session)
+    r = await app_client.get("/api/v1/risks", params={"sort_by": "probability"})
+    assert r.status_code == 200
+    rows = r.json()
+    assert rows[0]["title"] == "High impact"
+
+
+@pytest.mark.asyncio
+async def test_risks_sort_by_created_at(
+    session: AsyncSession, app_client: AsyncClient
+) -> None:
+    await _seed_one_programme(session)
+    r = await app_client.get("/api/v1/risks", params={"sort_by": "created_at"})
+    assert r.status_code == 200
+    assert len(r.json()) == 2
+
+
+@pytest.mark.asyncio
 async def test_customer_endpoints_404_on_unknown_programme(
     app_client: AsyncClient,
 ) -> None:

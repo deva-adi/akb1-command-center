@@ -11,11 +11,14 @@ import {
 import { Card, CardHeader } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import {
+  commitCsv,
   fetchCurrencyRates,
   fetchImportLog,
+  fetchImportSchemas,
   fetchSettings,
   previewCsv,
   refreshCurrencyRates,
+  rollbackImport,
 } from "@/lib/api";
 import { formatDate } from "@/lib/format";
 
@@ -44,10 +47,20 @@ const templates = [
   "project_phases.csv",
 ];
 
+type CommitState = {
+  importId: number;
+  rowsImported: number;
+  affectedTables: string[];
+} | null;
+
 export function DataHub() {
   const inputRef = useRef<HTMLInputElement>(null);
   const [preview, setPreview] = useState<PreviewState>(null);
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
+  const [entityType, setEntityType] = useState<string>("");
   const [previewError, setPreviewError] = useState<string | null>(null);
+  const [commitResult, setCommitResult] = useState<CommitState>(null);
+  const [commitError, setCommitError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [dragOver, setDragOver] = useState(false);
 
@@ -58,6 +71,7 @@ export function DataHub() {
     queryKey: ["currency-rates"],
     queryFn: fetchCurrencyRates,
   });
+  const schemas = useQuery({ queryKey: ["import-schemas"], queryFn: fetchImportSchemas });
 
   const settingMap = new Map((settings.data ?? []).map((s) => [s.key, s.value ?? "—"]));
 
@@ -68,8 +82,37 @@ export function DataHub() {
     },
   });
 
+  const doCommit = useMutation({
+    mutationFn: ({ file, type }: { file: File; type: string }) =>
+      commitCsv(file, type),
+    onSuccess: (result) => {
+      setCommitResult({
+        importId: result.import_id,
+        rowsImported: result.rows_imported,
+        affectedTables: result.affected_tables,
+      });
+      setCommitError(null);
+      setPreview(null);
+      setPendingFile(null);
+      setEntityType("");
+      void queryClient.invalidateQueries({ queryKey: ["imports"] });
+    },
+    onError: (err) => {
+      setCommitError((err as Error).message);
+    },
+  });
+
+  const doRollback = useMutation({
+    mutationFn: (importId: number) => rollbackImport(importId),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["imports"] });
+    },
+  });
+
   async function handleFile(file: File) {
     setPreviewError(null);
+    setCommitResult(null);
+    setCommitError(null);
     setUploading(true);
     try {
       const response = await previewCsv(file);
@@ -79,8 +122,10 @@ export function DataHub() {
         rowCount: response.row_count,
         sample: response.sample,
       });
+      setPendingFile(file);
     } catch (err) {
       setPreview(null);
+      setPendingFile(null);
       setPreviewError((err as Error).message);
     } finally {
       setUploading(false);
@@ -101,7 +146,7 @@ export function DataHub() {
         <Card className="lg:col-span-2">
           <CardHeader
             title="Ingest programme data"
-            subtitle="Preview parses headers client-side; committed imports arrive in Iteration 2."
+            subtitle="Preview → pick entity type → Commit. Rollback restores the pre-import snapshot."
           />
           <label
             htmlFor="csv-upload"
@@ -150,6 +195,20 @@ export function DataHub() {
             <p className="mt-3 text-sm text-danger-600">{previewError}</p>
           ) : null}
 
+          {commitResult ? (
+            <div className="mt-4 flex items-start gap-2 rounded-md border border-success-200 bg-success-50 p-3">
+              <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-success-600" aria-hidden="true" />
+              <p className="text-sm">
+                <strong>Committed</strong> — {commitResult.rowsImported} rows into{" "}
+                {commitResult.affectedTables.join(", ")} (import #{commitResult.importId})
+              </p>
+            </div>
+          ) : null}
+
+          {commitError ? (
+            <p className="mt-3 text-sm text-danger-600">{commitError}</p>
+          ) : null}
+
           {preview ? (
             <div className="mt-4 space-y-3">
               <div className="flex items-center gap-2">
@@ -183,10 +242,44 @@ export function DataHub() {
                   </tbody>
                 </table>
               </div>
-              <p className="text-xs text-navy/70">
-                Commit and rollback land with the{" "}
-                <code>data_import_snapshots</code> pipeline in Iteration 2.
-              </p>
+              <div className="flex items-center gap-3">
+                <select
+                  value={entityType}
+                  onChange={(e) => setEntityType(e.target.value)}
+                  className="rounded border border-ice-200 bg-white px-3 py-1.5 text-sm text-navy focus:outline-none focus:ring-2 focus:ring-amber-500"
+                  aria-label="Entity type"
+                >
+                  <option value="">— select entity type —</option>
+                  {Object.entries(schemas.data ?? {}).map(([key, cfg]) => (
+                    <option key={key} value={key}>
+                      {cfg.label}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  className="btn-primary text-sm"
+                  disabled={!entityType || !pendingFile || doCommit.isPending}
+                  onClick={() => {
+                    if (pendingFile && entityType) {
+                      doCommit.mutate({ file: pendingFile, type: entityType });
+                    }
+                  }}
+                >
+                  {doCommit.isPending ? "Committing…" : "Commit"}
+                </button>
+                <button
+                  type="button"
+                  className="btn-ghost text-sm"
+                  onClick={() => {
+                    setPreview(null);
+                    setPendingFile(null);
+                    setEntityType("");
+                  }}
+                >
+                  Discard
+                </button>
+              </div>
             </div>
           ) : null}
         </Card>
@@ -242,8 +335,19 @@ export function DataHub() {
                     <Badge tone={entry.status === "committed" ? "green" : "amber"}>
                       {entry.status ?? "pending"}
                     </Badge>
-                    <button className="btn-ghost" type="button" disabled>
-                      <RotateCcw className="size-3" /> Rollback
+                    <button
+                      className="btn-ghost"
+                      type="button"
+                      disabled={entry.status === "rolled_back" || doRollback.isPending}
+                      onClick={() => doRollback.mutate(entry.id)}
+                      title={
+                        entry.status === "rolled_back"
+                          ? "Already rolled back"
+                          : "Restore pre-import snapshot"
+                      }
+                    >
+                      <RotateCcw className="size-3" />{" "}
+                      {doRollback.isPending ? "…" : "Rollback"}
                     </button>
                   </div>
                 </li>
