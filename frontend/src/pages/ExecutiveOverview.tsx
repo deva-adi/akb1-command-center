@@ -10,7 +10,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { ChevronRight, FileDown, Home, Sparkles } from "lucide-react";
+import { ChevronRight, FileDown, Home, Sparkles, X } from "lucide-react";
 import { Breadcrumb } from "@/components/Breadcrumb";
 import { AlertsTicker } from "@/components/AlertsTicker";
 import { Card, CardHeader } from "@/components/ui/Card";
@@ -116,6 +116,22 @@ export function ExecutiveOverview() {
 
   const [ragFilter, setRagFilter] = useState<RagBucket | null>(null);
   const programmeTableRef = useRef<HTMLElement>(null);
+
+  // Drill-down: which L2 panel is open ("revenue" | "margin" | "cpi" | null)
+  type DrillTarget = "revenue" | "margin" | "cpi";
+  const [drillTarget, setDrillTarget] = useState<DrillTarget | null>(null);
+  const drillPanelRef = useRef<HTMLDivElement>(null);
+
+  function openDrill(target: DrillTarget) {
+    const next = drillTarget === target ? null : target;
+    setDrillTarget(next);
+    if (next !== null) {
+      setTimeout(
+        () => drillPanelRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }),
+        50,
+      );
+    }
+  }
 
   function applyRagFilter(bucket: RagBucket) {
     const next = ragFilter === bucket ? null : bucket;
@@ -224,16 +240,18 @@ export function ExecutiveOverview() {
         </Card>
 
         <Card>
-          <CardHeader title="Financials" subtitle="Click any number to drill into Margin & EVM" />
+          <CardHeader title="Financials" subtitle="Click to see per-programme breakdown" />
           <div className="grid grid-cols-2 gap-3">
             <KpiMini
               label="Revenue"
               value={currency.format(totals.revenue, currency.baseCurrency)}
-              onClick={() => navigate("/margin")}
+              active={drillTarget === "revenue"}
+              onClick={() => openDrill("revenue")}
             />
             <KpiMini
               label="Avg margin"
               value={formatPct(totals.avgMargin)}
+              active={drillTarget === "margin"}
               tone={
                 totals.avgMargin === null
                   ? "neutral"
@@ -243,18 +261,19 @@ export function ExecutiveOverview() {
                       ? "amber"
                       : "red"
               }
-              onClick={() => navigate("/margin")}
+              onClick={() => openDrill("margin")}
             />
           </div>
         </Card>
 
         <Card>
-          <CardHeader title="Delivery" subtitle="Click any number to drill further" />
+          <CardHeader title="Delivery" subtitle="Click to see per-programme breakdown" />
           <div className="grid grid-cols-2 gap-3">
             <KpiMini
               label="Avg CPI"
               value={formatRatio(totals.avgCpi)}
-              onClick={() => navigate("/margin")}
+              active={drillTarget === "cpi"}
+              onClick={() => openDrill("cpi")}
             />
             <KpiMini
               label="Programmes"
@@ -270,24 +289,37 @@ export function ExecutiveOverview() {
         <KpiTile
           label="Revenue realised"
           value={currency.format(totals.revenue, currency.baseCurrency)}
-          sub="YTD across 5 programmes — click to drill into Margin & EVM"
-          onClick={() => navigate("/margin")}
+          sub={drillTarget === "revenue" ? "▼ Per-programme breakdown open below" : "YTD across all programmes — click to see per-programme breakdown"}
+          onClick={() => openDrill("revenue")}
         />
         <KpiTile
           label="Blended margin"
           value={formatPct(totals.avgMargin)}
-          sub="Target 22% · Amber 15% — click to drill into Margin & EVM"
+          sub={drillTarget === "margin" ? "▼ Per-programme breakdown open below" : "Target 22% · Amber 15% — click to see per-programme breakdown"}
           trend={totals.avgMargin !== null && totals.avgMargin < 0.18 ? "down" : "flat"}
-          onClick={() => navigate("/margin")}
+          onClick={() => openDrill("margin")}
         />
         <KpiTile
           label="Avg Cost Performance Index"
           value={formatRatio(totals.avgCpi)}
-          sub="Green ≥ 1.00 · Amber 0.90 — click to drill into KPI Studio"
+          sub={drillTarget === "cpi" ? "▼ Per-programme breakdown open below" : "Green ≥ 1.00 · Amber 0.90 — click to see per-programme breakdown"}
           trend={totals.avgCpi !== null && totals.avgCpi < 0.95 ? "down" : "flat"}
-          onClick={() => navigate("/kpi")}
+          onClick={() => openDrill("cpi")}
         />
       </section>
+
+      {/* ── Level 2 Drill Panel ── */}
+      {drillTarget !== null && (
+        <div ref={drillPanelRef}>
+          <DrillPanel
+            target={drillTarget}
+            rows={rows}
+            currency={currency}
+            onClose={() => setDrillTarget(null)}
+            onNavigate={(path) => navigate(path)}
+          />
+        </div>
+      )}
 
       <Card>
         <CardHeader
@@ -480,11 +512,13 @@ function KpiMini({
   label,
   value,
   tone = "neutral",
+  active,
   onClick,
 }: {
   label: string;
   value: string;
   tone?: RagBucket | "neutral";
+  active?: boolean;
   onClick?: () => void;
 }) {
   const Tag = onClick ? "button" : "div";
@@ -492,12 +526,159 @@ function KpiMini({
     <Tag
       type={onClick ? "button" : undefined}
       onClick={onClick}
-      className={`flex flex-col gap-1 ${onClick ? "cursor-pointer rounded p-1 transition hover:bg-ice-50 dark:hover:bg-navy-600" : ""}`}
+      className={[
+        "flex flex-col gap-1",
+        onClick
+          ? "cursor-pointer rounded p-1 transition hover:bg-ice-50 dark:hover:bg-navy-600"
+          : "",
+        active ? "ring-2 ring-navy/30 rounded bg-navy/5" : "",
+      ].join(" ")}
       aria-label={onClick ? `Drill into ${label}` : undefined}
+      aria-expanded={active}
     >
       <span className="kpi-label">{label}</span>
       <Badge tone={tone}>{value}</Badge>
+      {active && <span className="mt-0.5 text-[10px] text-navy/60">▼ open below</span>}
     </Tag>
+  );
+}
+
+// ---------- Level 2 Drill Panel ----------
+
+type DrillPanelProps = {
+  target: "revenue" | "margin" | "cpi";
+  rows: ProgrammeRow[];
+  currency: ReturnType<typeof useCurrency>;
+  onClose: () => void;
+  onNavigate: (path: string) => void;
+};
+
+const DRILL_CONFIG = {
+  revenue: {
+    title: "Revenue by Programme",
+    subtitle: "Click any row to drill into Margin & EVM for that programme",
+    col: "Revenue",
+    destLabel: "→ Margin & EVM",
+    destPath: (code: string) => `/margin?programme=${code}`,
+    getValue: (r: ProgrammeRow, cu: ReturnType<typeof useCurrency>) =>
+      cu.format(r.revenue, r.currency_code),
+    getTone: (_r: ProgrammeRow): RagBucket | "neutral" => "neutral",
+  },
+  margin: {
+    title: "Blended Margin by Programme",
+    subtitle: "Click any row to drill into Margin & EVM for that programme",
+    col: "Net Margin",
+    destLabel: "→ Margin & EVM",
+    destPath: (code: string) => `/margin?programme=${code}`,
+    getValue: (r: ProgrammeRow, _cu: ReturnType<typeof useCurrency>) =>
+      formatPct(r.latestMargin),
+    getTone: (r: ProgrammeRow): RagBucket | "neutral" =>
+      r.latestMargin === null
+        ? "neutral"
+        : r.latestMargin >= 0.22
+          ? "green"
+          : r.latestMargin >= 0.15
+            ? "amber"
+            : "red",
+  },
+  cpi: {
+    title: "Cost Performance Index by Programme",
+    subtitle: "Click any row to drill into Delivery Health for that programme",
+    col: "CPI",
+    destLabel: "→ Delivery Health",
+    destPath: (code: string) => `/delivery?programme=${code}`,
+    getValue: (r: ProgrammeRow, _cu: ReturnType<typeof useCurrency>) =>
+      formatRatio(r.latestCpi),
+    getTone: (r: ProgrammeRow): RagBucket | "neutral" =>
+      r.latestCpi === null
+        ? "neutral"
+        : r.latestCpi >= 1.0
+          ? "green"
+          : r.latestCpi >= 0.9
+            ? "amber"
+            : "red",
+  },
+} as const;
+
+function DrillPanel({ target, rows, currency, onClose, onNavigate }: DrillPanelProps) {
+  const cfg = DRILL_CONFIG[target];
+  return (
+    <Card className="border-navy/20 bg-navy/[0.02]">
+      <div className="flex items-start justify-between gap-2">
+        <div>
+          <p className="text-sm font-semibold text-navy">{cfg.title}</p>
+          <p className="mt-0.5 text-xs text-navy/60">{cfg.subtitle}</p>
+        </div>
+        <button
+          type="button"
+          onClick={onClose}
+          className="rounded p-1 hover:bg-ice-100"
+          aria-label="Close drill panel"
+        >
+          <X className="size-3.5 text-navy/60" />
+        </button>
+      </div>
+
+      <div className="mt-3 overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-ice-100 text-left text-xs uppercase text-navy/60">
+              <th className="pb-2">Programme</th>
+              <th className="pb-2">Client</th>
+              <th className="pb-2 text-right">{cfg.col}</th>
+              <th className="pb-2">Status</th>
+              <th className="pb-2 text-right">Next level</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((r) => {
+              const tone = cfg.getTone(r);
+              const val = cfg.getValue(r, currency);
+              const dest = cfg.destPath(r.code);
+              return (
+                <tr
+                  key={r.code}
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => onNavigate(dest)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      onNavigate(dest);
+                    }
+                  }}
+                  className="cursor-pointer border-t border-ice-50 transition hover:bg-ice-50"
+                  aria-label={`Drill into ${r.name}`}
+                >
+                  <td className="py-2">
+                    <span className="font-medium">{r.name}</span>
+                    <span className="ml-1.5 font-mono text-xs text-navy/50">{r.code}</span>
+                  </td>
+                  <td className="py-2 text-xs text-navy/70">—</td>
+                  <td className="py-2 text-right">
+                    <Badge tone={tone}>{val}</Badge>
+                  </td>
+                  <td className="py-2">
+                    <Badge tone={deriveBucket(r.latestMargin, r.status)}>
+                      {r.status}
+                    </Badge>
+                  </td>
+                  <td className="py-2 text-right">
+                    <span className="inline-flex items-center gap-1 rounded border border-navy/20 px-2 py-0.5 text-xs text-navy hover:bg-ice-100">
+                      {cfg.destLabel} <ChevronRight className="size-3" />
+                    </span>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+
+      <p className="mt-3 text-xs text-navy/50">
+        Level 2 of 4 · Click a row to go to Level 3 (programme detail) · Level 4 is the raw data table in the destination tab
+      </p>
+    </Card>
   );
 }
 

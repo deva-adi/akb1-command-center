@@ -780,6 +780,33 @@ export function auditPackageUrl(programId?: number): string {
     : `/api/v1/reports/audit-package.zip`;
 }
 
+export type ReportType =
+  | "executive_summary"
+  | "qbr_pack"
+  | "board_pack"
+  | "margin_loss"
+  | "evm_portfolio"
+  | "kpi_trend"
+  | "delivery_health"
+  | "risk_audit"
+  | "ai_governance";
+
+export type ReportRequest = {
+  report_type: ReportType;
+  programme_codes: string[];
+  period_months: 3 | 6 | 12 | 24;
+  kpi_codes: string[];
+  format: "pdf" | "csv";
+  currency: string;
+};
+
+export async function generateReport(req: ReportRequest): Promise<Blob> {
+  const { data } = await api.post<Blob>("/api/v1/reports/generate", req, {
+    responseType: "blob",
+  });
+  return data;
+}
+
 export async function previewCsv(file: File): Promise<{
   filename: string;
   columns: string[];
