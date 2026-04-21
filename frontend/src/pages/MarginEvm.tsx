@@ -6,7 +6,6 @@ import {
   BarChart,
   CartesianGrid,
   Cell,
-  Legend,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -263,7 +262,7 @@ export function MarginEvm() {
                               ) : "—"}
                             </td>
                             <td className="text-right font-mono text-navy/70">
-                              {currency.format(row.revenue ?? 0, prog?.currency_code ?? "INR")}
+                              {currency.format(row.actual_revenue ?? row.planned_revenue ?? 0, prog?.currency_code ?? "INR")}
                             </td>
                             <td className="pr-1 text-right text-navy/40 text-xs">→</td>
                           </tr>
