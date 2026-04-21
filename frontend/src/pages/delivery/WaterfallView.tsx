@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Card, CardHeader } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { MetricCard } from "@/components/ui/MetricCard";
@@ -24,6 +24,7 @@ const STATUS_TONE: Record<string, RagBucket | "neutral"> = {
 };
 
 export function WaterfallView({ project, programmeCode }: { project: ProjectListItem; programmeCode?: string }) {
+  const navigate = useNavigate();
   const [expandedPhase, setExpandedPhase] = useState<number | null>(null);
   const [expandedMilestone, setExpandedMilestone] = useState<number | null>(null);
 
@@ -75,11 +76,13 @@ export function WaterfallView({ project, programmeCode }: { project: ProjectList
             const isOpen = expandedPhase === phase.id;
             return (
               <li key={phase.id}>
-                <button
-                  type="button"
+                <div
+                  role="button"
+                  tabIndex={0}
                   onClick={() => setExpandedPhase(isOpen ? null : phase.id)}
+                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setExpandedPhase(isOpen ? null : phase.id); } }}
                   aria-expanded={isOpen}
-                  className="grid w-full gap-2 py-3 text-left md:grid-cols-[1fr_auto_auto] hover:bg-ice-50"
+                  className="grid w-full gap-2 py-3 text-left md:grid-cols-[1fr_auto_auto] hover:bg-ice-50 cursor-pointer"
                 >
                   <div className="flex flex-col gap-1">
                     <div className="flex items-center gap-2">
@@ -98,7 +101,7 @@ export function WaterfallView({ project, programmeCode }: { project: ProjectList
                       {formatDate(phase.planned_end)}
                     </div>
                   </div>
-                  <div className="flex flex-col items-end gap-2 min-w-[140px]">
+                  <div className="flex flex-col items-end gap-2 min-w-[140px]" onClick={(e) => e.stopPropagation()}>
                     <MetricCard
                       metricId="phase_completion"
                       value={`${(phase.percent_complete ?? 0).toFixed(0)}%`}
@@ -110,6 +113,7 @@ export function WaterfallView({ project, programmeCode }: { project: ProjectList
                             : "red"
                       }
                       className="w-full"
+                      onClick={() => navigate(programmeCode ? `/delivery?programme=${programmeCode}` : '/delivery')}
                     />
                     {varianceDays !== null ? (
                       <MetricCard
@@ -117,6 +121,7 @@ export function WaterfallView({ project, programmeCode }: { project: ProjectList
                         value={varianceDays > 0 ? `+${varianceDays}d slip` : `${Math.abs(varianceDays)}d ahead`}
                         tone={varianceDays > 7 ? "red" : varianceDays > 0 ? "amber" : "green"}
                         className="w-full"
+                        onClick={() => navigate(programmeCode ? `/delivery?programme=${programmeCode}` : '/delivery')}
                       />
                     ) : null}
                   </div>
@@ -127,7 +132,7 @@ export function WaterfallView({ project, programmeCode }: { project: ProjectList
                       <ChevronDown className="size-4" aria-hidden="true" />
                     )}
                   </span>
-                </button>
+                </div>
                 {isOpen ? (
                   <dl className="grid grid-cols-2 gap-3 pb-3 pl-4 text-sm md:grid-cols-3">
                     <DetailCell
@@ -188,11 +193,13 @@ export function WaterfallView({ project, programmeCode }: { project: ProjectList
                 key={m.id}
                 className="rounded border border-ice-100 bg-white"
               >
-                <button
-                  type="button"
+                <div
+                  role="button"
+                  tabIndex={0}
                   onClick={() => setExpandedMilestone(isOpen ? null : m.id)}
+                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setExpandedMilestone(isOpen ? null : m.id); } }}
                   aria-expanded={isOpen}
-                  className="flex w-full items-center justify-between gap-3 px-3 py-2 text-left transition hover:bg-ice-50"
+                  className="flex w-full items-center justify-between gap-3 px-3 py-2 text-left transition hover:bg-ice-50 cursor-pointer"
                 >
                   <div>
                     <p className="font-medium">{m.name}</p>
@@ -207,12 +214,15 @@ export function WaterfallView({ project, programmeCode }: { project: ProjectList
                   <div className="flex items-center gap-2">
                     <Badge tone={STATUS_TONE[m.status] ?? "neutral"}>{m.status}</Badge>
                     {slipDays !== null && slipDays !== 0 ? (
-                      <MetricCard
-                        metricId="milestone_slip"
-                        value={slipDays > 0 ? `+${slipDays}d` : `${slipDays}d`}
-                        tone={slipDays > 5 ? "red" : slipDays > 0 ? "amber" : "green"}
-                        className="px-2 py-1"
-                      />
+                      <div onClick={(e) => e.stopPropagation()}>
+                        <MetricCard
+                          metricId="milestone_slip"
+                          value={slipDays > 0 ? `+${slipDays}d` : `${slipDays}d`}
+                          tone={slipDays > 5 ? "red" : slipDays > 0 ? "amber" : "green"}
+                          className="px-2 py-1"
+                          onClick={() => navigate(programmeCode ? `/raid?programme=${programmeCode}` : '/raid')}
+                        />
+                      </div>
                     ) : null}
                     {isOpen ? (
                       <ChevronUp className="size-4 text-navy/40" aria-hidden="true" />
@@ -220,7 +230,7 @@ export function WaterfallView({ project, programmeCode }: { project: ProjectList
                       <ChevronDown className="size-4 text-navy/40" aria-hidden="true" />
                     )}
                   </div>
-                </button>
+                </div>
                 {isOpen ? (
                   <dl className="grid grid-cols-2 gap-3 px-3 pb-3 text-sm md:grid-cols-3">
                     <DetailCell label="Status" value={m.status} />

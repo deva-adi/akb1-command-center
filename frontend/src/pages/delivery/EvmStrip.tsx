@@ -37,15 +37,18 @@ export function EvmStrip({
         metricId="eac"
         value={currency.format(latest?.eac ?? null, sourceCurrency)}
         sub={`BAC ${currency.format(project.id ? latest?.bac ?? null : null, sourceCurrency)}`}
+        onClick={onNavigate ? () => onNavigate(programmeCode ? `/margin?programme=${programmeCode}` : '/margin') : undefined}
       />
       <MetricCard
         metricId="tcpi"
         value={formatRatio(latest?.tcpi)}
         tone={toneForIndex(latest?.tcpi ?? null, true)}
+        onClick={onNavigate ? () => onNavigate(programmeCode ? `/margin?programme=${programmeCode}` : '/margin') : undefined}
       />
       <MetricCard
         metricId="percent_complete"
         value={formatPct(latest ? (latest.percent_complete ?? 0) / 100 : null)}
+        onClick={onNavigate ? () => onNavigate(programmeCode ? `/margin?programme=${programmeCode}` : '/margin') : undefined}
       />
     </div>
   );

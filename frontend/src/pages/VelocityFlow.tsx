@@ -217,13 +217,13 @@ export function VelocityFlow() {
                       className="border-t border-ice-100 cursor-pointer hover:bg-ice-50 transition"
                       onClick={() => {
                         const code = programmes.data?.find((p) => p.id === g.program_id)?.code;
-                        if (code) navigate(`/delivery?programme=${code}`);
+                        navigate(code ? `/delivery?programme=${code}` : '/delivery');
                       }}
                       onKeyDown={(e) => {
                         if (e.key === 'Enter' || e.key === ' ') {
                           e.preventDefault();
                           const code = programmes.data?.find((p) => p.id === g.program_id)?.code;
-                          if (code) navigate(`/delivery?programme=${code}`);
+                          navigate(code ? `/delivery?programme=${code}` : '/delivery');
                         }
                       }}
                     >

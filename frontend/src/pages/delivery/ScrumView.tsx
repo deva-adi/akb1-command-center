@@ -387,11 +387,15 @@ function SprintDrillPanel({
           metricId="burndown_pct"
           value={`${burndownPct}%`}
           tone={burndownPct >= 90 ? "green" : burndownPct >= 70 ? "amber" : "red"}
+          onClick={() => toggleFilter("completed")}
+          drillFilter="completed"
         />
         <MetricCard
           metricId="shortfall"
           value={shortfall > 0 ? `${shortfall} pts behind` : "On target"}
           tone={shortfall > 0 ? "red" : "green"}
+          onClick={() => toggleFilter("planned")}
+          drillFilter="planned"
         />
         <MetricCard
           metricId="velocity"
