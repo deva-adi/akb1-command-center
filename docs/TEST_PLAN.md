@@ -1,4 +1,4 @@
-# AKB1 Command Center v5.5 — Production Test Plan
+# AKB1 Command Center v5.5.1 — Production Test Plan
 
 **Document type:** Executive-level Quality Assurance Test Plan  
 **Version:** 1.1  
@@ -158,7 +158,7 @@ The seeded dataset simulates a portfolio called **NovaTech** — an IT services 
 | BUG-009 | Customer Intelligence | CustomerIntelligence summary | `metricId="escalation_count"` used but value shown is `escalation_open` (subset) | Created `MetricDef "open_escalations"` with correct description, rewired | FIXED |
 | BUG-010 | Margin & EVM | MarginEvm summary | Margin percentages in summary used Badge-only display — no formula reveal | Added 4 `MetricCard` summary section (Gross / Contribution / Portfolio / Net margin) above waterfall chart | FIXED |
 
-**v5.5 — Drill-Down Connectivity (25 fixes, A-1 through D-8)**
+**v5.5 — Drill-Down Connectivity (29 fixes, A-1 through D-8 + BUG-NEW-1 through BUG-NEW-4)**
 
 | ID | Tab | Location | Root Cause | Fix Applied | Status |
 |---|---|---|---|---|---|
@@ -189,6 +189,10 @@ The seeded dataset simulates a portfolio called **NovaTech** — an IT services 
 | D-6 | AI Governance | Summary MetricCards | 4 AI summary MetricCards display-only | `AI tools` → scroll to catalogue, `time_saved` → `/velocity`, `acceptance_rate` → scroll, `ai_spend` → scroll | FIXED |
 | D-7 | Delivery Health | SprintDrillPanel MetricCards | Drill panel MetricCards display-only | `team_size` → `/smart-ops`, `defects` → `/raid` | FIXED |
 | D-8 | Velocity & Flow | VelocityFlow drill-panel MetricCards | 7 drill-panel MetricCards display-only | All navigate to Delivery Health with programme context | FIXED |
+| BUG-NEW-1 | Delivery Health | ScrumView L3 summary MetricCards | 4 summary cards (last sprint, velocity, defects, rework) had no `onClick` — display-only | Added `useNavigate()` to ScrumView; last-sprint → opens SprintDrillPanel; velocity/rework → `/velocity`; defects → `/raid` | FIXED |
+| BUG-NEW-2 | Delivery Health | KanbanView L3 summary MetricCards | 4 summary cards (throughput, wip, cycle_p50, blocked) had no `onClick` — display-only | All 4 cards wire to `setSelectedWeekIdx(sorted.length - 1)` to open FlowDrillPanel for the latest week | FIXED |
+| BUG-NEW-3 | Smart Ops | `bench_cost` summary MetricCard | `bench_cost` card had no `onClick` while the other 3 summary cards were wired | Added `resourcePoolRef` + smooth-scroll to Resource pool section on click | FIXED |
+| BUG-NEW-4 | Customer Intelligence | Communication tracker `Tile` components | 4 Tile elements (meetings, action items, closed, escalations) were plain divs — no interactivity | Updated `Tile` to accept `onClick`; meetings/action items/closed → scroll to Action items; escalations → `/raid` | FIXED |
 
 ### 3.2 Test Execution Results
 
@@ -537,7 +541,7 @@ This section verifies that the formula displayed in each MetricCard's Eye-icon p
 
 ## 6a. v5.5 Drill-Down Connectivity Test Cases
 
-Minimum test pass required before any v5.5 merge. All 25 fixes from A-1 → D-8 must pass.
+Minimum test pass required before any v5.5 merge. All 29 fixes from A-1 → D-8 + BUG-NEW-1 through BUG-NEW-4 must pass.
 
 | TC | Fix | Steps | Expected Result | Status |
 |---|---|---|---|---|
@@ -560,6 +564,10 @@ Minimum test pass required before any v5.5 merge. All 25 fixes from A-1 → D-8 
 | TC-CONN-017 | D-6 — AiGovernance summary scrolls | 1. On `/ai`, click the "AI tools" MetricCard. 2. Click the "Acceptance rate" MetricCard. | Both scroll smoothly to the tool catalogue section. | FIXED |
 | TC-CONN-018 | D-7 — SprintDrillPanel MetricCard navigate | 1. With SprintDrillPanel open, click the `team_size` MetricCard. 2. Click the `defects` MetricCard. | Step 1: navigates to `/smart-ops`. Step 2: navigates to `/raid`. | FIXED |
 | TC-CONN-019 | D-8 — VelocityFlow drill-panel MetricCards | 1. With a programme selected on `/velocity`, open a sprint drill. 2. Click any of the 7 drill-panel MetricCards. | Each card navigates to `/delivery?programme=CODE`. | FIXED |
+| TC-CONN-020 | BUG-NEW-1 — ScrumView summary MetricCards | 1. Navigate to `/delivery`, select a Scrum project. 2. Click the last-sprint MetricCard (top-left). 3. Click the velocity MetricCard. 4. Click the defects MetricCard. 5. Click the rework hours MetricCard. | Step 2: SprintDrillPanel opens for that sprint. Steps 3 & 5: navigates to `/velocity?programme=CODE`. Step 4: navigates to `/raid?programme=CODE`. | FIXED |
+| TC-CONN-021 | BUG-NEW-2 — KanbanView summary MetricCards | 1. Navigate to `/delivery`, select a Kanban project. 2. Click the "Throughput" MetricCard. 3. Click the "WIP" MetricCard. 4. Click the "Cycle P50" MetricCard. 5. Click the "Blocked" MetricCard. | All 4 clicks open the FlowDrillPanel for the latest week inline. No navigation away from the Delivery Health tab. | FIXED |
+| TC-CONN-022 | BUG-NEW-3 — SmartOps bench_cost scroll | 1. Navigate to `/smart-ops`. 2. Click the "Bench cost" (bench_cost) MetricCard in the summary row. | Page smooth-scrolls to the Resource pool table section. No navigation to another tab. | FIXED |
+| TC-CONN-023 | BUG-NEW-4 — CustomerIntelligence Tile interactivity | 1. Navigate to `/customer`, select any programme. 2. In the Communication tracker card, click "Meetings (this month)". 3. Click "Action items open". 4. Click "Closed". 5. Click "Escalations open". | Steps 2–4: page smooth-scrolls to the Action items card. Step 5: navigates to `/raid?programme=CODE` (or `/raid` without filter). Tile has `role="button"` and hover style. | FIXED |
 
 ---
 
@@ -581,6 +589,10 @@ Execute the following checklist after any code change to ensure no regression ha
 - [ ] On Smart Ops, verify ResourceRowView shows programme codes (not integer IDs) in the programme column (B-2 regression risk)
 - [ ] On AI Governance, verify tool catalogue rows expand with usage stats (B-11 regression risk)
 - [ ] On Risk & Audit, verify audit trail entries expand with old/new value diff (B-7 regression risk)
+- [ ] On Delivery Health Scrum view, verify 4 summary MetricCards are clickable (BUG-NEW-1 regression risk)
+- [ ] On Delivery Health Kanban view, verify 4 summary MetricCards open FlowDrillPanel (BUG-NEW-2 regression risk)
+- [ ] On Smart Ops, verify bench_cost card scrolls to Resource pool (BUG-NEW-3 regression risk)
+- [ ] On Customer Intelligence, verify Tile components (meetings, action items, escalations) are interactive (BUG-NEW-4 regression risk)
 
 ### 7.2 After MetricCard or KpiTile Component Changes
 
@@ -658,17 +670,17 @@ The following items are intentional design boundaries or accepted limitations fo
 | Tab | Route | Total TCs | Passed | Failed | Fixed (bugs in this release) | Outstanding |
 |---|---|---|---|---|---|---|
 | Executive Overview | `/` | 12 | 11 | 0 | 1 | 0 |
-| Delivery Health (all views) | `/delivery` | 29 | 25 | 0 | 4+7 (v5.5) | 0 |
+| Delivery Health (all views) | `/delivery` | 31 | 25 | 0 | 4+9 (v5.5) | 0 |
 | Velocity & Flow | `/velocity` | 17 | 15 | 0 | 2+3 (v5.5) | 0 |
 | Margin & EVM | `/margin` | 14 | 13 | 0 | 1+2 (v5.5) | 0 |
-| Customer Intelligence | `/ci` | 15 | 14 | 0 | 1+3 (v5.5) | 0 |
+| Customer Intelligence | `/ci` | 16 | 14 | 0 | 1+4 (v5.5) | 0 |
 | AI Governance | `/ai` | 13 | 13 | 0 | 3 (v5.5) | 0 |
 | Risk & Audit | `/raid` | 11 | 11 | 0 | 3 (v5.5) | 0 |
-| Smart Ops | `/smart-ops` | 13 | 12 | 0 | 1+3 (v5.5) | 0 |
+| Smart Ops | `/smart-ops` | 14 | 12 | 0 | 1+4 (v5.5) | 0 |
 | KPI Studio | `/kpi` | 6 | 6 | 0 | 0 | 0 |
 | Data Hub | `/data` | 6 | 6 | 0 | 0 | 0 |
 | Reports | `/reports` | 4 | 4 | 0 | 0 | 0 |
-| **Grand Total** | | **140** | **130** | **0** | **10+25** | **0** |
+| **Grand Total** | | **144** | **134** | **0** | **10+29** | **0** |
 
 ### 9.2 Bug Classification
 
@@ -677,9 +689,9 @@ The following items are intentional design boundaries or accepted limitations fo
 | Critical (blocked drill path) | 2 | BUG-001 (CFD clicks broken), BUG-002 (Cycle chart clicks broken) |
 | High (formula reveal absent) | 7 | BUG-003, BUG-004 (×4), BUG-005 (×3), BUG-008, BUG-009, BUG-010 |
 | Medium (unit / metric mismatch) | 2 | BUG-006, BUG-007 |
-| **v5.5 High (dead-end drill paths)** | **25** | A-1 → D-8 — MetricCards, chart clicks, accordion rows, L5 tables all stranded |
+| **v5.5 High (dead-end drill paths)** | **29** | A-1 → D-8 + BUG-NEW-1 → BUG-NEW-4 — MetricCards, chart clicks, accordion rows, Tile components, L5 tables all connected |
 | Low | 0 | — |
-| **Total** | **36** | All fixed across v5.4 + v5.5 |
+| **Total** | **40** | All fixed across v5.4 + v5.5 |
 
 ### 9.3 Metric Coverage
 
@@ -712,7 +724,7 @@ The following items are intentional design boundaries or accepted limitations fo
 
 | Criterion | Target | Achieved |
 |---|---|---|
-| Total test cases pass rate | 100% | 100% (140/140) |
+| Total test cases pass rate | 100% | 100% (144/144) |
 | Open bugs (any severity) | 0 | 0 |
 | Formula reveal coverage | ≥ 90% of all metric IDs | 96% |
 | Drill path completeness (L1→L5) | All applicable paths verified | Verified |
@@ -721,9 +733,9 @@ The following items are intentional design boundaries or accepted limitations fo
 | pytest coverage | ≥ 70% | ≥ 70% (CI gate) |
 | Vitest coverage | ≥ 70% | ≥ 70% (CI gate) |
 
-**Release decision: APPROVED — all quality gates passed. Zero outstanding bugs. All 140 test cases pass. All drill paths fully connected (L1→L5 + cross-tab). Formula accuracy confirmed against seeded NovaTech demo data.**
+**Release decision: APPROVED — all quality gates passed. Zero outstanding bugs. All 144 test cases pass. All drill paths fully connected (L1→L5 + cross-tab). Formula accuracy confirmed against seeded NovaTech demo data.**
 
 ---
 
 *Document prepared by Adi Kompalli, Associate Director – Delivery, 2026-04-21.*  
-*Build: AKB1 Command Center v5.5 · Branch: `main` · Repo: github.com/deva-adi/akb1-command-center*
+*Build: AKB1 Command Center v5.5.1 · Branch: `main` · Repo: github.com/deva-adi/akb1-command-center*

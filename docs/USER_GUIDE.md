@@ -577,6 +577,15 @@ These patterns work consistently across all tabs:
 | L5 row expand | Click any work item row in a FlowDrillPanel or SprintDrillPanel | Row expands inline showing all item fields; click again to collapse |
 | Expanded section links | Expand any phase, milestone, scenario, CR, or audit row | Bottom of expanded section shows "Open in: Tab X \| Tab Y" chips |
 
+### v5.5.1 — Complete Drill-Down Connectivity (29 fixes total)
+
+**Additional fixes in v5.5.1** (applied after initial v5.5 release):
+
+- **Delivery Health — Scrum summary cards**: The 4 L3 MetricCards (last sprint, velocity, defects, rework hours) are now fully wired. The last-sprint card opens the SprintDrillPanel inline; velocity and rework cards navigate to Velocity & Flow; the defects card navigates to Risk & Audit.
+- **Delivery Health — Kanban summary cards**: The 4 L3 MetricCards (throughput, WIP, cycle P50, blocked) now open the FlowDrillPanel for the most recent week inline — keeping you in context rather than navigating away.
+- **Smart Ops — Bench cost card**: The `bench_cost` summary MetricCard now smooth-scrolls to the Resource pool table below when clicked.
+- **Customer Intelligence — Communication tracker tiles**: The 4 tiles (Meetings this month, Action items open, Closed, Escalations open) are now interactive. The first three scroll to the Action items section; the Escalations tile navigates to Risk & Audit with programme context.
+
 ### v5.5 — Complete Drill-Down Connectivity
 
 Every element in the dashboard that displays a number now has at least one of the following actions:
@@ -1484,8 +1493,9 @@ In most dashboards, numbers are black boxes. A CPI of 0.87 means nothing to a st
 
 ---
 
-**AKB1 Command Center v5.5**
+**AKB1 Command Center v5.5.1**
 **Maintained by:** Adi Kompalli | deva.adi@gmail.com
+**New in v5.5.1:** 4 additional drill-down fixes — Scrum/Kanban summary cards, bench cost scroll, CI communication tracker tiles.
 **New in v5.5:** Complete Drill-Down Connectivity — 25 dead-end fixes across all 11 tabs. Every number navigates, expands, or cross-links.
 **New in v5.4:** Universal Formula Reveal — Eye icon on every metric, 55+ inline definitions, 10 audit bugs fixed
 **Repository:** github.com/deva-adi/akb1-command-center
