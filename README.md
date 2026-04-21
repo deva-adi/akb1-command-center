@@ -1,4 +1,4 @@
-# AKB1 Command Center v5.5.2
+# AKB1 Command Center v5.5.3
 
 **The open-source delivery intelligence platform that answers every question your CTO, CIO, or CEO would ask — driven entirely by your data.**
 
@@ -681,6 +681,7 @@ MIT License. Use it, fork it, adapt it. Attribution appreciated but not required
 
 | Version | Highlights |
 |---------|-----------|
+| **v5.5.3** | Accessibility fix: AI Governance trust composite badge buttons with null programme now have `tabIndex={-1}` — keyboard Tab skips no-op buttons. 151 test cases, 47 total bugs fixed. |
 | **v5.5.2** | 6 additional drill-down fixes: EVM strip 3 dead cards; SprintDrillPanel burndown/shortfall; WaterfallView button-inside-button HTML fix; VelocityFlow blend-rule fallback; RiskAudit scorecard preserves `?programme=CODE`. 150 test cases, 46 total bugs fixed. |
 | **v5.5.1** | 4 additional drill-down fixes: Scrum/Kanban L3 summary MetricCards wired; Smart Ops bench-cost card scrolls to Resource pool; Customer Intelligence Communication tracker Tiles are now interactive. 144 test cases, 40 total bugs fixed. |
 | **v5.5** | Complete Drill-Down Connectivity — 25 dead-end fixes across all 11 tabs. Every MetricCard, chart, accordion row, and table row now navigates with `?programme=` context. L5 backlog/flow item rows expand inline. Cross-tab navigation links added to WaterfallView, ScrumView, KanbanView, ScenarioRow, CR rows, audit trail. |

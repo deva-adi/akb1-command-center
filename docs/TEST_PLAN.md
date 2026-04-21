@@ -1,4 +1,4 @@
-# AKB1 Command Center v5.5.2 — Production Test Plan
+# AKB1 Command Center v5.5.3 — Production Test Plan
 
 **Document type:** Executive-level Quality Assurance Test Plan  
 **Version:** 1.1  
@@ -158,7 +158,7 @@ The seeded dataset simulates a portfolio called **NovaTech** — an IT services 
 | BUG-009 | Customer Intelligence | CustomerIntelligence summary | `metricId="escalation_count"` used but value shown is `escalation_open` (subset) | Created `MetricDef "open_escalations"` with correct description, rewired | FIXED |
 | BUG-010 | Margin & EVM | MarginEvm summary | Margin percentages in summary used Badge-only display — no formula reveal | Added 4 `MetricCard` summary section (Gross / Contribution / Portfolio / Net margin) above waterfall chart | FIXED |
 
-**v5.5 — Drill-Down Connectivity (35 fixes, A-1 through D-8 + BUG-NEW-1 through BUG-NEW-4 + BUG-E1 through BUG-E6)**
+**v5.5 — Drill-Down Connectivity (36 fixes, A-1 through D-8 + BUG-NEW-1 through BUG-NEW-4 + BUG-E1 through BUG-E6 + BUG-F1)**
 
 | ID | Tab | Location | Root Cause | Fix Applied | Status |
 |---|---|---|---|---|---|
@@ -199,6 +199,7 @@ The seeded dataset simulates a portfolio called **NovaTech** — an IT services 
 | BUG-E4 | Delivery Health | WaterfallView — milestone accordion MetricCard | `milestone_slip` MetricCard nested inside `<button>` — same button-inside-button invalid HTML issue | Same fix as BUG-E3; MetricCard navigates to `/raid?programme=CODE` | FIXED |
 | BUG-E5 | Velocity & Flow | Blend-rule gate table rows | `onClick` silently did nothing when programme code lookup returned `undefined` — `if (code) navigate(...)` with no else branch | Added fallback `navigate('/delivery')` so click always navigates | FIXED |
 | BUG-E6 | Risk & Audit | Audit Readiness Scorecard rows | All 7 dimension rows navigated to bare paths (`/margin`, `/raid`, etc.) — dropped `?programme=CODE` context when filter active | All 7 `onClick` handlers now append `?programme=${filteredProgramme.code}` when `filteredProgramme` is set | FIXED |
+| BUG-F1 | AI Governance | Trust composite score badge buttons | When `prog` is null the badge `<button>` remained in the Tab order with no `aria-label` and a no-op `onClick` — keyboard users could Tab-focus a button that did nothing | Added `tabIndex={prog ? 0 : -1}` so the button is removed from the keyboard Tab sequence when there is no associated programme | FIXED |
 
 ### 3.2 Test Execution Results
 
@@ -547,7 +548,7 @@ This section verifies that the formula displayed in each MetricCard's Eye-icon p
 
 ## 6a. v5.5 Drill-Down Connectivity Test Cases
 
-Minimum test pass required before any v5.5 merge. All 35 fixes from A-1 → D-8 + BUG-NEW-1 through BUG-NEW-4 + BUG-E1 through BUG-E6 must pass.
+Minimum test pass required before any v5.5 merge. All 36 fixes from A-1 → D-8 + BUG-NEW-1 through BUG-NEW-4 + BUG-E1 through BUG-E6 + BUG-F1 must pass.
 
 | TC | Fix | Steps | Expected Result | Status |
 |---|---|---|---|---|
@@ -580,6 +581,7 @@ Minimum test pass required before any v5.5 merge. All 35 fixes from A-1 → D-8 
 | TC-CONN-027 | BUG-E4 — WaterfallView milestone MetricCard | 1. On a Waterfall project with slipped milestones, scroll to the Milestones section. 2. Click the "milestone_slip" MetricCard (shown on rows where slipDays ≠ 0). | Navigates to `/raid?programme=CODE`. Eye icon opens formula panel independently without triggering the accordion expand. | FIXED |
 | TC-CONN-028 | BUG-E5 — VelocityFlow blend-rule fallback navigation | 1. Navigate to `/velocity` with NO programme filter. 2. Scroll to the blend-rule gates table. 3. Click any gate row. | Row always navigates — to `/delivery?programme=CODE` if the programme lookup succeeds, or to `/delivery` (generic) if it does not. Never silently does nothing. | FIXED |
 | TC-CONN-029 | BUG-E6 — RiskAudit scorecard preserves programme context | 1. Navigate to `/raid?programme=NVT-HRCL`. 2. Scroll to the Audit Readiness Scorecard. 3. Click "Financial Controls". 4. Navigate back. 5. Click "AI Governance". 6. Navigate back. 7. Click "Quality Assurance". | Step 3: navigates to `/margin?programme=NVT-HRCL`. Step 5: navigates to `/ai?programme=NVT-HRCL`. Step 7: navigates to `/delivery?programme=NVT-HRCL`. Programme context preserved on all 7 dimension rows. | FIXED |
+| TC-CONN-030 | BUG-F1 — AiGovernance trust badge keyboard accessibility | 1. Navigate to `/ai` with no programme filter (so some badge buttons have no associated programme). 2. Use Tab key to navigate through the page. 3. Verify that trust score badge buttons where `prog` is null are skipped by Tab. 4. Navigate to `/ai?programme=NVT-HRCL`. 5. Tab to the trust score badge buttons; confirm they are focusable and Enter/Space navigates to `/ai?programme=CODE`. | Steps 2–3: no-op badge buttons (null programme) are not reachable via keyboard Tab — they do not appear in the focus sequence. Step 5: programme-linked badge buttons are Tab-focusable, have a visible focus ring, and activate on Enter/Space. | FIXED |
 
 ---
 
@@ -610,6 +612,7 @@ Execute the following checklist after any code change to ensure no regression ha
 - [ ] On Delivery Health Waterfall view, verify phase/milestone MetricCard Eye icons work without triggering accordion expand (BUG-E3/E4 regression risk)
 - [ ] On Velocity & Flow blend-rule table, verify every row navigates even without programme filter (BUG-E5 regression risk)
 - [ ] On Risk & Audit scorecard with programme filter active, verify navigation preserves ?programme=CODE (BUG-E6 regression risk)
+- [ ] On AI Governance trust composite, Tab through the page and confirm no-programme badge buttons are skipped by keyboard (BUG-F1 regression risk)
 
 ### 7.2 After MetricCard or KpiTile Component Changes
 
@@ -697,7 +700,7 @@ The following items are intentional design boundaries or accepted limitations fo
 | KPI Studio | `/kpi` | 6 | 6 | 0 | 0 | 0 |
 | Data Hub | `/data` | 6 | 6 | 0 | 0 | 0 |
 | Reports | `/reports` | 4 | 4 | 0 | 0 | 0 |
-| **Grand Total** | | **150** | **140** | **0** | **10+35** | **0** |
+| **Grand Total** | | **151** | **141** | **0** | **10+36** | **0** |
 
 ### 9.2 Bug Classification
 
@@ -706,9 +709,9 @@ The following items are intentional design boundaries or accepted limitations fo
 | Critical (blocked drill path) | 2 | BUG-001 (CFD clicks broken), BUG-002 (Cycle chart clicks broken) |
 | High (formula reveal absent) | 7 | BUG-003, BUG-004 (×4), BUG-005 (×3), BUG-008, BUG-009, BUG-010 |
 | Medium (unit / metric mismatch) | 2 | BUG-006, BUG-007 |
-| **v5.5 High (dead-end drill paths)** | **35** | A-1 → D-8 + BUG-NEW-1 → BUG-NEW-4 + BUG-E1 → BUG-E6 — MetricCards, chart clicks, accordion rows, Tile components, L5 tables, button-inside-button, programme context all fixed |
+| **v5.5 High (dead-end drill paths + a11y)** | **36** | A-1 → D-8 + BUG-NEW-1 → BUG-NEW-4 + BUG-E1 → BUG-E6 + BUG-F1 — MetricCards, chart clicks, accordion rows, Tile components, L5 tables, button-inside-button, programme context, keyboard accessibility all fixed |
 | Low | 0 | — |
-| **Total** | **40** | All fixed across v5.4 + v5.5 |
+| **Total** | **47** | All fixed across v5.4 + v5.5 + v5.5.1 + v5.5.2 + v5.5.3 |
 
 ### 9.3 Metric Coverage
 
@@ -741,7 +744,7 @@ The following items are intentional design boundaries or accepted limitations fo
 
 | Criterion | Target | Achieved |
 |---|---|---|
-| Total test cases pass rate | 100% | 100% (150/150) |
+| Total test cases pass rate | 100% | 100% (151/151) |
 | Open bugs (any severity) | 0 | 0 |
 | Formula reveal coverage | ≥ 90% of all metric IDs | 96% |
 | Drill path completeness (L1→L5) | All applicable paths verified | Verified |
@@ -750,9 +753,9 @@ The following items are intentional design boundaries or accepted limitations fo
 | pytest coverage | ≥ 70% | ≥ 70% (CI gate) |
 | Vitest coverage | ≥ 70% | ≥ 70% (CI gate) |
 
-**Release decision: APPROVED — all quality gates passed. Zero outstanding bugs. All 150 test cases pass. All drill paths fully connected (L1→L5 + cross-tab). Formula accuracy confirmed against seeded NovaTech demo data.**
+**Release decision: APPROVED — all quality gates passed. Zero outstanding bugs. All 151 test cases pass. All drill paths fully connected (L1→L5 + cross-tab). Formula accuracy confirmed against seeded NovaTech demo data.**
 
 ---
 
 *Document prepared by Adi Kompalli, Associate Director – Delivery, 2026-04-21.*  
-*Build: AKB1 Command Center v5.5.2 · Branch: `main` · Repo: github.com/deva-adi/akb1-command-center*
+*Build: AKB1 Command Center v5.5.3 · Branch: `main` · Repo: github.com/deva-adi/akb1-command-center*

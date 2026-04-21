@@ -1,6 +1,6 @@
 # AKB1 Command Center — User Guide
 
-**Version:** 5.5.2 | **Audience:** CTO, Associate Director, Delivery Lead, CFO, Account Director
+**Version:** 5.5.3 | **Audience:** CTO, Associate Director, Delivery Lead, CFO, Account Director
 **Last Updated:** 2026-04-21 | **Author:** Adi Kompalli
 
 ---
@@ -576,6 +576,12 @@ These patterns work consistently across all tabs:
 | Cross-tab navigation | Click a MetricCard, accordion row, or expanded section nav chip | Navigates to the related tab pre-filtered to `?programme=CODE` |
 | L5 row expand | Click any work item row in a FlowDrillPanel or SprintDrillPanel | Row expands inline showing all item fields; click again to collapse |
 | Expanded section links | Expand any phase, milestone, scenario, CR, or audit row | Bottom of expanded section shows "Open in: Tab X \| Tab Y" chips |
+
+### v5.5.3 — Accessibility Fix (1 fix)
+
+**Fix in v5.5.3** (third audit pass — 1 accessibility issue found and fixed):
+
+- **AI Governance — Trust composite score badge keyboard accessibility (BUG-F1)**: When a trust score badge has no associated programme (e.g. the dataset contains a trust record with a null `program_id`), the badge rendered as a `<button>` that was still reachable via the keyboard Tab key, had no `aria-label`, and its `onClick` was a no-op. Fixed by adding `tabIndex={-1}` on the button when `prog` is null, so keyboard navigation skips it entirely. Badge buttons with a valid programme remain fully keyboard-accessible with their `aria-label` and Tab focus intact.
 
 ### v5.5.2 — Complete Drill-Down Connectivity (35 fixes total)
 
@@ -1503,8 +1509,9 @@ In most dashboards, numbers are black boxes. A CPI of 0.87 means nothing to a st
 
 ---
 
-**AKB1 Command Center v5.5.2**
+**AKB1 Command Center v5.5.3**
 **Maintained by:** Adi Kompalli | deva.adi@gmail.com
+**New in v5.5.3:** Accessibility fix — AI Governance trust badge buttons with null programme now have tabIndex={-1} so keyboard Tab skips them.
 **New in v5.5.2:** 6 additional drill-down fixes — EVM strip, sprint drill panel, Waterfall button-inside-button fix, VelocityFlow fallback, RiskAudit programme context.
 **New in v5.5.1:** 4 additional drill-down fixes — Scrum/Kanban summary cards, bench cost scroll, CI communication tracker tiles.
 **New in v5.5:** Complete Drill-Down Connectivity — 25 dead-end fixes across all 11 tabs. Every number navigates, expands, or cross-links.

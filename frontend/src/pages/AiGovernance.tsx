@@ -296,6 +296,7 @@ export function AiGovernance() {
               <li key={t.id} className="flex items-center gap-1">
                 <button
                   type="button"
+                  tabIndex={prog ? 0 : -1}
                   onClick={() => prog ? navigate(`/ai?programme=${prog.code}`) : undefined}
                   className={prog ? "cursor-pointer" : undefined}
                   aria-label={prog ? `Drill into ${prog.code} AI detail` : undefined}
