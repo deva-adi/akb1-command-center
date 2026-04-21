@@ -269,7 +269,7 @@ export function MarginEvm() {
                           <tr
                             key={row.id}
                             role="button"
-                            tabIndex={0}
+                            tabIndex={prog ? 0 : -1}
                             onClick={() => prog && navigate(`/margin?programme=${prog.code}`)}
                             onKeyDown={(e) => {
                               if ((e.key === "Enter" || e.key === " ") && prog) {
@@ -648,11 +648,11 @@ export function MarginEvm() {
                               <span className="text-xs text-navy/50 self-center">Open in:</span>
                               <button type="button" onClick={() => {
                                 const prog = programmes.data?.find(p => p.id === cr.program_id);
-                                if (prog) navigate(`/delivery?programme=${prog.code}`);
+                                navigate(prog ? `/delivery?programme=${prog.code}` : '/delivery');
                               }} className="rounded-full border border-ice-100 bg-white px-2 py-0.5 text-xs text-navy hover:bg-ice-50 cursor-pointer">→ Delivery Health</button>
                               <button type="button" onClick={() => {
                                 const prog = programmes.data?.find(p => p.id === cr.program_id);
-                                if (prog) navigate(`/raid?programme=${prog.code}`);
+                                navigate(prog ? `/raid?programme=${prog.code}` : '/raid');
                               }} className="rounded-full border border-ice-100 bg-white px-2 py-0.5 text-xs text-navy hover:bg-ice-50 cursor-pointer">→ Risk Register</button>
                             </div>
                           </td>

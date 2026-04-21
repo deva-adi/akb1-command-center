@@ -1,6 +1,6 @@
 # AKB1 Command Center — User Guide
 
-**Version:** 5.5.3 | **Audience:** CTO, Associate Director, Delivery Lead, CFO, Account Director
+**Version:** 5.5.4 | **Audience:** CTO, Associate Director, Delivery Lead, CFO, Account Director
 **Last Updated:** 2026-04-21 | **Author:** Adi Kompalli
 
 ---
@@ -576,6 +576,11 @@ These patterns work consistently across all tabs:
 | Cross-tab navigation | Click a MetricCard, accordion row, or expanded section nav chip | Navigates to the related tab pre-filtered to `?programme=CODE` |
 | L5 row expand | Click any work item row in a FlowDrillPanel or SprintDrillPanel | Row expands inline showing all item fields; click again to collapse |
 | Expanded section links | Expand any phase, milestone, scenario, CR, or audit row | Bottom of expanded section shows "Open in: Tab X \| Tab Y" chips |
+
+### v5.5.4 — Accessibility + Dead-End Fix (2 fixes)
+
+- **Margin & EVM — Waterfall drill table row keyboard accessibility (BUG-G1)**: Waterfall breakdown rows always rendered with `role="button"` + `tabIndex={0}` even when no programme was associated, making them keyboard-focusable dead ends. Fixed by adding `tabIndex={prog ? 0 : -1}` so Tab skips rows with no programme.
+- **Margin & EVM — Change Request "Open in" buttons always navigate (BUG-G2)**: The `→ Delivery Health` and `→ Risk Register` buttons in the CR expanded section used `if (prog) navigate(...)` with no fallback, silently doing nothing when the programme lookup failed. Fixed with fallback navigation to `/delivery` and `/raid` respectively.
 
 ### v5.5.3 — Accessibility Fix (1 fix)
 
@@ -1509,8 +1514,9 @@ In most dashboards, numbers are black boxes. A CPI of 0.87 means nothing to a st
 
 ---
 
-**AKB1 Command Center v5.5.3**
+**AKB1 Command Center v5.5.4**
 **Maintained by:** Adi Kompalli | deva.adi@gmail.com
+**New in v5.5.4:** 2 fixes — MarginEvm waterfall row keyboard dead-end (BUG-G1) and CR "Open in" buttons fallback navigation (BUG-G2).
 **New in v5.5.3:** Accessibility fix — AI Governance trust badge buttons with null programme now have tabIndex={-1} so keyboard Tab skips them.
 **New in v5.5.2:** 6 additional drill-down fixes — EVM strip, sprint drill panel, Waterfall button-inside-button fix, VelocityFlow fallback, RiskAudit programme context.
 **New in v5.5.1:** 4 additional drill-down fixes — Scrum/Kanban summary cards, bench cost scroll, CI communication tracker tiles.

@@ -1,4 +1,4 @@
-# AKB1 Command Center v5.5.3 — Production Test Plan
+# AKB1 Command Center v5.5.4 — Production Test Plan
 
 **Document type:** Executive-level Quality Assurance Test Plan  
 **Version:** 1.1  
@@ -158,7 +158,7 @@ The seeded dataset simulates a portfolio called **NovaTech** — an IT services 
 | BUG-009 | Customer Intelligence | CustomerIntelligence summary | `metricId="escalation_count"` used but value shown is `escalation_open` (subset) | Created `MetricDef "open_escalations"` with correct description, rewired | FIXED |
 | BUG-010 | Margin & EVM | MarginEvm summary | Margin percentages in summary used Badge-only display — no formula reveal | Added 4 `MetricCard` summary section (Gross / Contribution / Portfolio / Net margin) above waterfall chart | FIXED |
 
-**v5.5 — Drill-Down Connectivity (36 fixes, A-1 through D-8 + BUG-NEW-1 through BUG-NEW-4 + BUG-E1 through BUG-E6 + BUG-F1)**
+**v5.5 — Drill-Down Connectivity (38 fixes, A-1 through D-8 + BUG-NEW-1 through BUG-NEW-4 + BUG-E1 through BUG-E6 + BUG-F1 + BUG-G1 + BUG-G2)**
 
 | ID | Tab | Location | Root Cause | Fix Applied | Status |
 |---|---|---|---|---|---|
@@ -200,6 +200,8 @@ The seeded dataset simulates a portfolio called **NovaTech** — an IT services 
 | BUG-E5 | Velocity & Flow | Blend-rule gate table rows | `onClick` silently did nothing when programme code lookup returned `undefined` — `if (code) navigate(...)` with no else branch | Added fallback `navigate('/delivery')` so click always navigates | FIXED |
 | BUG-E6 | Risk & Audit | Audit Readiness Scorecard rows | All 7 dimension rows navigated to bare paths (`/margin`, `/raid`, etc.) — dropped `?programme=CODE` context when filter active | All 7 `onClick` handlers now append `?programme=${filteredProgramme.code}` when `filteredProgramme` is set | FIXED |
 | BUG-F1 | AI Governance | Trust composite score badge buttons | When `prog` is null the badge `<button>` remained in the Tab order with no `aria-label` and a no-op `onClick` — keyboard users could Tab-focus a button that did nothing | Added `tabIndex={prog ? 0 : -1}` so the button is removed from the keyboard Tab sequence when there is no associated programme | FIXED |
+| BUG-G1 | Margin & EVM | Waterfall drill table rows | Rows always rendered with `role="button"` + `tabIndex={0}` + `cursor-pointer` even when `prog` is null, but `onClick` silently did nothing — keyboard dead-end, same class as BUG-F1 | Added `tabIndex={prog ? 0 : -1}` so Tab skips rows with no associated programme | FIXED |
+| BUG-G2 | Margin & EVM | CR expanded section "Open in" buttons | Two navigation buttons (`→ Delivery Health`, `→ Risk Register`) used inline `if (prog) navigate(...)` with no else branch — silently did nothing if programme lookup returned undefined, same dead-end class as BUG-E5 | Added fallback navigation: `navigate(prog ? \`/delivery?programme=${prog.code}\` : '/delivery')` and `navigate(prog ? \`/raid?programme=${prog.code}\` : '/raid')` | FIXED |
 
 ### 3.2 Test Execution Results
 
@@ -582,6 +584,8 @@ Minimum test pass required before any v5.5 merge. All 36 fixes from A-1 → D-8 
 | TC-CONN-028 | BUG-E5 — VelocityFlow blend-rule fallback navigation | 1. Navigate to `/velocity` with NO programme filter. 2. Scroll to the blend-rule gates table. 3. Click any gate row. | Row always navigates — to `/delivery?programme=CODE` if the programme lookup succeeds, or to `/delivery` (generic) if it does not. Never silently does nothing. | FIXED |
 | TC-CONN-029 | BUG-E6 — RiskAudit scorecard preserves programme context | 1. Navigate to `/raid?programme=NVT-HRCL`. 2. Scroll to the Audit Readiness Scorecard. 3. Click "Financial Controls". 4. Navigate back. 5. Click "AI Governance". 6. Navigate back. 7. Click "Quality Assurance". | Step 3: navigates to `/margin?programme=NVT-HRCL`. Step 5: navigates to `/ai?programme=NVT-HRCL`. Step 7: navigates to `/delivery?programme=NVT-HRCL`. Programme context preserved on all 7 dimension rows. | FIXED |
 | TC-CONN-030 | BUG-F1 — AiGovernance trust badge keyboard accessibility | 1. Navigate to `/ai` with no programme filter (so some badge buttons have no associated programme). 2. Use Tab key to navigate through the page. 3. Verify that trust score badge buttons where `prog` is null are skipped by Tab. 4. Navigate to `/ai?programme=NVT-HRCL`. 5. Tab to the trust score badge buttons; confirm they are focusable and Enter/Space navigates to `/ai?programme=CODE`. | Steps 2–3: no-op badge buttons (null programme) are not reachable via keyboard Tab — they do not appear in the focus sequence. Step 5: programme-linked badge buttons are Tab-focusable, have a visible focus ring, and activate on Enter/Space. | FIXED |
+| TC-CONN-031 | BUG-G1 — MarginEvm waterfall drill table row keyboard accessibility | 1. Navigate to `/margin` with no programme filter. 2. Use Tab key to navigate through the waterfall breakdown table. 3. Verify rows with no associated programme are skipped by Tab. 4. Navigate to `/margin?programme=NVT-HRCL`. 5. Tab to the waterfall rows; confirm they are focusable and Enter/Space navigates to `/margin?programme=CODE`. | Steps 2–3: no-programme rows not reachable via keyboard Tab. Step 5: programme-linked rows are focusable and activate on Enter/Space. | FIXED |
+| TC-CONN-032 | BUG-G2 — MarginEvm CR "Open in" buttons always navigate | 1. On `/margin`, expand any Change Request row. 2. Verify the "→ Delivery Health" and "→ Risk Register" buttons are visible. 3. Click "→ Delivery Health". 4. Navigate back. 5. Expand a CR row. 6. Click "→ Risk Register". 7. Test with a programme filter active (`?programme=NVT-HRCL`) — click both buttons and verify programme context is preserved. | Steps 3 & 6: buttons always navigate — to `/delivery?programme=CODE` or `/raid?programme=CODE` if programme is found, otherwise to `/delivery` or `/raid` as a safe fallback. Never silently does nothing. Step 7: programme context preserved in URL. | FIXED |
 
 ---
 
@@ -613,6 +617,8 @@ Execute the following checklist after any code change to ensure no regression ha
 - [ ] On Velocity & Flow blend-rule table, verify every row navigates even without programme filter (BUG-E5 regression risk)
 - [ ] On Risk & Audit scorecard with programme filter active, verify navigation preserves ?programme=CODE (BUG-E6 regression risk)
 - [ ] On AI Governance trust composite, Tab through the page and confirm no-programme badge buttons are skipped by keyboard (BUG-F1 regression risk)
+- [ ] On Margin & EVM waterfall drill table, Tab through and confirm no-programme rows are skipped by keyboard (BUG-G1 regression risk)
+- [ ] On Margin & EVM CR expanded section, click "→ Delivery Health" and "→ Risk Register" and confirm they always navigate even without programme filter (BUG-G2 regression risk)
 
 ### 7.2 After MetricCard or KpiTile Component Changes
 
@@ -692,7 +698,7 @@ The following items are intentional design boundaries or accepted limitations fo
 | Executive Overview | `/` | 12 | 11 | 0 | 1 | 0 |
 | Delivery Health (all views) | `/delivery` | 35 | 29 | 0 | 4+9+4 (v5.5) | 0 |
 | Velocity & Flow | `/velocity` | 18 | 16 | 0 | 2+3+1 (v5.5) | 0 |
-| Margin & EVM | `/margin` | 14 | 13 | 0 | 1+2 (v5.5) | 0 |
+| Margin & EVM | `/margin` | 16 | 15 | 0 | 1+4 (v5.5) | 0 |
 | Customer Intelligence | `/ci` | 16 | 14 | 0 | 1+4 (v5.5) | 0 |
 | AI Governance | `/ai` | 13 | 13 | 0 | 3 (v5.5) | 0 |
 | Risk & Audit | `/raid` | 12 | 12 | 0 | 3+1 (v5.5) | 0 |
@@ -700,7 +706,7 @@ The following items are intentional design boundaries or accepted limitations fo
 | KPI Studio | `/kpi` | 6 | 6 | 0 | 0 | 0 |
 | Data Hub | `/data` | 6 | 6 | 0 | 0 | 0 |
 | Reports | `/reports` | 4 | 4 | 0 | 0 | 0 |
-| **Grand Total** | | **151** | **141** | **0** | **10+36** | **0** |
+| **Grand Total** | | **153** | **143** | **0** | **10+38** | **0** |
 
 ### 9.2 Bug Classification
 
@@ -709,9 +715,9 @@ The following items are intentional design boundaries or accepted limitations fo
 | Critical (blocked drill path) | 2 | BUG-001 (CFD clicks broken), BUG-002 (Cycle chart clicks broken) |
 | High (formula reveal absent) | 7 | BUG-003, BUG-004 (×4), BUG-005 (×3), BUG-008, BUG-009, BUG-010 |
 | Medium (unit / metric mismatch) | 2 | BUG-006, BUG-007 |
-| **v5.5 High (dead-end drill paths + a11y)** | **36** | A-1 → D-8 + BUG-NEW-1 → BUG-NEW-4 + BUG-E1 → BUG-E6 + BUG-F1 — MetricCards, chart clicks, accordion rows, Tile components, L5 tables, button-inside-button, programme context, keyboard accessibility all fixed |
+| **v5.5 High (dead-end drill paths + a11y)** | **38** | A-1 → D-8 + BUG-NEW-1 → BUG-NEW-4 + BUG-E1 → BUG-E6 + BUG-F1 + BUG-G1 + BUG-G2 — MetricCards, chart clicks, accordion rows, Tile components, L5 tables, button-inside-button, programme context, keyboard accessibility all fixed |
 | Low | 0 | — |
-| **Total** | **47** | All fixed across v5.4 + v5.5 + v5.5.1 + v5.5.2 + v5.5.3 |
+| **Total** | **49** | All fixed across v5.4 + v5.5 + v5.5.1 + v5.5.2 + v5.5.3 + v5.5.4 |
 
 ### 9.3 Metric Coverage
 
@@ -744,7 +750,7 @@ The following items are intentional design boundaries or accepted limitations fo
 
 | Criterion | Target | Achieved |
 |---|---|---|
-| Total test cases pass rate | 100% | 100% (151/151) |
+| Total test cases pass rate | 100% | 100% (153/153) |
 | Open bugs (any severity) | 0 | 0 |
 | Formula reveal coverage | ≥ 90% of all metric IDs | 96% |
 | Drill path completeness (L1→L5) | All applicable paths verified | Verified |
@@ -753,9 +759,9 @@ The following items are intentional design boundaries or accepted limitations fo
 | pytest coverage | ≥ 70% | ≥ 70% (CI gate) |
 | Vitest coverage | ≥ 70% | ≥ 70% (CI gate) |
 
-**Release decision: APPROVED — all quality gates passed. Zero outstanding bugs. All 151 test cases pass. All drill paths fully connected (L1→L5 + cross-tab). Formula accuracy confirmed against seeded NovaTech demo data.**
+**Release decision: APPROVED — all quality gates passed. Zero outstanding bugs. All 153 test cases pass. All drill paths fully connected (L1→L5 + cross-tab). Formula accuracy confirmed against seeded NovaTech demo data.**
 
 ---
 
 *Document prepared by Adi Kompalli, Associate Director – Delivery, 2026-04-21.*  
-*Build: AKB1 Command Center v5.5.3 · Branch: `main` · Repo: github.com/deva-adi/akb1-command-center*
+*Build: AKB1 Command Center v5.5.4 · Branch: `main` · Repo: github.com/deva-adi/akb1-command-center*
