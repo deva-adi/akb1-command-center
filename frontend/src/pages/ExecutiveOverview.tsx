@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   CartesianGrid,
@@ -115,6 +115,18 @@ export function ExecutiveOverview() {
   );
 
   const [ragFilter, setRagFilter] = useState<RagBucket | null>(null);
+  const programmeTableRef = useRef<HTMLElement>(null);
+
+  function applyRagFilter(bucket: RagBucket) {
+    const next = ragFilter === bucket ? null : bucket;
+    setRagFilter(next);
+    if (next !== null) {
+      setTimeout(
+        () => programmeTableRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }),
+        50,
+      );
+    }
+  }
 
   const visibleRows = useMemo(() => {
     if (ragFilter === null) return rows;
@@ -164,7 +176,7 @@ export function ExecutiveOverview() {
             live from the seeded NovaTech demo (5 programmes × 12 months).
           </p>
         </div>
-        <button type="button" className="btn-primary" disabled>
+        <button type="button" className="btn-primary" onClick={() => navigate("/reports")}>
           <FileDown className="size-4" /> Generate QBR Brief
         </button>
       </div>
@@ -175,7 +187,7 @@ export function ExecutiveOverview() {
         <Card>
           <CardHeader
             title="Portfolio Health"
-            subtitle="Click a bucket to filter the table below"
+            subtitle="Click a bucket to see which programmes are in that status"
           />
           <div className="flex items-center justify-around gap-3 pt-1 text-center">
             <RagStat
@@ -183,26 +195,32 @@ export function ExecutiveOverview() {
               label="Green"
               tone="green"
               active={ragFilter === "green"}
-              onClick={() => setRagFilter(ragFilter === "green" ? null : "green")}
+              onClick={() => applyRagFilter("green")}
             />
             <RagStat
               count={buckets.amber}
               label="Amber"
               tone="amber"
               active={ragFilter === "amber"}
-              onClick={() => setRagFilter(ragFilter === "amber" ? null : "amber")}
+              onClick={() => applyRagFilter("amber")}
             />
             <RagStat
               count={buckets.red}
               label="Red"
               tone="red"
               active={ragFilter === "red"}
-              onClick={() => setRagFilter(ragFilter === "red" ? null : "red")}
+              onClick={() => applyRagFilter("red")}
             />
           </div>
-          <p className="mt-4 text-xs text-navy/70">
-            Derived from programme status and the latest monthly margin KPI.
-          </p>
+          {ragFilter ? (
+            <p className="mt-3 rounded bg-navy/5 px-2 py-1.5 text-xs font-medium text-navy dark:bg-navy-600 dark:text-navy-100">
+              ↓ Scrolled to {visibleRows.length} {ragFilter} programme{visibleRows.length !== 1 ? "s" : ""} below
+            </p>
+          ) : (
+            <p className="mt-4 text-xs text-navy/70">
+              Derived from programme status and the latest monthly margin KPI.
+            </p>
+          )}
         </Card>
 
         <Card>
@@ -331,7 +349,7 @@ export function ExecutiveOverview() {
         </div>
       </Card>
 
-      <section className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+      <section ref={programmeTableRef} className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <Card className="lg:col-span-2">
           <CardHeader
             title="Programme status"

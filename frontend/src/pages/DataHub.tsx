@@ -54,6 +54,7 @@ type CommitState = {
 } | null;
 
 export function DataHub() {
+  const csvImportRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const [preview, setPreview] = useState<PreviewState>(null);
   const [pendingFile, setPendingFile] = useState<File | null>(null);
@@ -142,7 +143,7 @@ export function DataHub() {
         </p>
       </div>
 
-      <section className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+      <section ref={csvImportRef} className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <Card className="lg:col-span-2">
           <CardHeader
             title="Ingest programme data"
@@ -453,8 +454,14 @@ export function DataHub() {
           title="Guided onboarding wizard (preview)"
           subtitle="Four steps — base currency, fiscal year, programmes, data"
           action={
-            <button type="button" className="btn-primary" disabled>
-              <Upload className="size-4" /> Launch wizard
+            <button
+              type="button"
+              className="btn-primary"
+              onClick={() =>
+                csvImportRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
+              }
+            >
+              <Upload className="size-4" /> Start Import
             </button>
           }
         />
