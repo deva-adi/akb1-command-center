@@ -24,14 +24,14 @@ export function CardHeader({ title, subtitle, action, className }: CardHeaderPro
   return (
     <div
       className={cn(
-        "mb-4 flex items-start justify-between gap-3 border-b border-ice-100 pb-3",
+        "mb-4 flex items-start justify-between gap-3 border-b border-ice-100 pb-3 dark:border-navy-500",
         className,
       )}
     >
       <div>
-        <h3 className="text-base font-semibold text-navy">{title}</h3>
+        <h3 className="text-base font-semibold text-navy dark:text-navy-50">{title}</h3>
         {subtitle ? (
-          <p className="mt-0.5 text-xs text-navy/70">{subtitle}</p>
+          <p className="mt-0.5 text-xs text-navy/70 dark:text-navy-100/70">{subtitle}</p>
         ) : null}
       </div>
       {action ? <div className="shrink-0">{action}</div> : null}
