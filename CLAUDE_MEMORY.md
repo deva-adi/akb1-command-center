@@ -2,7 +2,7 @@
 
 This file is the recovery document. It is updated at the end of every milestone commit, before the git push. In any future Claude Code session starting cold after data loss or a machine reset, the first instruction is: read this file and resume from the state it describes.
 
-Last updated: 2026-04-22 (end of M5)
+Last updated: 2026-04-22 (end of M6)
 
 ---
 
@@ -37,6 +37,7 @@ Last updated: 2026-04-22 (end of M5)
 | M3b recovery doc | `31ddd99` | 2026-04-22 | docs: add CLAUDE_MEMORY.md project recovery file (standing rule established) |
 | M4 (formulas + harness) | `8cc823e` | 2026-04-22 | feat(test): FORMULAS 50-55 for the 6 new Tab 12 definitions + cross-endpoint reconciliation harness (+55 tests, 205 total green) |
 | M5 (ContextRail) | `d0885dd` | 2026-04-22 | feat(ui): global ContextRail breadcrumb + drill-up/across + URL-encoded filter state; delete per-page Breadcrumb; migrate Customer to URL programme state (+8 Vitest, +2 Playwright) |
+| M6 (/pnl stub + API client) | `TBD` | 2026-04-22 | feat(ui): /pnl route + PnlCockpit.tsx stub + typed pnlApi.ts client for nine endpoints + nav entry + Vitest + Playwright (+3 Vitest, +3 Playwright) |
 
 Earlier v5.x milestones (pre-Tab 12, already on main): v5.6 drill-fidelity audit (`792aa0d`), v5.5.4 margin bug fixes (`22c93b1`), v5.5.3 a11y trust-badge fix (`0854876`), v5.5.2 dead-metric-card fix (`7e03e1c`). These are retained on `main`; the Tab 12 branch builds forward from there.
 
@@ -44,17 +45,18 @@ Earlier v5.x milestones (pre-Tab 12, already on main): v5.6 drill-fidelity audit
 
 ## Section 3 — Current state
 
-- **Milestone just completed:** M5 (global ContextRail breadcrumb + URL-encoded filter state)
-- **Tests:** backend 205 passed (unchanged from M4), frontend 25 Vitest passed (up from 17 — 8 new ContextRail tests), plus 2 new Playwright e2e tests for two-tab manual check
+- **Milestone just completed:** M6 (/pnl route stub + typed pnlApi client + nav entry)
+- **Tests:** backend 205 passed (unchanged — M6 is frontend-only), frontend 28 Vitest passed (up from 25 at M5 — 3 new PnlCockpit tests), plus 5 Playwright specs total (2 from M5 + 3 new pnl-stub specs)
 - **/health output:** `{"status":"healthy","version":"5.7.0-dev","tables":47}`
-- **Docker state:** `akb1-backend` healthy on 127.0.0.1:9001, `akb1-frontend` rebuilt and healthy on 127.0.0.1:9000 at M5 close
+- **Docker state:** `akb1-backend` healthy on 127.0.0.1:9001, `akb1-frontend` rebuilt at M6 close and healthy on 127.0.0.1:9000
 - **Nine active endpoints registered** under `/api/v1/pnl/`: waterfall, bridge, pfa, pyramid, losses, evm, dso, revenue, lineage
 - **Bridge identity locked:** Phoenix Feb→Mar `gross_margin_pct` reconciles to −340.00 bps exact (price +147.17, volume +61.71, mix −505.65, cost_residual −43.23)
 - **Cross-endpoint identities pinned (M4):** 55 reconciliation tests across two programmes (Phoenix, Atlas)
-- **ContextRail (M5):** global component at `frontend/src/components/ContextRail.tsx`, mounted once in `Layout.tsx`, renders Portfolio > Tab > Programme > Metric > Period > Tier as URL-derived segments. Drill-up via clicks, drill-across via Programme and Metric dropdowns, all state lives in query params (programme, metric, from, to, month, tier, scenario_name, portfolio). Old `Breadcrumb.tsx` deleted and all 11 per-page call sites removed. `CustomerIntelligence` migrated from local-state selection to URL state so the rail sees it. Tab 12 (`/pnl`) added to the tab registry (route not yet mounted — that's M6).
-- **Branch state:** `feat/tab-12-pnl-cockpit-v5.7` is now six commits ahead of main (M3a, M3b, M3b-memory, M4, M4-memory-fix, M5); no merge to main yet
+- **ContextRail (M5):** global component at `frontend/src/components/ContextRail.tsx`, mounted once in `Layout.tsx`, URL-driven
+- **PnlCockpit stub (M6):** `/pnl` route live at `frontend/src/pages/PnlCockpit.tsx` showing the M7 placeholder card. Nav entry "P&L Cockpit — 12" appears in the sidebar via the shared TABS registry. Typed API client at `frontend/src/api/pnlApi.ts` exports `fetchPnlWaterfall`, `fetchPnlBridge`, `fetchPnlPfa`, `fetchPnlPyramid`, `fetchPnlLosses`, `fetchPnlEvm`, `fetchPnlDso`, `fetchPnlRevenue`, `fetchPnlLineage` plus the shared `PnlFilters`, `FiltersApplied`, `LineageBlock`, and per-endpoint response types mirroring `backend/app/schemas/pnl.py`. No endpoints wired to UI yet — that's M7.
+- **Branch state:** `feat/tab-12-pnl-cockpit-v5.7` is now eight commits ahead of main (M3a, M3b, M3b-memory, M4, M4-memory-fix, M5, M5-memory-fix, M6); no merge to main yet
 - **In flight:** nothing mid-change on disk; working tree clean except unrelated Finder duplicate files
-- **Next milestone:** M6 — scaffold the `/pnl` route and the five Tab 12 section components (RevenueCards, MarginWaterfall, MarginBridge, PfaTriangle, LossesAttribution, Pyramid with EVM and DSO sub-cards). Backend endpoints already live from M3b.
+- **Next milestone:** M7 — wire the five Tab 12 section components (RevenueCards, MarginWaterfall, MarginBridge, PfaTriangle, LossesAttribution, Pyramid with EVM and DSO sub-cards) to the pnlApi client via React Query hooks. UI rendering against live Phoenix data.
 
 ---
 
@@ -72,6 +74,19 @@ Reasons summarised (full reasoning in `docs/TECH_DEBT.md`):
 - /narrative → Tab AI PRD must land first so the narrative pattern is chosen once.
 
 PRD §6.1, §6.6, §6.7 carry "Status: deferred to v5.8" banners at the top with the full design content preserved underneath for v5.8 implementers.
+
+---
+
+## Section 4.5 — Known issues (must be fixed before M8 verification)
+
+These are pre-existing issues carried forward from before the Tab 12 build began. They are not blockers for intermediate milestones but must be resolved before the M8 verification protocol runs, per Adi's note at the close of M5.
+
+| ID | File | Line(s) | Description | Detected in |
+|---|---|---|---|---|
+| LINT-1 | `frontend/src/pages/MarginEvm.tsx` | 36 | `WATERFALL_LABELS` is assigned a value but only used as a type. Rule: `@typescript-eslint/no-unused-vars`. | pre-M5 baseline |
+| LINT-2 | `frontend/src/pages/delivery/KanbanView.tsx` | 122, 139, 722, 725, 780, 783 | Six uses of `any`. Rule: `@typescript-eslint/no-explicit-any`. Columns-value typing or generic narrowing needed. | pre-M5 baseline |
+
+Fix target: before the M8 verification protocol begins. Rerun `npm --prefix frontend run lint` after fixes and confirm the error count is zero. Record the resolving commit hashes in this table when done.
 
 ---
 
