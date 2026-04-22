@@ -6,12 +6,14 @@ import { expect, test } from "@playwright/test";
  * segment too. Nav entry appears in the sidebar.
  */
 test.describe("/pnl stub (M6)", () => {
-  test("loads with title and M7 placeholder", async ({ page }) => {
+  test("loads with title and remaining-sections placeholder", async ({ page }) => {
     await page.goto("/pnl");
     await expect(
       page.getByRole("heading", { level: 1, name: /P&L Cockpit/i }),
     ).toBeVisible();
-    await expect(page.getByText(/Sections load in M7/i)).toBeVisible();
+    await expect(
+      page.getByText(/Remaining sections land in M7\.2 through M7\.7/i),
+    ).toBeVisible();
     const rail = page.getByTestId("context-rail");
     await expect(rail).toBeVisible();
     await expect(rail.getByText("Portfolio")).toBeVisible();

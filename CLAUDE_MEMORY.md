@@ -2,7 +2,7 @@
 
 This file is the recovery document. It is updated at the end of every milestone commit, before the git push. In any future Claude Code session starting cold after data loss or a machine reset, the first instruction is: read this file and resume from the state it describes.
 
-Last updated: 2026-04-22 (end of M6)
+Last updated: 2026-04-22 (end of M7.1 Revenue section)
 
 ---
 
@@ -38,6 +38,7 @@ Last updated: 2026-04-22 (end of M6)
 | M4 (formulas + harness) | `8cc823e` | 2026-04-22 | feat(test): FORMULAS 50-55 for the 6 new Tab 12 definitions + cross-endpoint reconciliation harness (+55 tests, 205 total green) |
 | M5 (ContextRail) | `d0885dd` | 2026-04-22 | feat(ui): global ContextRail breadcrumb + drill-up/across + URL-encoded filter state; delete per-page Breadcrumb; migrate Customer to URL programme state (+8 Vitest, +2 Playwright) |
 | M6 (/pnl stub + API client) | `d41eb3a` | 2026-04-22 | feat(ui): /pnl route + PnlCockpit.tsx stub + typed pnlApi.ts client for nine endpoints + nav entry + Vitest + Playwright (+3 Vitest, +3 Playwright) |
+| M7.1 (Revenue section) | `TBD` | 2026-04-22 | feat(ui): RevenueCards section — 5 cards (Booked, Billed, Collected, Unbilled WIP, AR) wired to /revenue + /dso with period-over-period delta, RAG tone by sign, 4 Vitest states, Playwright live-stack (+4 Vitest, +2 Playwright) |
 
 Earlier v5.x milestones (pre-Tab 12, already on main): v5.6 drill-fidelity audit (`792aa0d`), v5.5.4 margin bug fixes (`22c93b1`), v5.5.3 a11y trust-badge fix (`0854876`), v5.5.2 dead-metric-card fix (`7e03e1c`). These are retained on `main`; the Tab 12 branch builds forward from there.
 
@@ -45,18 +46,19 @@ Earlier v5.x milestones (pre-Tab 12, already on main): v5.6 drill-fidelity audit
 
 ## Section 3 — Current state
 
-- **Milestone just completed:** M6 (/pnl route stub + typed pnlApi client + nav entry)
-- **Tests:** backend 205 passed (unchanged — M6 is frontend-only), frontend 28 Vitest passed (up from 25 at M5 — 3 new PnlCockpit tests), plus 5 Playwright specs total (2 from M5 + 3 new pnl-stub specs)
+- **Milestone just completed:** M7.1 Revenue section (first of seven per-section commits in M7)
+- **Tests:** backend 205 passed (unchanged), frontend 32 Vitest passed (up from 28 — 4 new RevenueCards state tests), plus 7 Playwright specs total (2 ContextRail, 3 pnl-stub, 2 pnl-revenue — all against live Docker stack)
 - **/health output:** `{"status":"healthy","version":"5.7.0-dev","tables":47}`
 - **Docker state:** `akb1-backend` healthy on 127.0.0.1:9001, `akb1-frontend` rebuilt at M6 close and healthy on 127.0.0.1:9000
 - **Nine active endpoints registered** under `/api/v1/pnl/`: waterfall, bridge, pfa, pyramid, losses, evm, dso, revenue, lineage
 - **Bridge identity locked:** Phoenix Feb→Mar `gross_margin_pct` reconciles to −340.00 bps exact (price +147.17, volume +61.71, mix −505.65, cost_residual −43.23)
 - **Cross-endpoint identities pinned (M4):** 55 reconciliation tests across two programmes (Phoenix, Atlas)
 - **ContextRail (M5):** global component at `frontend/src/components/ContextRail.tsx`, mounted once in `Layout.tsx`, URL-driven
-- **PnlCockpit stub (M6):** `/pnl` route live at `frontend/src/pages/PnlCockpit.tsx` showing the M7 placeholder card. Nav entry "P&L Cockpit — 12" appears in the sidebar via the shared TABS registry. Typed API client at `frontend/src/api/pnlApi.ts` exports `fetchPnlWaterfall`, `fetchPnlBridge`, `fetchPnlPfa`, `fetchPnlPyramid`, `fetchPnlLosses`, `fetchPnlEvm`, `fetchPnlDso`, `fetchPnlRevenue`, `fetchPnlLineage` plus the shared `PnlFilters`, `FiltersApplied`, `LineageBlock`, and per-endpoint response types mirroring `backend/app/schemas/pnl.py`. No endpoints wired to UI yet — that's M7.
-- **Branch state:** `feat/tab-12-pnl-cockpit-v5.7` is now eight commits ahead of main (M3a, M3b, M3b-memory, M4, M4-memory-fix, M5, M5-memory-fix, M6); no merge to main yet
-- **In flight:** nothing mid-change on disk; working tree clean except unrelated Finder duplicate files
-- **Next milestone:** M7 — wire the five Tab 12 section components (RevenueCards, MarginWaterfall, MarginBridge, PfaTriangle, LossesAttribution, Pyramid with EVM and DSO sub-cards) to the pnlApi client via React Query hooks. UI rendering against live Phoenix data.
+- **PnlCockpit stub (M6):** `/pnl` route live at `frontend/src/pages/PnlCockpit.tsx`. Nav entry "P&L Cockpit — 12" appears in the sidebar via the shared TABS registry. Typed API client at `frontend/src/api/pnlApi.ts` exports fetchers for all nine endpoints plus shared types mirroring `backend/app/schemas/pnl.py`.
+- **Revenue section (M7.1):** first of seven M7 per-section commits. `frontend/src/pages/pnl/sections/RevenueCards.tsx` wires `/revenue` + `/dso` via React Query with current + prior-month fetches. Five cards: Booked, Billed, Collected, Unbilled WIP, AR Balance. Delta computed client-side as current − prior, rendered as absolute + percentage with sign. RAG tone flips by card: green when movement is favourable (Booked/Billed/Collected up or WIP/AR down), red when unfavourable. Handles four states: no-programme prompt, loading skeleton, error banner with envelope message, populated grid. Committed Revenue is dropped from the UI (still on the endpoint for v5.8's KPI Board).
+- **Branch state:** `feat/tab-12-pnl-cockpit-v5.7` is now ten commits ahead of main; no merge to main yet
+- **In flight:** M7.2 (Margin Waterfall) next
+- **Next milestone:** M7.2 — wire `/waterfall` to render the four-layer margin waterfall (gross → contribution → portfolio → net) with layer values and lineage reveal. Hold for sign-off before starting.
 
 ---
 

@@ -5,6 +5,14 @@ import { describe, expect, it, vi } from "vitest";
 import { PnlCockpit } from "@/pages/PnlCockpit";
 import { ContextRail } from "@/components/ContextRail";
 
+// The Revenue section (M7.1) fires real axios queries on mount. Stub
+// the client so this page-level test exercises the stub copy and the
+// ContextRail wiring without network activity.
+vi.mock("@/api/pnlApi", () => ({
+  fetchPnlRevenue: vi.fn(() => new Promise(() => {})),
+  fetchPnlDso: vi.fn(() => new Promise(() => {})),
+}));
+
 vi.mock("@/hooks/usePortfolio", () => ({
   useProgrammes: () => ({
     data: [
@@ -50,12 +58,14 @@ function renderAt(url: string) {
 }
 
 describe("PnlCockpit", () => {
-  it("renders the stub title and M7 placeholder without crashing", () => {
+  it("renders the page title and the M7.2+ remaining-sections placeholder", () => {
     renderAt("/pnl");
     expect(
       screen.getByRole("heading", { level: 1, name: /P&L Cockpit/i }),
     ).toBeInTheDocument();
-    expect(screen.getByText(/Sections load in M7/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/Remaining sections land in M7\.2 through M7\.7/i),
+    ).toBeInTheDocument();
   });
 
   it("ContextRail shows the P&L Cockpit tab segment on /pnl", () => {

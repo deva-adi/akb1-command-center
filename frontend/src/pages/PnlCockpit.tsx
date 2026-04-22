@@ -1,4 +1,5 @@
 import { Card, CardHeader } from "@/components/ui/Card";
+import { RevenueCards } from "@/pages/pnl/sections/RevenueCards";
 
 export function PnlCockpit() {
   return (
@@ -14,18 +15,13 @@ export function PnlCockpit() {
         </p>
       </div>
 
+      <RevenueCards />
+
       <Card>
         <CardHeader
-          title="Sections load in M7"
-          subtitle="M6 delivers the route, the typed API client, and the nav entry. The five section components wire to the nine live /api/v1/pnl/ endpoints in M7."
+          title="Remaining sections land in M7.2 through M7.7"
+          subtitle="Margin Waterfall, Margin Bridge, PFA Triangle, Losses with Attribution, and Pyramid with EVM and DSO sub-cards. Revenue is live above."
         />
-        <p className="text-sm text-navy/70">
-          The nine backend endpoints are already live and reconciliation-tested
-          (see docs/FORMULAS.md entries 50 through 55 and the harness at
-          backend/tests/test_pnl_reconciliation.py). Pick a programme from the
-          sidebar or add <code className="font-mono text-xs">?programme=PHOENIX</code>{" "}
-          to the URL to see the ContextRail breadcrumb update.
-        </p>
       </Card>
     </div>
   );
