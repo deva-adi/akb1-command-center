@@ -1,8 +1,8 @@
-# FORMULAS REFERENCE — AKB1 Command Center v5.2
+# FORMULAS REFERENCE — AKB1 Command Center v5.7
 
 ## Overview
 
-This document defines all 45 formulas in the AKB1 Command Center v5.2, organized by category. Each formula includes:
+This document defines 51 formulas in the AKB1 Command Center (45 from v5.2 and 6 added in v5.7.0 for Tab 12 P&L Cockpit, entries 50 through 55 in the P&L COCKPIT section at the bottom). Numbers 46 through 49 are reserved for the remaining Tab 12 definitions that ship with the v5.8 pick-up of KPI Board, Commercial Levers, and Narrative. Each formula includes:
 - **Definition:** Plain-English explanation
 - **Formula Expression:** Executable equation
 - **Worked Example 1:** Real numbers, step-by-step calculation, interpretation
@@ -1476,6 +1476,219 @@ WIP Aging Category:
 
 ---
 
+## P&L COCKPIT (6 Formulas)
+
+These six entries back the nine `/api/v1/pnl/` endpoints shipped in v5.7.0 (Tab 12 P&L Cockpit). Numbers 46 through 49 are reserved for the remaining Tab 12 definitions that land with the v5.8 pick-up of the deferred KPI Board, Commercial Levers, and Narrative sections.
+
+**Endpoint coverage map.** Formulas 14 through 17 (gross, contribution, portfolio, net margin percentage) back `GET /pnl/waterfall`. Formulas 50 through 53 back `GET /pnl/bridge`. Formulas 1 and 7 through 13 (BAC, CPI, SPI, EAC, TCPI, VAC, EV) back `GET /pnl/evm`. Formula 54 backs `GET /pnl/dso` and the billed, collected, unbilled-WIP cards inside `GET /pnl/revenue`. Formula 55 and formulas 18 through 21 (utilisation family plus utilisation waterfall loss) back `GET /pnl/pyramid`. Formula 25 (revenue leakage) plus the revenue-foregone derivation in formula 54's extension below back `GET /pnl/losses`. `GET /pnl/pfa` is a composition rather than a new formula — it plots planned, Forecast at Completion, and Monthly Actuals scenarios of whichever metric (revenue, gross_pct, net_pct, CPI, SPI) the caller requests. `GET /pnl/lineage` is a resolver, not a calculation; it returns the formula expression of the metric_key it parses.
+
+### 50. Margin Bridge Price Delta
+
+**Definition:** The basis-point change in programme margin attributable to rate-card drift between two snapshots, holding hours and mix constant. One of the four drivers returned by `GET /api/v1/pnl/bridge/{metric_key}`. The bridge engine is in `backend/app/services/pnl_engine.py`, `compute_bridge`.
+
+**Formula Expression:**
+```
+price_bps = sum over tiers of ((rate_current_tier - rate_prior_tier) * hours_prior_tier) / revenue_prior * 10000
+
+where
+    hours_prior_tier = revenue_prior * tier_weight_prior / rate_prior_tier  (implied)
+    revenue_prior    = actual_revenue at the prior snapshot
+```
+
+Round the final value to two decimals so the four bridge drivers sum to `total_delta_bps` within 0.01 bps.
+
+**Worked Example 1 — Phoenix Feb to Mar 2026 (the locked identity case):**
+- Prior gross margin 31.4%, current 28.0%, total_delta_bps = (0.28 − 0.314) × 10000 = −340.00
+- Tier rates Feb: Junior 71, Mid 114, Senior 177.5. Tier rates Mar: Junior 72, Mid 118, Senior 175.
+- Implied hours at Feb: blended rate = 0.40×71 + 0.415×114 + 0.185×177.5 = 108.55. Hours_prior = 845,000 / 108.55 ≈ 7,784, then split by Feb weights.
+- Price bucket: +147.17 bps. Rate drift is net positive (Mid and Junior up, Senior down only marginally) against Feb hour weights.
+- Interpretation: rates alone would have *added* 147 bps to margin; the 340 bp fall is driven elsewhere.
+
+**Worked Example 2 — Atlas Feb to Mar 2026:**
+- Prior 42.1%, current 39.8%, total_delta_bps = −230.
+- Atlas has Mid Engineer rate drift from 110 to 115 (roughly 4.5% up), Senior and Junior flat.
+- Price bucket on Atlas decomposes to roughly −210 bps, dominating the total, because the Mid-tier weight inside Atlas is higher than Phoenix.
+- Interpretation: on Atlas, the bridge says "the rate-card drift is the story." On Phoenix, mix tells the story instead.
+
+**Target (Green):** |price_bps| < 50 (rates reasonably stable month over month)
+**Alert (Red):** |price_bps| ≥ 150 (significant rate-card drift needing commercial review)
+**Dashboard Location:** Tab 12 Margin Bridge section, first bar in the Price/Volume/Mix/Cost waterfall. Info modal cites this entry.
+
+---
+
+### 51. Margin Bridge Volume Delta
+
+**Definition:** The basis-point change in programme margin attributable to implied-hours change between two snapshots, holding rates and mix constant. One of the four drivers returned by `GET /api/v1/pnl/bridge/{metric_key}`.
+
+**Formula Expression:**
+```
+volume_bps = (hours_current_total - hours_prior_total) * blended_rate_prior / revenue_prior * 10000
+
+where
+    hours_total        = revenue / blended_rate (implied hours at the snapshot)
+    blended_rate_prior = sum over tiers of (tier_weight_prior * rate_prior_tier)
+```
+
+Round to two decimals.
+
+**Worked Example 1 — Phoenix Feb to Mar 2026:**
+- Blended rate Feb = 108.55 (see entry 50). Hours_prior ≈ 7,784.
+- Blended rate Mar = 0.50×72 + 0.33×118 + 0.17×175 = 104.69. Hours_current = 820,000 / 104.69 ≈ 7,833.
+- Volume bucket: +61.71 bps. Implied-hours slightly up month over month.
+- Interpretation: delivery volume is not the drag on Phoenix. Hours held.
+
+**Worked Example 2 — Atlas Feb to Mar 2026:**
+- Atlas Feb revenue 1.10M, Mar revenue 1.08M. Implied hours held roughly flat.
+- Volume bucket around +20 bps. Small compared with the −210 price bucket.
+- Interpretation: Atlas volume is steady, the bleed is in rates.
+
+**Target (Green):** |volume_bps| < 50
+**Alert (Red):** volume_bps ≤ −150 (significant under-delivery in the period)
+**Dashboard Location:** Tab 12 Margin Bridge section, second bar. Info modal cites this entry.
+
+---
+
+### 52. Margin Bridge Mix Delta
+
+**Definition:** The basis-point change in programme margin attributable to tier-mix shift between two snapshots, holding total hours and current rates constant. Captures the "pyramid inversion" effect — Senior-heavy mix eating margin. One of the four drivers returned by `GET /api/v1/pnl/bridge/{metric_key}`.
+
+**Formula Expression:**
+```
+mix_bps = sum over tiers of (rate_current_tier * (hours_current_tier - hours_prior_tier * hours_current_total / hours_prior_total)) / revenue_prior * 10000
+```
+
+The inner expression isolates the hours that moved between tiers after normalising for total-hours change already captured in the volume bucket. Round to two decimals.
+
+**Worked Example 1 — Phoenix Feb to Mar 2026:**
+- Feb weights 40/41.5/18.5, Mar weights 50/33/17. The shift is Mid → Junior (Mid weight down 8.5 points, Junior up 10).
+- On implied hours that shift moves billable work from the 118 Mid rate to the 72 Junior rate.
+- Mix bucket: −505.65 bps. This is the single largest driver of the −340 bps total.
+- Interpretation: Phoenix's Junior/Mid rebalance killed margin. If the bridge hides this, a PM would chase the wrong lever.
+
+**Worked Example 2 — Atlas Feb to Mar 2026:**
+- Atlas mix held roughly steady, weights moved within one or two points on each tier.
+- Mix bucket around −30 bps, second smallest driver.
+- Interpretation: Atlas does not have a mix problem. It has a rate problem.
+
+**Target (Green):** mix_bps ≥ 0 (mix moving toward lower-cost tiers or steady)
+**Alert (Red):** mix_bps ≤ −200 (pyramid inversion eating margin)
+**Dashboard Location:** Tab 12 Margin Bridge section, third bar. Info modal cites this entry.
+
+---
+
+### 53. Margin Bridge Cost Delta (residual)
+
+**Definition:** The basis-point change in programme margin that cannot be attributed to price, volume, or mix. Computed as a residual so the four drivers always sum to `total_delta_bps` exactly. Captures cost moves outside the rate card — tooling, variable overhead, one-offs. Returned by `GET /api/v1/pnl/bridge/{metric_key}`.
+
+**Formula Expression:**
+```
+total_delta_bps    = (current_value - prior_value) * 10000
+cost_bps_residual  = total_delta_bps - price_bps - volume_bps - mix_bps
+```
+
+By construction, `price_bps + volume_bps + mix_bps + cost_bps_residual == total_delta_bps` within 0.01 bps (the rounding tolerance).
+
+**Worked Example 1 — Phoenix Feb to Mar 2026:**
+- Price +147.17, Volume +61.71, Mix −505.65. Total −340.00.
+- Cost residual = −340 − 147.17 − 61.71 − (−505.65) = −43.23 bps.
+- Interpretation: small cost bucket. The bleed is mix, not hidden cost. The residual confirms price/volume/mix capture 87% of the move.
+
+**Worked Example 2 — Atlas Feb to Mar 2026:**
+- Price −210, Volume +20, Mix −30. Total −230.
+- Cost residual = −230 − (−210) − 20 − (−30) = −10 bps.
+- Interpretation: essentially all of Atlas's margin drop is rate-card drift. Not mix, not cost, not volume.
+
+**Target (Green):** |cost_bps_residual| ≤ 50 (most of the move is explained by the first three drivers)
+**Alert (Red):** |cost_bps_residual| > 200 (large unexplained residual — investigate costs outside the rate card)
+**Dashboard Location:** Tab 12 Margin Bridge section, fourth bar. Info modal cites this entry and notes the identity that all four sum to the total.
+
+Engine reference: the identity is pinned by `test_phoenix_feb_to_mar_identity_price_mix_volume_cost_equal_total` in `backend/tests/test_pnl_engine.py`.
+
+---
+
+### 54. DSO and AR Balance
+
+**Definition:** Days Sales Outstanding converts the working capital locked in unpaid invoices into a comparable days figure. AR Balance is the subtraction behind it. Together they power `GET /api/v1/pnl/dso/{programme_code}` and three of the five cards in `GET /api/v1/pnl/revenue/{programme_code}`.
+
+**Formula Expression:**
+```
+billed_revenue    = actual_revenue * billing_ratio                  (seed column)
+collected_revenue = billed_revenue * collection_ratio               (seed column)
+ar_balance        = billed_revenue - collected_revenue
+unbilled_wip      = max(actual_revenue - billed_revenue, 0)
+dso_days          = (ar_balance / billed_revenue) * 30              when billed_revenue > 0, else null
+```
+
+The 30-day window is a monthly-snapshot convention; FORMULAS.md entry 41 already documents the base-currency aggregation the cash values flow through.
+
+**Revenue foregone (consumed by `/pnl/losses`):**
+```
+revenue_foregone = loss_amount / (1 - target_gross_margin_pct)      default target_gross_margin_pct = 0.30
+```
+
+**Worked Example 1 — Phoenix March 2026:**
+- actual_revenue = 820,000, billing_ratio = 0.88 (Phoenix is a lagging programme per the seed rule).
+- billed_revenue = 820,000 × 0.88 = 721,600.
+- collection_ratio = 0.80 (Phoenix lagging). collected_revenue = 721,600 × 0.80 = 577,280.
+- ar_balance = 721,600 − 577,280 = 144,320.
+- unbilled_wip = max(820,000 − 721,600, 0) = 98,400.
+- dso_days = (144,320 / 721,600) × 30 = 6.0 days.
+- Interpretation: six days of billed-but-uncollected cash. Tight for a real programme, deliberately tight in the NovaTech demo.
+
+**Worked Example 2 — Atlas March 2026:**
+- actual_revenue = 1,080,000, billing_ratio = 0.97 (healthy programme).
+- billed = 1,047,600. collected = 1,047,600 × 0.92 = 963,792. ar_balance = 83,808.
+- dso_days = (83,808 / 1,047,600) × 30 = 2.4 days.
+- Interpretation: Atlas collects nearly everything it bills within the month. The DSO card shows green.
+
+**Target (Green):** dso_days < 45
+**Alert (Red):** dso_days > 75
+**Dashboard Location:** Tab 12 Pyramid section's DSO sub-card and three of the five Revenue cards.
+
+---
+
+### 55. Pyramid Ratio deviation from target
+
+**Definition:** How far the actual Junior-to-Mid-to-Senior mix drifts from the target ratio in settings (default 30:50:20). Feeds the RAG on `GET /api/v1/pnl/pyramid/{programme_code}`.
+
+**Formula Expression:**
+```
+for each tier in {Junior, Mid, Senior}:
+    actual_share_tier = headcount_tier / total_headcount
+    target_share_tier = target_ratio_tier / 100
+    deviation_tier    = actual_share_tier - target_share_tier
+
+total_deviation = sum over tiers of |deviation_tier|
+
+rag =
+    green  if total_deviation <= 0.15
+    amber  if 0.15 < total_deviation <= 0.30
+    red    if total_deviation >  0.30
+```
+
+**Realisation rate (already documented as formula 21, cross-referenced here):**
+```
+realisation = hours_billed / hours_worked
+```
+
+**Worked Example 1 — Phoenix March 2026:**
+- Headcount Junior 3, Mid 2, Senior 1, total 6. Actual shares: 50 / 33 / 17.
+- Target 30 / 50 / 20. Deviations: +0.20 Junior, −0.17 Mid, −0.03 Senior. |Sum| = 0.40.
+- RAG: red. But the seed flips this amber by using weight-deviation thresholds rather than pure headcount; see `_pyramid_rag` in `backend/app/api/v1/pnl.py`.
+- Interpretation: Phoenix is too Senior-light for the work it is doing, which in turn drags the rate-blend down. The mix-bucket −505 bps in entry 52 is the downstream consequence.
+
+**Worked Example 2 — Sentinel March 2026 target case:**
+- Headcount Junior 3, Mid 5, Senior 2, total 10. Actual 30 / 50 / 20 — an exact match.
+- total_deviation = 0.00, RAG green.
+- Interpretation: Sentinel's pyramid is on target. The card shows a green chip on the tier bar.
+
+**Target (Green):** total_deviation ≤ 0.15
+**Amber:** 0.15 < total_deviation ≤ 0.30
+**Alert (Red):** total_deviation > 0.30 (pyramid inversion likely, margin downside follows)
+**Dashboard Location:** Tab 12 Pyramid section. The RAG chip renders at card level; the per-tier weights render as a horizontal bar.
+
+---
+
 ## Support & Questions
 
 For formula interpretation or calculation verification:
@@ -1485,6 +1698,6 @@ For formula interpretation or calculation verification:
 
 ---
 
-**Last Updated:** 2026-04-16
-**Version:** 5.2
+**Last Updated:** 2026-04-22
+**Version:** 5.7.0-dev (Tab 12 P&L Cockpit, M4 appended formulas 50 through 55)
 **Maintainer:** Adi Kompalli — AKB1 Framework

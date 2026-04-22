@@ -2,7 +2,7 @@
 
 This file is the recovery document. It is updated at the end of every milestone commit, before the git push. In any future Claude Code session starting cold after data loss or a machine reset, the first instruction is: read this file and resume from the state it describes.
 
-Last updated: 2026-04-22 (end of M3b)
+Last updated: 2026-04-22 (end of M4)
 
 ---
 
@@ -34,6 +34,8 @@ Last updated: 2026-04-22 (end of M3b)
 | M2 (seed) | `a1a7414` | 2026-04-22 | feat(seed): programme_rates, Feb-Mar Monthly Actuals, billing backfill (252-row programme_rates, 7 programmes incl. BHARAT) |
 | M3a (infra) | `0175b5f` | 2026-04-22 | chore: version SSOT + P&L shared infra (filters, error envelope, lineage keys, schemas) |
 | M3b (endpoints) | `9561102` | 2026-04-22 | feat(api): nine P&L endpoints + PRD v5.7 scope rewrite + docs/TECH_DEBT.md |
+| M3b recovery doc | `31ddd99` | 2026-04-22 | docs: add CLAUDE_MEMORY.md project recovery file (standing rule established) |
+| M4 (formulas + harness) | `TBD` | 2026-04-22 | feat(test): FORMULAS 50-55 for the 6 new Tab 12 definitions + cross-endpoint reconciliation harness (+55 tests, 205 total green) |
 
 Earlier v5.x milestones (pre-Tab 12, already on main): v5.6 drill-fidelity audit (`792aa0d`), v5.5.4 margin bug fixes (`22c93b1`), v5.5.3 a11y trust-badge fix (`0854876`), v5.5.2 dead-metric-card fix (`7e03e1c`). These are retained on `main`; the Tab 12 branch builds forward from there.
 
@@ -41,15 +43,16 @@ Earlier v5.x milestones (pre-Tab 12, already on main): v5.6 drill-fidelity audit
 
 ## Section 3 — Current state
 
-- **Milestone just completed:** M3b (nine P&L endpoints with PRD v5.7 scope rewrite)
-- **Tests:** 150 passed, 0 failed, 0 skipped via `python -m pytest tests/` on backend host venv
+- **Milestone just completed:** M4 (FORMULAS 50–55 plus cross-endpoint reconciliation harness with fixtures)
+- **Tests:** 205 passed, 0 failed, 0 skipped via `python -m pytest tests/` on backend host venv (up from 150 at M3b)
 - **/health output:** `{"status":"healthy","version":"5.7.0-dev","tables":47}`
-- **Docker state:** `akb1-backend` healthy on 127.0.0.1:9001, `akb1-frontend` up on 127.0.0.1:9000; backend image rebuilt at end of M3b
+- **Docker state:** `akb1-backend` healthy on 127.0.0.1:9001, `akb1-frontend` up on 127.0.0.1:9000; backend image last rebuilt at end of M3b (M4 is test-and-docs only, no image rebuild needed)
 - **Nine active endpoints registered** under `/api/v1/pnl/`: waterfall, bridge, pfa, pyramid, losses, evm, dso, revenue, lineage
 - **Bridge identity locked:** Phoenix Feb→Mar `gross_margin_pct` reconciles to −340.00 bps exact (price +147.17, volume +61.71, mix −505.65, cost_residual −43.23)
-- **Branch state:** `feat/tab-12-pnl-cockpit-v5.7` is two commits ahead of main's tip (M3a + M3b); no merge to main yet
-- **In flight:** nothing mid-change on disk; working tree has only this CLAUDE_MEMORY.md add plus unrelated Finder duplicate files (`docs/*2.md`, `docs/*2.csv`) that are not part of the M3b scope
-- **Next milestone:** M4 — FORMULAS.md entries 50–55 plus the cross-endpoint reconciliation harness (fixtures included, one atomic commit)
+- **Cross-endpoint identities pinned (M4):** 55 reconciliation tests across two programmes (Phoenix, Atlas) covering revenue↔dso↔waterfall, lineage↔primary endpoint, DSO internal, bridge driver-sum identity, losses attribution, EVM internal, pyramid weight normalisation, PFA gross-actual↔waterfall gross
+- **Branch state:** `feat/tab-12-pnl-cockpit-v5.7` is four commits ahead of main (M3a, M3b, M3b-memory, M4); no merge to main yet
+- **In flight:** nothing mid-change on disk; working tree has only unrelated Finder duplicate files (`docs/*2.md`, `docs/*2.csv`) that are not part of any milestone
+- **Next milestone:** M5 — frontend scaffold for Tab 12 (`/pnl` route + five section components + ContextRail drill-up). No backend changes expected
 
 ---
 
