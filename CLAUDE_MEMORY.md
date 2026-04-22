@@ -2,7 +2,7 @@
 
 This file is the recovery document. It is updated at the end of every milestone commit, before the git push. In any future Claude Code session starting cold after data loss or a machine reset, the first instruction is: read this file and resume from the state it describes.
 
-Last updated: 2026-04-22 (end of M7.4 PFA section)
+Last updated: 2026-04-22 (end of M7.5 Losses section)
 
 ---
 
@@ -42,6 +42,7 @@ Last updated: 2026-04-22 (end of M7.4 PFA section)
 | M7.2 (Margin Bridge) | `5279eca` | 2026-04-22 | feat(ui): MarginBridge section — Recharts running-total waterfall wired to /bridge with default metric_key pnl.gross_margin_pct.programme.month; Phoenix Feb→Mar renders −340 bps total; loading/error/no-programme states; 4 Vitest + 2 Playwright |
 | M7.3 (Margin Waterfall) | `b38278c` | 2026-04-22 | feat(ui): MarginWaterfall section — four-layer cascade (Gross→Contribution→Portfolio→Net) wired to /waterfall with drop-bps pills between consecutive bars; Phoenix Mar renders 28.0/12.5/8.2/4.1% with drops −1550/−430/−410 bps; 4 Vitest + 2 Playwright |
 | M7.4 (PFA table) | `e94b2c2` | 2026-04-22 | feat(ui): PfaTable section — three-row table (Revenue / Cost derived / Gross margin) with Plan / Forecast / Actual / Variance columns. Two /pfa calls (revenue + gross_pct), cost derived as revenue×(1−margin), RAG on margin variance. Forecast row reads — with v5.8 footnote. 4 Vitest + 2 Playwright. Iron Triangle dropped (Gap 3 Option A). |
+| M7.5 (Losses with Attribution) | `TBD` | 2026-04-22 | feat(ui): LossesAttribution section — 7-column table (Date / Category / Mitigation / Amount / Revenue foregone / Margin lost bps / Cumulative) + horizontal Recharts breakdown chart by category + total row with RAG chip. Phoenix: four rows $1.95M total 237.8% of programme revenue = red. 5 Vitest + 2 Playwright. |
 
 Earlier v5.x milestones (pre-Tab 12, already on main): v5.6 drill-fidelity audit (`792aa0d`), v5.5.4 margin bug fixes (`22c93b1`), v5.5.3 a11y trust-badge fix (`0854876`), v5.5.2 dead-metric-card fix (`7e03e1c`). These are retained on `main`; the Tab 12 branch builds forward from there.
 
@@ -49,8 +50,8 @@ Earlier v5.x milestones (pre-Tab 12, already on main): v5.6 drill-fidelity audit
 
 ## Section 3 — Current state
 
-- **Milestone just completed:** M7.4 PFA Plan/Forecast/Actual table (fourth of seven per-section commits in M7)
-- **Tests:** backend 205 passed (unchanged), frontend 44 Vitest passed (up from 40 — 4 new PfaTable state tests), 13 Playwright specs total (2 ContextRail, 3 pnl-stub, 2 pnl-revenue, 2 pnl-bridge, 2 pnl-waterfall, 2 pnl-pfa — all against live Docker stack)
+- **Milestone just completed:** M7.5 Losses with Attribution section (fifth of seven per-section commits in M7)
+- **Tests:** backend 205 passed (unchanged), frontend 49 Vitest passed (up from 44 — 5 new LossesAttribution state tests), 15 Playwright specs total (2 ContextRail, 3 pnl-stub, 2 pnl-revenue, 2 pnl-bridge, 2 pnl-waterfall, 2 pnl-pfa, 2 pnl-losses — all against live Docker stack)
 - **/health output:** `{"status":"healthy","version":"5.7.0-dev","tables":47}`
 - **Docker state:** `akb1-backend` healthy on 127.0.0.1:9001, `akb1-frontend` rebuilt at M6 close and healthy on 127.0.0.1:9000
 - **Nine active endpoints registered** under `/api/v1/pnl/`: waterfall, bridge, pfa, pyramid, losses, evm, dso, revenue, lineage
@@ -61,10 +62,11 @@ Earlier v5.x milestones (pre-Tab 12, already on main): v5.6 drill-fidelity audit
 - **Revenue section (M7.1):** `frontend/src/pages/pnl/sections/RevenueCards.tsx` wires `/revenue` + `/dso`. Five cards (Booked, Billed, Collected, Unbilled WIP, AR Balance) with prior-month delta. Four states (no-programme, loading, error, populated). Committed Revenue silently dropped from UI.
 - **Margin Bridge (M7.2):** `frontend/src/pages/pnl/sections/MarginBridge.tsx` wires `/bridge` with the canonical metric key `pnl.gross_margin_pct.programme.month`. Recharts running-total waterfall: prior bar on the left, four driver bars (Price/Volume/Mix/Cost) floating between running totals, current bar on the right. Phoenix Feb→Mar renders −340 bps exactly.
 - **Margin Waterfall (M7.3):** `frontend/src/pages/pnl/sections/MarginWaterfall.tsx` wires `/waterfall`. Four-bar cascade with drop-pill annotations between bars. Phoenix Mar: 28.0 / 12.5 / 8.2 / 4.1% with drops −1550 / −430 / −410 bps.
-- **PFA table (M7.4):** `frontend/src/pages/pnl/sections/PfaTable.tsx` wires `/pfa` with two calls (metric=revenue + metric=gross_pct). Cost row is derived client-side as `revenue × (1 − margin)` per Gap 1 Option A — /pfa does not expose a `cost` metric and this keeps the backend contract stable. Three rows: Revenue, Cost (derived), Gross margin. Four columns: Planned / Forecast / Actual / Variance. Gross-margin variance carries RAG: red if more than 200 bps below plan, amber 0-200 below, green at/above. Revenue and Cost variance cells stay neutral. URL `from` / `to` filters bound the candidate window; without them, latest snapshot wins (Gap 2 Option B). Forecast column reads "—" with footnote "Forecast at Completion not seeded — planned for v5.8" because no Forecast-at-Completion rows are seeded. The Iron Triangle diagram that appeared in earlier drafts of the brief was dropped at Gap 3 Option A; PFA stays PFA-only. Phoenix March: Revenue $850K plan → $820K actual (−$30K, neutral); Cost $550K plan → $590.4K actual (+$40.4K, neutral); Gross 35.3% plan → 28.0% actual (−729 bps, red).
-- **Branch state:** `feat/tab-12-pnl-cockpit-v5.7` is now sixteen commits ahead of main; no merge to main yet
-- **In flight:** M7.5 (Losses with Attribution) next
-- **Next milestone:** M7.5 — wire `/losses` to render the seven-loss category bars with revenue-foregone and margin-bps-lost columns per PRD §6.4. Hold for sign-off before starting.
+- **PFA table (M7.4):** `frontend/src/pages/pnl/sections/PfaTable.tsx` wires `/pfa` with two calls (revenue + gross_pct). Cost derived client-side. Three rows × four cols with RAG on the gross-margin variance. Phoenix March: Revenue −$30K neutral, Cost +$40.4K neutral, Gross margin −729 bps red.
+- **Losses with Attribution (M7.5):** `frontend/src/pages/pnl/sections/LossesAttribution.tsx` wires `/losses`. Seven-column table: Date / Category / Mitigation / Amount / Revenue foregone / Margin lost (bps) / Cumulative. Running cumulative computed client-side. Total row sits below the table with a RAG chip against `programme_revenue` (red >2%, amber 1-2%, green <1%). Below the table, a Recharts horizontal BarChart (`layout="vertical"`) breaks total losses down by `loss_category`, each bar labelled "$amount (pct%)". Empty state renders a "No loss events" message with a neutral ∅ icon. Phoenix: four rows (Scope Creep $1.2M / Rework $420K / Bench Tax $180K / Estimation Miss $150K = $1.95M total, 237.8% of programme revenue → red chip). Column set chosen per Gap-B session decision (2026-04-22) to foreground revenue-foregone and bps-lost as the attribution signal rather than carrying ghost Description / Attribution columns.
+- **Branch state:** `feat/tab-12-pnl-cockpit-v5.7` is now eighteen commits ahead of main; no merge to main yet
+- **In flight:** M7.6 (Pyramid with EVM and DSO sub-cards) next
+- **Next milestone:** M7.6 — wire `/pyramid` + `/evm` + `/dso` in one section. Pyramid with three tier bars and RAG, plus EVM and DSO as sub-cards. Hold for sign-off before starting.
 
 ---
 

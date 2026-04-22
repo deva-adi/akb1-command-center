@@ -1,4 +1,5 @@
 import { Card, CardHeader } from "@/components/ui/Card";
+import { LossesAttribution } from "@/pages/pnl/sections/LossesAttribution";
 import { MarginBridge } from "@/pages/pnl/sections/MarginBridge";
 import { MarginWaterfall } from "@/pages/pnl/sections/MarginWaterfall";
 import { PfaTable } from "@/pages/pnl/sections/PfaTable";
@@ -22,11 +23,12 @@ export function PnlCockpit() {
       <MarginBridge />
       <MarginWaterfall />
       <PfaTable />
+      <LossesAttribution />
 
       <Card>
         <CardHeader
-          title="Remaining sections land in M7.5 through M7.7"
-          subtitle="Losses with Attribution and Pyramid with EVM and DSO sub-cards. Revenue, Margin Bridge, Margin Waterfall, and PFA are live above."
+          title="Remaining sections land in M7.6 through M7.7"
+          subtitle="Pyramid with EVM and DSO sub-cards. Revenue, Margin Bridge, Margin Waterfall, PFA, and Losses are live above."
         />
       </Card>
     </div>

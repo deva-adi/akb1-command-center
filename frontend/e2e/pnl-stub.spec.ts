@@ -12,7 +12,7 @@ test.describe("/pnl stub (M6)", () => {
       page.getByRole("heading", { level: 1, name: /P&L Cockpit/i }),
     ).toBeVisible();
     await expect(
-      page.getByText(/Remaining sections land in M7\.5 through M7\.7/i),
+      page.getByText(/Remaining sections land in M7\.6 through M7\.7/i),
     ).toBeVisible();
     const rail = page.getByTestId("context-rail");
     await expect(rail).toBeVisible();
