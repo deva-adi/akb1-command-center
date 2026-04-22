@@ -35,7 +35,7 @@ Last updated: 2026-04-22 (end of M4)
 | M3a (infra) | `0175b5f` | 2026-04-22 | chore: version SSOT + P&L shared infra (filters, error envelope, lineage keys, schemas) |
 | M3b (endpoints) | `9561102` | 2026-04-22 | feat(api): nine P&L endpoints + PRD v5.7 scope rewrite + docs/TECH_DEBT.md |
 | M3b recovery doc | `31ddd99` | 2026-04-22 | docs: add CLAUDE_MEMORY.md project recovery file (standing rule established) |
-| M4 (formulas + harness) | `TBD` | 2026-04-22 | feat(test): FORMULAS 50-55 for the 6 new Tab 12 definitions + cross-endpoint reconciliation harness (+55 tests, 205 total green) |
+| M4 (formulas + harness) | `8cc823e` | 2026-04-22 | feat(test): FORMULAS 50-55 for the 6 new Tab 12 definitions + cross-endpoint reconciliation harness (+55 tests, 205 total green) |
 
 Earlier v5.x milestones (pre-Tab 12, already on main): v5.6 drill-fidelity audit (`792aa0d`), v5.5.4 margin bug fixes (`22c93b1`), v5.5.3 a11y trust-badge fix (`0854876`), v5.5.2 dead-metric-card fix (`7e03e1c`). These are retained on `main`; the Tab 12 branch builds forward from there.
 
