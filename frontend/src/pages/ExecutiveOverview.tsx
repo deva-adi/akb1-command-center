@@ -10,8 +10,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { ChevronRight, FileDown, Home, Sparkles, X } from "lucide-react";
-import { Breadcrumb } from "@/components/Breadcrumb";
+import { ChevronRight, FileDown, Sparkles, X } from "lucide-react";
 import { AlertsTicker } from "@/components/AlertsTicker";
 import { Card, CardHeader } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
@@ -176,15 +175,6 @@ export function ExecutiveOverview() {
 
   return (
     <div className="flex flex-col gap-6">
-      <Breadcrumb
-        items={[
-          {
-            label: "Portfolio",
-            icon: <Home className="size-3" aria-hidden="true" />,
-          },
-          { label: "Executive Summary" },
-        ]}
-      />
       <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold text-navy dark:text-navy-50">Executive Summary</h1>

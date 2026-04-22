@@ -8,10 +8,8 @@ import {
   ChevronDown,
   ChevronUp,
   Clock,
-  Home,
   Users,
 } from "lucide-react";
-import { Breadcrumb } from "@/components/Breadcrumb";
 import { ProgrammeFilterBar } from "@/components/ProgrammeFilterBar";
 import { PROGRAMME_CROSS_LINKS } from "@/components/programmeCrossLinks";
 import { Card, CardHeader } from "@/components/ui/Card";
@@ -116,14 +114,6 @@ export function SmartOps() {
 
   return (
     <div className="flex flex-col gap-6">
-      <Breadcrumb
-        items={[
-          { label: "Portfolio", to: "/", icon: <Home className="size-3" aria-hidden="true" /> },
-          { label: "Smart Ops", to: filteredProgramme ? "/smart-ops" : undefined },
-          ...(filteredProgramme ? [{ label: filteredProgramme.name }] : []),
-        ]}
-      />
-
       <div>
         <h1 className="text-2xl font-semibold text-navy">Smart Ops</h1>
         <p className="mt-1 text-sm text-navy/70">

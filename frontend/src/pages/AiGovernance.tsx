@@ -16,8 +16,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { AlertOctagon, ChevronDown, ChevronUp, Home, ShieldCheck, Sparkles } from "lucide-react";
-import { Breadcrumb } from "@/components/Breadcrumb";
+import { AlertOctagon, ChevronDown, ChevronUp, ShieldCheck, Sparkles } from "lucide-react";
 import { ProgrammeFilterBar } from "@/components/ProgrammeFilterBar";
 import { PROGRAMME_CROSS_LINKS } from "@/components/programmeCrossLinks";
 import { Card, CardHeader } from "@/components/ui/Card";
@@ -186,12 +185,6 @@ export function AiGovernance() {
     return prompts > 0 ? accepted / prompts : null;
   })();
 
-  const breadcrumbItems = [
-    { label: "Portfolio", to: "/", icon: <Home className="size-3" aria-hidden="true" /> },
-    { label: "AI Governance", to: filteredProgramme ? "/ai" : undefined },
-    ...(filteredProgramme ? [{ label: filteredProgramme.name }] : []),
-  ];
-
   const programmeCodes = useMemo(
     () => [...new Set(trustRadarData.map((r) => r.programme as unknown as string))],
     [trustRadarData],
@@ -199,8 +192,6 @@ export function AiGovernance() {
 
   return (
     <div className="flex flex-col gap-6">
-      <Breadcrumb items={breadcrumbItems} />
-
       <div>
         <h1 className="text-2xl font-semibold text-navy">AI Governance</h1>
         <p className="mt-1 text-sm text-navy/70">

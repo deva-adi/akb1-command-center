@@ -2,7 +2,7 @@
 
 This file is the recovery document. It is updated at the end of every milestone commit, before the git push. In any future Claude Code session starting cold after data loss or a machine reset, the first instruction is: read this file and resume from the state it describes.
 
-Last updated: 2026-04-22 (end of M4)
+Last updated: 2026-04-22 (end of M5)
 
 ---
 
@@ -36,6 +36,7 @@ Last updated: 2026-04-22 (end of M4)
 | M3b (endpoints) | `9561102` | 2026-04-22 | feat(api): nine P&L endpoints + PRD v5.7 scope rewrite + docs/TECH_DEBT.md |
 | M3b recovery doc | `31ddd99` | 2026-04-22 | docs: add CLAUDE_MEMORY.md project recovery file (standing rule established) |
 | M4 (formulas + harness) | `8cc823e` | 2026-04-22 | feat(test): FORMULAS 50-55 for the 6 new Tab 12 definitions + cross-endpoint reconciliation harness (+55 tests, 205 total green) |
+| M5 (ContextRail) | `TBD` | 2026-04-22 | feat(ui): global ContextRail breadcrumb + drill-up/across + URL-encoded filter state; delete per-page Breadcrumb; migrate Customer to URL programme state (+10 frontend tests, 2 e2e) |
 
 Earlier v5.x milestones (pre-Tab 12, already on main): v5.6 drill-fidelity audit (`792aa0d`), v5.5.4 margin bug fixes (`22c93b1`), v5.5.3 a11y trust-badge fix (`0854876`), v5.5.2 dead-metric-card fix (`7e03e1c`). These are retained on `main`; the Tab 12 branch builds forward from there.
 
@@ -43,16 +44,17 @@ Earlier v5.x milestones (pre-Tab 12, already on main): v5.6 drill-fidelity audit
 
 ## Section 3 — Current state
 
-- **Milestone just completed:** M4 (FORMULAS 50–55 plus cross-endpoint reconciliation harness with fixtures)
-- **Tests:** 205 passed, 0 failed, 0 skipped via `python -m pytest tests/` on backend host venv (up from 150 at M3b)
+- **Milestone just completed:** M5 (global ContextRail breadcrumb + URL-encoded filter state)
+- **Tests:** backend 205 passed (unchanged from M4), frontend 25 Vitest passed (up from 17 — 8 new ContextRail tests), plus 2 new Playwright e2e tests for two-tab manual check
 - **/health output:** `{"status":"healthy","version":"5.7.0-dev","tables":47}`
-- **Docker state:** `akb1-backend` healthy on 127.0.0.1:9001, `akb1-frontend` up on 127.0.0.1:9000; backend image last rebuilt at end of M3b (M4 is test-and-docs only, no image rebuild needed)
+- **Docker state:** `akb1-backend` healthy on 127.0.0.1:9001, `akb1-frontend` rebuilt and healthy on 127.0.0.1:9000 at M5 close
 - **Nine active endpoints registered** under `/api/v1/pnl/`: waterfall, bridge, pfa, pyramid, losses, evm, dso, revenue, lineage
 - **Bridge identity locked:** Phoenix Feb→Mar `gross_margin_pct` reconciles to −340.00 bps exact (price +147.17, volume +61.71, mix −505.65, cost_residual −43.23)
-- **Cross-endpoint identities pinned (M4):** 55 reconciliation tests across two programmes (Phoenix, Atlas) covering revenue↔dso↔waterfall, lineage↔primary endpoint, DSO internal, bridge driver-sum identity, losses attribution, EVM internal, pyramid weight normalisation, PFA gross-actual↔waterfall gross
-- **Branch state:** `feat/tab-12-pnl-cockpit-v5.7` is four commits ahead of main (M3a, M3b, M3b-memory, M4); no merge to main yet
-- **In flight:** nothing mid-change on disk; working tree has only unrelated Finder duplicate files (`docs/*2.md`, `docs/*2.csv`) that are not part of any milestone
-- **Next milestone:** M5 — frontend scaffold for Tab 12 (`/pnl` route + five section components + ContextRail drill-up). No backend changes expected
+- **Cross-endpoint identities pinned (M4):** 55 reconciliation tests across two programmes (Phoenix, Atlas)
+- **ContextRail (M5):** global component at `frontend/src/components/ContextRail.tsx`, mounted once in `Layout.tsx`, renders Portfolio > Tab > Programme > Metric > Period > Tier as URL-derived segments. Drill-up via clicks, drill-across via Programme and Metric dropdowns, all state lives in query params (programme, metric, from, to, month, tier, scenario_name, portfolio). Old `Breadcrumb.tsx` deleted and all 11 per-page call sites removed. `CustomerIntelligence` migrated from local-state selection to URL state so the rail sees it. Tab 12 (`/pnl`) added to the tab registry (route not yet mounted — that's M6).
+- **Branch state:** `feat/tab-12-pnl-cockpit-v5.7` is now six commits ahead of main (M3a, M3b, M3b-memory, M4, M4-memory-fix, M5); no merge to main yet
+- **In flight:** nothing mid-change on disk; working tree clean except unrelated Finder duplicate files
+- **Next milestone:** M6 — scaffold the `/pnl` route and the five Tab 12 section components (RevenueCards, MarginWaterfall, MarginBridge, PfaTriangle, LossesAttribution, Pyramid with EVM and DSO sub-cards). Backend endpoints already live from M3b.
 
 ---
 

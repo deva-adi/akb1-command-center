@@ -7,7 +7,6 @@ import {
   BookOpen,
   FileDown,
   FileText,
-  Home,
   LayoutDashboard,
   Loader2,
   Package,
@@ -28,7 +27,6 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { Breadcrumb } from "@/components/Breadcrumb";
 import { Card, CardHeader } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import {
@@ -200,13 +198,6 @@ export function Reports() {
 
   return (
     <div className="flex flex-col gap-6">
-      <Breadcrumb
-        items={[
-          { label: "Portfolio", to: "/", icon: <Home className="size-3" aria-hidden="true" /> },
-          { label: "Reports & Exports" },
-        ]}
-      />
-
       <div>
         <h1 className="text-2xl font-semibold text-navy">Reports & Exports</h1>
         <p className="mt-1 text-sm text-navy/70">

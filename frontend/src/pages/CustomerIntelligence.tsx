@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -16,8 +16,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { AlertOctagon, ChevronDown, ChevronUp, Home, Sparkles } from "lucide-react";
-import { Breadcrumb } from "@/components/Breadcrumb";
+import { AlertOctagon, ChevronDown, ChevronUp, Sparkles } from "lucide-react";
 import { ProgrammeFilterBar } from "@/components/ProgrammeFilterBar";
 import { PROGRAMME_CROSS_LINKS } from "@/components/programmeCrossLinks";
 import { Card, CardHeader } from "@/components/ui/Card";
@@ -62,7 +61,6 @@ export function CustomerIntelligence() {
   const programmes = useProgrammes();
   const currency = useCurrency();
 
-  const [activeProgrammeId, setActiveProgrammeId] = useState<number | null>(null);
   const [expandedAction, setExpandedAction] = useState<number | null>(null);
   const [expandedIncident, setExpandedIncident] = useState<number | null>(null);
   const [actionStatusFilter, setActionStatusFilter] = useState<string | null>(null);
@@ -77,19 +75,15 @@ export function CustomerIntelligence() {
     [programmes.data, programmeFilter],
   );
 
-  // Default to the programme from the URL filter, else the first programme.
-  useEffect(() => {
-    if (filteredProgramme) {
-      setActiveProgrammeId(filteredProgramme.id);
-    } else if (!activeProgrammeId && programmes.data && programmes.data.length > 0) {
-      setActiveProgrammeId(programmes.data[0].id);
-    }
-  }, [filteredProgramme, programmes.data, activeProgrammeId]);
-
-  const activeProgramme = useMemo(
-    () => programmes.data?.find((p) => p.id === activeProgrammeId) ?? null,
-    [programmes.data, activeProgrammeId],
-  );
+  // ContextRail makes the URL the single source of truth for programme
+  // selection. When the URL has no programme, fall back to the first
+  // programme so the page has something to render but do not rewrite
+  // the URL — keep /customer with no params a valid shareable state.
+  const activeProgramme = useMemo(() => {
+    if (filteredProgramme) return filteredProgramme;
+    return programmes.data?.[0] ?? null;
+  }, [filteredProgramme, programmes.data]);
+  const activeProgrammeId = activeProgramme?.id ?? null;
 
   const satisfaction = useQuery({
     queryKey: ["satisfaction", activeProgrammeId],
@@ -125,16 +119,12 @@ export function CustomerIntelligence() {
   });
 
   const handleProgrammeChange = (next: { id: number } | null) => {
-    setActiveProgrammeId(next?.id ?? null);
     const params = new URLSearchParams(searchParams);
     if (next) {
       const code =
         programmes.data?.find((p) => p.id === next.id)?.code ?? "";
-      if (code) {
-        params.set("programme", code);
-      } else {
-        params.delete("programme");
-      }
+      if (code) params.set("programme", code);
+      else params.delete("programme");
     } else {
       params.delete("programme");
     }
@@ -184,18 +174,10 @@ export function CustomerIntelligence() {
     });
   }, [expectations.data]);
 
-  const breadcrumbItems = [
-    { label: "Portfolio", to: "/", icon: <Home className="size-3" aria-hidden="true" /> },
-    { label: "Customer Intelligence", to: filteredProgramme ? "/customer" : undefined },
-    ...(activeProgramme ? [{ label: activeProgramme.name }] : []),
-  ];
-
   const sourceCurrency = activeProgramme?.currency_code ?? "INR";
 
   return (
     <div className="flex flex-col gap-6">
-      <Breadcrumb items={breadcrumbItems} />
-
       <div>
         <h1 className="text-2xl font-semibold text-navy">Customer Intelligence</h1>
         <p className="mt-1 text-sm text-navy/70">
@@ -221,7 +203,7 @@ export function CustomerIntelligence() {
                 <button
                   key={p.id}
                   type="button"
-                  onClick={() => setActiveProgrammeId(p.id)}
+                  onClick={() => handleProgrammeChange({ id: p.id })}
                   className={`rounded-md border px-3 py-2 text-sm transition ${
                     isActive
                       ? "border-navy bg-navy text-white"

@@ -14,8 +14,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { CheckCircle2, ChevronRight, Home, X, XCircle } from "lucide-react";
-import { Breadcrumb } from "@/components/Breadcrumb";
+import { CheckCircle2, ChevronRight, X, XCircle } from "lucide-react";
 import { ProgrammeFilterBar } from "@/components/ProgrammeFilterBar";
 import { PROGRAMME_CROSS_LINKS } from "@/components/programmeCrossLinks";
 import { Card, CardHeader } from "@/components/ui/Card";
@@ -104,16 +103,8 @@ export function VelocityFlow() {
     };
   }, [dual.data]);
 
-  const breadcrumbItems = [
-    { label: "Portfolio", to: "/", icon: <Home className="size-3" aria-hidden="true" /> },
-    { label: "Velocity & Flow", to: filteredProgramme ? "/velocity" : undefined },
-    ...(filteredProgramme ? [{ label: filteredProgramme.name }] : []),
-  ];
-
   return (
     <div className="flex flex-col gap-6">
-      <Breadcrumb items={breadcrumbItems} />
-
       <div>
         <h1 className="text-2xl font-semibold text-navy">Velocity & Flow</h1>
         <p className="mt-1 text-sm text-navy/70">
