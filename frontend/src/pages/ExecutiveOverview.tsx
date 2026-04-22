@@ -190,7 +190,7 @@ export function ExecutiveOverview() {
           <h1 className="text-2xl font-semibold text-navy dark:text-navy-50">Executive Summary</h1>
           <p className="mt-1 text-sm text-navy/70 dark:text-navy-100/70">
             Portfolio snapshot — answers CEO/COO pre-board questions. Data is
-            live from the seeded NovaTech demo (5 programmes × 12 months).
+            live from the seeded demo (NovaTech + Hercules + Bharat Digital Spine — 7 programmes × 12 months).
           </p>
         </div>
         <button type="button" className="btn-primary" onClick={() => navigate("/reports")}>

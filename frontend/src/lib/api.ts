@@ -303,6 +303,33 @@ export async function fetchMilestones(projectId: number): Promise<Milestone[]> {
   return data;
 }
 
+export type PhaseDeliverable = {
+  id: number;
+  phase_id: number;
+  project_id: number | null;
+  title: string;
+  description: string | null;
+  deliverable_type: string | null;
+  owner: string | null;
+  planned_end: string | null;
+  actual_end: string | null;
+  status: string;
+  effort_days_planned: number | null;
+  effort_days_actual: number | null;
+  evidence_link: string | null;
+  notes: string | null;
+};
+
+export async function fetchPhaseDeliverables(
+  projectId: number,
+  phaseId?: number,
+): Promise<PhaseDeliverable[]> {
+  const { data } = await api.get<PhaseDeliverable[]>("/api/v1/phase-deliverables", {
+    params: { project_id: projectId, phase_id: phaseId },
+  });
+  return data;
+}
+
 export type BacklogItem = {
   id: number;
   project_id: number | null;

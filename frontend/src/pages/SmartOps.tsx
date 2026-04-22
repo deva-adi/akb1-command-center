@@ -41,6 +41,7 @@ export function SmartOps() {
   const programmeFilter = searchParams.get("programme");
   const programmes = useProgrammes();
   const [filter, setFilter] = useState<string | null>(null);
+  const [resourceStatusFilter, setResourceStatusFilter] = useState<string | null>(null);
   const [expandedScenario, setExpandedScenario] = useState<number | null>(null);
   const [expandedResource, setExpandedResource] = useState<number | null>(null);
 
@@ -69,13 +70,20 @@ export function SmartOps() {
     );
   }, [scenarios.data, filteredProgramme]);
 
-  const visibleResources = useMemo(() => {
+  // Programme-scoped resources — drives the headline bench count + bench cost.
+  // Kept separate from visibleResources so the status chip doesn't change the
+  // "Y FTE on bench" number shown on the card.
+  const programmeResources = useMemo(() => {
     const all = resources.data ?? [];
     if (!filteredProgramme) return all;
-    return all.filter(
-      (r) => r.current_program_id === filteredProgramme.id,
-    );
+    return all.filter((r) => r.current_program_id === filteredProgramme.id);
   }, [resources.data, filteredProgramme]);
+
+  // Rendered in the resource pool table — respects the status filter chip.
+  const visibleResources = useMemo(() => {
+    if (!resourceStatusFilter) return programmeResources;
+    return programmeResources.filter((r) => r.status === resourceStatusFilter);
+  }, [programmeResources, resourceStatusFilter]);
 
   const activeCount = visibleScenarios.filter((s) => s.status === "Active").length;
   const mitigatingCount = visibleScenarios.filter(
@@ -85,7 +93,7 @@ export function SmartOps() {
     (sum, s) => sum + (s.financial_impact ?? 0),
     0,
   );
-  const bench = visibleResources.filter((r) => r.status === "Bench");
+  const bench = programmeResources.filter((r) => r.status === "Bench");
   const benchCost = bench.reduce(
     (sum, r) => sum + ((r.loaded_cost_annual ?? 0) / 365) * r.bench_days,
     0,
@@ -144,7 +152,10 @@ export function SmartOps() {
           metricId="bench_cost"
           value={currency.format(benchCost, "INR")}
           sub={`${bench.length} FTE on bench`}
-          onClick={() => resourcePoolRef.current?.scrollIntoView({ behavior: 'smooth' })}
+          onClick={() => {
+            setResourceStatusFilter("Bench");
+            resourcePoolRef.current?.scrollIntoView({ behavior: 'smooth' });
+          }}
         />
       </section>
 
@@ -201,8 +212,27 @@ export function SmartOps() {
       <Card>
         <CardHeader
           title="Resource pool"
-          subtitle={`${visibleResources.length} people · ${bench.length} on bench`}
-          action={<Users className="size-4 text-navy/70" aria-hidden="true" />}
+          subtitle={
+            resourceStatusFilter
+              ? `${visibleResources.length} ${resourceStatusFilter.toLowerCase()} of ${programmeResources.length} total · ${bench.length} on bench`
+              : `${visibleResources.length} people · ${bench.length} on bench`
+          }
+          action={
+            <div className="flex items-center gap-2">
+              {resourceStatusFilter ? (
+                <button
+                  type="button"
+                  onClick={() => setResourceStatusFilter(null)}
+                  className="inline-flex items-center gap-1 rounded-full border border-navy/30 bg-navy/5 px-2 py-0.5 text-xs text-navy hover:bg-navy/10"
+                  aria-label={`Clear ${resourceStatusFilter} filter`}
+                >
+                  {resourceStatusFilter} only
+                  <span aria-hidden="true">×</span>
+                </button>
+              ) : null}
+              <Users className="size-4 text-navy/70" aria-hidden="true" />
+            </div>
+          }
         />
         <div className="overflow-x-auto">
           <table className="w-full text-sm">

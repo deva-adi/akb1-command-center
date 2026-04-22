@@ -53,3 +53,29 @@ class ProjectPhase(Base):
     gate_approver: Mapped[str | None] = mapped_column(String)
     gate_date: Mapped[date | None] = mapped_column(Date)
     notes: Mapped[str | None] = mapped_column(Text)
+
+
+class PhaseDeliverable(Base):
+    """Work-item granularity for Waterfall phases.
+
+    Mirrors BacklogItem for Scrum — gives a Waterfall phase a traceable L5
+    breakdown so a PM can reconcile "phase X is 60% complete" to the specific
+    deliverables that are Completed / In Progress / Blocked.
+    """
+
+    __tablename__ = "phase_deliverables"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    phase_id: Mapped[int] = mapped_column(ForeignKey("project_phases.id"), nullable=False)
+    project_id: Mapped[int | None] = mapped_column(ForeignKey("projects.id"))
+    title: Mapped[str] = mapped_column(String, nullable=False)
+    description: Mapped[str | None] = mapped_column(Text)
+    deliverable_type: Mapped[str | None] = mapped_column(String)  # doc | artefact | sign-off | build | review
+    owner: Mapped[str | None] = mapped_column(String)
+    planned_end: Mapped[date | None] = mapped_column(Date)
+    actual_end: Mapped[date | None] = mapped_column(Date)
+    status: Mapped[str] = mapped_column(String, default="Pending")  # Pending | In Progress | Completed | Blocked
+    effort_days_planned: Mapped[float | None] = mapped_column(Numeric(6, 2))
+    effort_days_actual: Mapped[float | None] = mapped_column(Numeric(6, 2))
+    evidence_link: Mapped[str | None] = mapped_column(Text)
+    notes: Mapped[str | None] = mapped_column(Text)

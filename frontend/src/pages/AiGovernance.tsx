@@ -56,6 +56,8 @@ export function AiGovernance() {
   const programmes = useProgrammes();
   const [expandedOverride, setExpandedOverride] = useState<number | null>(null);
   const [selectedTool, setSelectedTool] = useState<number | null>(null);
+  const [overrideTypeFilter, setOverrideTypeFilter] = useState<string | null>(null);
+  const [overrideOutcomeFilter, setOverrideOutcomeFilter] = useState<string | null>(null);
   const toolCatalogueRef = useRef<HTMLDivElement>(null);
 
   const filteredProgramme = useMemo(
@@ -423,14 +425,69 @@ export function AiGovernance() {
       <Card>
         <CardHeader
           title="Override log"
-          subtitle="Every human override of an AI suggestion captured with rationale"
-          action={<AlertOctagon className="size-4 text-danger-600" aria-hidden="true" />}
+          subtitle={(() => {
+            const total = overrides.data?.length ?? 0;
+            const filtered = (overrides.data ?? []).filter(
+              (o) =>
+                (!overrideTypeFilter || o.override_type === overrideTypeFilter) &&
+                (!overrideOutcomeFilter || o.outcome === overrideOutcomeFilter),
+            ).length;
+            if (!overrideTypeFilter && !overrideOutcomeFilter) {
+              return "Every human override of an AI suggestion captured with rationale";
+            }
+            return `${filtered} of ${total} — filter active. Click a chip again to clear.`;
+          })()}
+          action={
+            <div className="flex flex-wrap items-center gap-1">
+              {(() => {
+                const types = [...new Set((overrides.data ?? []).map((o) => o.override_type).filter((v): v is string => !!v))].sort();
+                const outcomes = [...new Set((overrides.data ?? []).map((o) => o.outcome).filter((v): v is string => !!v))].sort();
+                return (
+                  <>
+                    {types.map((t) => (
+                      <button
+                        key={`type-${t}`}
+                        type="button"
+                        onClick={() => setOverrideTypeFilter(overrideTypeFilter === t ? null : t)}
+                        className={`rounded-full px-2 py-0.5 text-[10px] transition ${
+                          overrideTypeFilter === t ? "bg-navy text-white" : "bg-ice-50 text-navy hover:bg-ice-100"
+                        }`}
+                        title={`Filter to ${t} overrides`}
+                      >
+                        {t}
+                      </button>
+                    ))}
+                    {outcomes.map((o) => (
+                      <button
+                        key={`outcome-${o}`}
+                        type="button"
+                        onClick={() => setOverrideOutcomeFilter(overrideOutcomeFilter === o ? null : o)}
+                        className={`rounded-full px-2 py-0.5 text-[10px] transition ${
+                          overrideOutcomeFilter === o ? "bg-amber-500 text-white" : "bg-amber-50 text-amber-800 hover:bg-amber-100"
+                        }`}
+                        title={`Filter to '${o}' outcome`}
+                      >
+                        {o}
+                      </button>
+                    ))}
+                    <AlertOctagon className="size-4 text-danger-600" aria-hidden="true" />
+                  </>
+                );
+              })()}
+            </div>
+          }
         />
         {(overrides.data ?? []).length === 0 ? (
           <p className="text-sm text-navy/70">No overrides in the current scope.</p>
         ) : (
           <ul className="flex flex-col gap-2 text-sm">
-            {(overrides.data ?? []).map((o) => {
+            {(overrides.data ?? [])
+              .filter(
+                (o) =>
+                  (!overrideTypeFilter || o.override_type === overrideTypeFilter) &&
+                  (!overrideOutcomeFilter || o.outcome === overrideOutcomeFilter),
+              )
+              .map((o) => {
               const programmeName =
                 o.program_id !== null
                   ? programmeByName.get(o.program_id)?.code ?? "—"

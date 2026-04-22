@@ -1,7 +1,7 @@
 # AKB1 Command Center — User Guide
 
-**Version:** 5.5.4 | **Audience:** CTO, Associate Director, Delivery Lead, CFO, Account Director
-**Last Updated:** 2026-04-21 | **Author:** Adi Kompalli
+**Version:** 5.6 | **Audience:** CTO, Associate Director, Delivery Lead, CFO, Account Director
+**Last Updated:** 2026-04-22 | **Author:** Adi Kompalli
 
 ---
 
@@ -224,7 +224,7 @@ Enterprise delivery organisations lose margin in ways that are rarely visible un
 
 - **Frontend:** React 18 + Vite + Tailwind CSS + shadcn/ui, served on port 9000
 - **Backend:** FastAPI (Python 3.12) + SQLAlchemy 2.0, served on port 9001
-- **Database:** SQLite WAL mode, 44 tables, volume-mounted at `/data/akb1.db`
+- **Database:** SQLite WAL mode, 46 tables (v5.6 added `phase_deliverables`), volume-mounted at `/data/akb1.db`
 - **Deployment:** Docker Compose, non-root containers, read-only filesystem, localhost-bound ports
 - **Charts:** ECharts (interactive, clickable, drill-down capable)
 
@@ -576,6 +576,34 @@ These patterns work consistently across all tabs:
 | Cross-tab navigation | Click a MetricCard, accordion row, or expanded section nav chip | Navigates to the related tab pre-filtered to `?programme=CODE` |
 | L5 row expand | Click any work item row in a FlowDrillPanel or SprintDrillPanel | Row expands inline showing all item fields; click again to collapse |
 | Expanded section links | Expand any phase, milestone, scenario, CR, or audit row | Bottom of expanded section shows "Open in: Tab X \| Tab Y" chips |
+
+### v5.6 — Drill-Fidelity Audit + Bharat Programme (8 fixes + new table + new programme)
+
+**New in v5.6** (drill-fidelity principle — every card value must reconcile to the rows that compose it):
+
+**Bug fixes H1–H3** (card value drilled to an unfiltered or mismatched list):
+- **H1 · Kanban top-strip drill pre-filter**: Throughput / WIP / Cycle p50 / Blocked summary cards opened the week panel but didn't select the clicked metric. Now they pre-select the metric cell and apply its formula filter (Throughput → completed items, WIP → in-progress, Cycle → completed, Blocked → in-progress). Wired via a new `initialMetric` prop on the FlowDrillPanel.
+- **H2 · Kanban Blocked card honest data note**: Blocked time is a weekly aggregate — per-item attribution isn't in `backlog_items`. The drill now shows an amber Data-note banner explaining the list is a proxy (in-progress items) and individual `rework_hours` won't sum to the card value. No fake column; no silent mismatch.
+- **H3 · SmartOps Bench-cost card filter**: Clicking "Bench cost ₹X" scrolled to the resource pool but showed every resource. Now sets `resourceStatusFilter="Bench"` and shows a clearable filter pill in the pool header. `programmeResources` (drives bench count on card) is kept separate from `visibleResources` (respects chip) so the headline number stays stable when the chip toggles.
+
+**Gap closures H4–H6 + H8** (cards / rows that cross-navigated without carrying context):
+- **H4 · AI Governance override log filter chips**: Added per-override-type and per-outcome filter chips in the card header. Subtitle reports filtered count. Addresses "I can see 10 overrides but can't slice them by type or outcome".
+- **H5 · Customer Intelligence filter chips**: Action items gain status + priority chips; SLA incident ledger gains priority + breach/met chips. Both sections show filtered count in the subtitle.
+- **H6 · Risk Audit top cards pre-filter**: The 4 top KPI cards now actually pre-filter the register. Open-risks toggles an `__open__` status filter; Risk exposure toggles expected-loss ranking. Clearable filter banner in the register header summarises active filters.
+- **H8 · Risk Audit compliance row programme context**: Compliance-scorecard rows cross-navigated to AI tab without the programme filter. Now they carry `?programme=` when a programme is active.
+
+**H7 · Waterfall L5 data-model expansion** (closes the only remaining L5 gap):
+- New `phase_deliverables` table (#46) — deliverable-level records per Waterfall phase with status (Pending / In Progress / Completed / Blocked), owner, planned/actual dates, planned/actual effort days, evidence link, and notes.
+- New API endpoint `/api/v1/phase-deliverables?project_id=X&phase_id=Y`.
+- Inside each expanded Waterfall phase, users now see an L5 deliverables table with status filter chips and a **reconcile banner** that compares the phase header's `percent_complete` against both count-based (items completed / total items) and effort-weighted (completed effort days / total planned effort days) completion. The banner flags mismatches only when BOTH views disagree with the header by more than 10 points — acknowledging that real-world `percent_complete` is usually effort-weighted, not count-based.
+- TTN-STORE (NovaTech's Waterfall project) seeded with 24 deliverables across 6 phases.
+
+**New programme — Bharat Digital Spine (BHARAT)**:
+- Indian-themed end-to-end demo programme added to exercise every tab with fresh data.
+- Client: Ministry of Digital Infrastructure · BAC ₹12.5M · 28 people · INR.
+- Two projects: `BHARAT-UPI` (Waterfall, UPI 2.0 core modernisation, Light AI — 6 phases × 22 deliverables) and `BHARAT-CITIZEN` (Scrum, Swayam citizen mobile app, Heavy AI — 8 sprints × 53 backlog items).
+- Seeded across every supporting table: 24 EVM snapshots, 7 milestones, 7 risks, 6 customer-satisfaction months, 7 expectation dimensions, 6 customer actions, 3 SLA incidents, 4 commercial scenarios, 4 loss categories, 4 rate-card rows, 3 change requests, 8 dual-velocity rows, 3 blend-rule gates, 3 AI tool assignments, 31 AI usage rows, 3 trust scores, 5 override-log entries, 8 SDLC metrics, 8 AI code metrics.
+- **Every BHARAT-CITIZEN sprint card reconciles exactly** to the filtered backlog items (planned / completed / AI-assisted) — Adi's "click 120, see 120" rule is provably correct against this seed.
 
 ### v5.5.4 — Accessibility + Dead-End Fix (2 fixes)
 
@@ -1514,8 +1542,9 @@ In most dashboards, numbers are black boxes. A CPI of 0.87 means nothing to a st
 
 ---
 
-**AKB1 Command Center v5.5.4**
+**AKB1 Command Center v5.6**
 **Maintained by:** Adi Kompalli | deva.adi@gmail.com
+**New in v5.6:** Drill-fidelity audit pass — 8 fixes (H1–H8) + new `phase_deliverables` L5 table (46 tables total) + new Indian-themed BHARAT programme seeded end-to-end with exact click-to-slice reconciliation.
 **New in v5.5.4:** 2 fixes — MarginEvm waterfall row keyboard dead-end (BUG-G1) and CR "Open in" buttons fallback navigation (BUG-G2).
 **New in v5.5.3:** Accessibility fix — AI Governance trust badge buttons with null programme now have tabIndex={-1} so keyboard Tab skips them.
 **New in v5.5.2:** 6 additional drill-down fixes — EVM strip, sprint drill panel, Waterfall button-inside-button fix, VelocityFlow fallback, RiskAudit programme context.

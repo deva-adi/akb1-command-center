@@ -48,6 +48,9 @@ export function RiskAudit() {
   const [tableFilter, setTableFilter] = useState<string | null>(null);
   const [expandedRisk, setExpandedRisk] = useState<number | null>(null);
   const [expandedAudit, setExpandedAudit] = useState<number | null>(null);
+  const [riskStatusFilter, setRiskStatusFilter] = useState<string | null>(null);
+  const [riskSeverityFilter, setRiskSeverityFilter] = useState<string | null>(null);
+  const [sortByExpectedLoss, setSortByExpectedLoss] = useState(false);
   const riskTableRef = useRef<HTMLDivElement>(null);
   const auditTrailRef = useRef<HTMLDivElement>(null);
   const programmes = useProgrammes();
@@ -112,11 +115,40 @@ export function RiskAudit() {
     }));
   }, [governance.data]);
 
-  const visibleRisks = useMemo(() => {
+  // Programme-scoped risk set — drives the "Open risks" count and exposure card.
+  // This is independent of the status/severity chips so those card values stay
+  // stable when the user toggles a chip.
+  const programmeRisks = useMemo(() => {
     const all = risks.data ?? [];
     if (!filteredProgramme) return all;
     return all.filter((r) => r.program_id === filteredProgramme.id);
   }, [risks.data, filteredProgramme]);
+
+  const openRiskCount = useMemo(
+    () => programmeRisks.filter((r) => (r.status ?? "").toLowerCase() !== "closed" && (r.status ?? "").toLowerCase() !== "mitigated").length,
+    [programmeRisks],
+  );
+
+  const visibleRisks = useMemo(() => {
+    let rows = programmeRisks;
+    if (riskStatusFilter === "__open__") {
+      rows = rows.filter((r) => {
+        const s = (r.status ?? "").toLowerCase();
+        return s !== "closed" && s !== "mitigated";
+      });
+    } else if (riskStatusFilter) {
+      rows = rows.filter((r) => r.status === riskStatusFilter);
+    }
+    if (riskSeverityFilter) {
+      rows = rows.filter((r) => r.severity === riskSeverityFilter);
+    }
+    if (sortByExpectedLoss) {
+      rows = [...rows].sort((a, b) =>
+        ((b.impact ?? 0) * (b.probability ?? 0)) - ((a.impact ?? 0) * (a.probability ?? 0)),
+      );
+    }
+    return rows;
+  }, [programmeRisks, riskStatusFilter, riskSeverityFilter, sortByExpectedLoss]);
 
   return (
     <div className="flex flex-col gap-6">
@@ -141,30 +173,48 @@ export function RiskAudit() {
       </div>
 
       <section className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        <MetricCard metricId="open_risks" value={`${visibleRisks.length}`} onClick={() => riskTableRef.current?.scrollIntoView({ behavior: 'smooth' })} />
+        <MetricCard
+          metricId="open_risks"
+          value={`${openRiskCount}`}
+          sub={`${programmeRisks.length} total`}
+          onClick={() => {
+            setRiskStatusFilter(riskStatusFilter === "__open__" ? null : "__open__");
+            setRiskSeverityFilter(null);
+            setSortByExpectedLoss(false);
+            riskTableRef.current?.scrollIntoView({ behavior: 'smooth' });
+          }}
+        />
         <MetricCard
           label="Controls tracked"
           value={`${governance.data?.length ?? 0}`}
           sub={`${(governance.data ?? []).filter((g) => g.config_type === "policy").length} policies · ${(governance.data ?? []).filter((g) => g.config_type === "control").length} controls`}
-          onClick={() => navigate('/ai')}
+          onClick={() => navigate(filteredProgramme ? `/ai?programme=${filteredProgramme.code}` : '/ai')}
         />
         <MetricCard
           label="Audit entries"
           value={`${audit.data?.length ?? 0}`}
           sub={`${auditTables.length} tables tracked`}
-          onClick={() => auditTrailRef.current?.scrollIntoView({ behavior: 'smooth' })}
+          onClick={() => {
+            setTableFilter(null);
+            auditTrailRef.current?.scrollIntoView({ behavior: 'smooth' });
+          }}
         />
         <MetricCard
           metricId="risk_exposure"
           value={currency.format(
-            visibleRisks.reduce(
+            programmeRisks.reduce(
               (sum, r) => sum + (r.impact ?? 0) * (r.probability ?? 0),
               0,
             ),
             "INR",
           )}
-          sub="Σ impact × probability"
-          onClick={() => navigate('/')}
+          sub="Σ impact × probability · click to rank"
+          onClick={() => {
+            setSortByExpectedLoss(!sortByExpectedLoss);
+            setRiskStatusFilter(null);
+            setRiskSeverityFilter(null);
+            riskTableRef.current?.scrollIntoView({ behavior: 'smooth' });
+          }}
         />
       </section>
 
@@ -172,7 +222,32 @@ export function RiskAudit() {
       <Card>
         <CardHeader
           title="Risk register"
-          subtitle="All open and mitigated risks across the portfolio"
+          subtitle={(() => {
+            const parts: string[] = [];
+            if (riskStatusFilter === "__open__") parts.push("open only");
+            else if (riskStatusFilter) parts.push(`status = ${riskStatusFilter}`);
+            if (riskSeverityFilter) parts.push(`severity = ${riskSeverityFilter}`);
+            if (sortByExpectedLoss) parts.push("ranked by expected loss");
+            if (parts.length === 0) return "All risks across the current scope";
+            return `${visibleRisks.length} of ${programmeRisks.length} — ${parts.join(" · ")}`;
+          })()}
+          action={
+            (riskStatusFilter || riskSeverityFilter || sortByExpectedLoss) ? (
+              <button
+                type="button"
+                onClick={() => {
+                  setRiskStatusFilter(null);
+                  setRiskSeverityFilter(null);
+                  setSortByExpectedLoss(false);
+                }}
+                className="inline-flex items-center gap-1 rounded-full border border-navy/30 bg-navy/5 px-2 py-0.5 text-xs text-navy hover:bg-navy/10"
+                aria-label="Clear all risk filters"
+              >
+                Clear filters
+                <span aria-hidden="true">×</span>
+              </button>
+            ) : null
+          }
         />
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
@@ -352,8 +427,8 @@ export function RiskAudit() {
                   key={row.control}
                   role="button"
                   tabIndex={0}
-                  onClick={() => navigate('/ai')}
-                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navigate('/ai'); } }}
+                  onClick={() => navigate(filteredProgramme ? `/ai?programme=${filteredProgramme.code}` : '/ai')}
+                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navigate(filteredProgramme ? `/ai?programme=${filteredProgramme.code}` : '/ai'); } }}
                   className="flex items-center justify-between gap-3 rounded border border-ice-100 bg-white px-3 py-2 cursor-pointer hover:bg-ice-50 transition"
                 >
                   <p className="font-medium">{row.control}</p>

@@ -54,7 +54,7 @@ for i in $(seq 1 30); do
         echo "  API Docs:   http://localhost:9001/docs"
         echo "  Health:     http://localhost:9001/health"
         echo ""
-        echo "Demo data has been pre-loaded with 5 programmes."
+        echo "Demo data has been pre-loaded with 7 programmes (5 NovaTech + Hercules + Bharat Digital Spine)."
         echo "To stop: docker-compose down"
         echo "To reset demo data: ./scripts/seed.sh"
         exit 0

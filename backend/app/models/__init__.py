@@ -37,7 +37,7 @@ from app.models.intelligence import (
     SlaIncident,
     UtilizationDetail,
 )
-from app.models.methodology import FlowMetrics, ProjectPhase
+from app.models.methodology import FlowMetrics, PhaseDeliverable, ProjectPhase
 from app.models.smart_ops import ResourcePool, ScenarioExecution
 from app.models.system import (
     AppSetting,
@@ -99,12 +99,13 @@ __all__ = [
     "CurrencyRate",
     "DataImportSnapshot",
     "SchemaVersion",
-    # Methodology (2)
+    # Methodology (3)
     "FlowMetrics",
     "ProjectPhase",
+    "PhaseDeliverable",
     # Auth (2)
     "User",
     "UserRole",
 ]
 
-TABLE_COUNT = 45
+TABLE_COUNT = 46

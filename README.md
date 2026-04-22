@@ -1,4 +1,4 @@
-# AKB1 Command Center v5.5.4
+# AKB1 Command Center v5.6
 
 **The open-source delivery intelligence platform that answers every question your CTO, CIO, or CEO would ask — driven entirely by your data.**
 
@@ -31,7 +31,7 @@ A Docker-containerized portfolio delivery dashboard that provides:
 - **Dark / Light Mode Toggle:** Sun/Moon button in the header; theme persisted to localStorage and applied instantly across all 11 tabs via Tailwind CSS `dark:` class strategy
 - **Universal Formula Reveal (v5.4):** Every metric, KPI tile, and graph card now has an Eye icon — click it to instantly see the formula, what it measures, how to interpret it, and traffic-light thresholds. 55+ metric definitions across 11 domains. No more black-box numbers.
 
-Ships with realistic demo data for **6 programmes** × 12 months (NovaTech Solutions narrative, including **Hercules** workload consolidation programme added in v5.3). Bring your own data via guided onboarding wizard, Excel (.xlsx) or CSV upload with auto-mapping, manual entry, or REST API. Every import creates an instant rollback snapshot. **First real data in 15 minutes.**
+Ships with realistic demo data for **7 programmes** × 12 months (NovaTech Solutions narrative + **Hercules** workload consolidation added in v5.3 + **Bharat Digital Spine** UPI 2.0 modernisation added in v5.6). Bring your own data via guided onboarding wizard, Excel (.xlsx) or CSV upload with auto-mapping, manual entry, or REST API. Every import creates an instant rollback snapshot. **First real data in 15 minutes.**
 
 ---
 
@@ -474,7 +474,7 @@ akb1-command-center/
 ├── docker-compose.proxy.yml     # Caddy reverse proxy overlay (Tier 1 HTTPS + Basic Auth)
 ├── Caddyfile                    # Caddy config (TLS, security headers, auth)
 ├── docs/
-│   ├── ARCHITECTURE.md          # Master design document (v5.2, 44 tables, 45 formulas)
+│   ├── ARCHITECTURE.md          # Master design document (v5.6, 46 tables, 45 formulas)
 │   ├── SECURITY_GUIDE.md        # Comprehensive security guide (4-tier auth, OWASP)
 │   ├── DATA_INGESTION.md        # Complete ingestion guide (xlsx + CSV)
 │   ├── FORMULAS.md              # 45 formulas with 2 worked examples each
@@ -540,7 +540,7 @@ akb1-command-center/
 
 | Document | What It Covers |
 |----------|---------------|
-| [`ARCHITECTURE.md`](docs/ARCHITECTURE.md) | Complete system design — 11 tabs, 44 tables, 45 formulas, 58 questions, SDLC framework compatibility, multi-currency, security architecture |
+| [`ARCHITECTURE.md`](docs/ARCHITECTURE.md) | Complete system design — 11 tabs, 46 tables, 45 formulas, 58 questions, SDLC framework compatibility, multi-currency, security architecture |
 | [`SECURITY_GUIDE.md`](docs/SECURITY_GUIDE.md) | 4-tier auth strategy, OWASP Top 10 mapping, container hardening, HTTPS, API keys, RBAC, rate limiting |
 | [`WIREFRAMES.md`](docs/WIREFRAMES.md) | ASCII wireframes for every tab with metric dictionaries — evaluate before you install |
 | [`TECH_STACK_BENCHMARK.md`](docs/TECH_STACK_BENCHMARK.md) | Layer-by-layer benchmark against 18 open-source apps (Plausible, Grafana, Metabase, Focalboard) |
@@ -681,6 +681,7 @@ MIT License. Use it, fork it, adapt it. Attribution appreciated but not required
 
 | Version | Highlights |
 |---------|-----------|
+| **v5.6** | Drill-fidelity audit pass (8 fixes, H1–H8) + new **Bharat Digital Spine** Indian-themed programme + new `phase_deliverables` L5 table (46 tables total). H1–H3 (bugs): Kanban top-strip cards now pre-filter their drill panel to the clicked metric (Throughput→completed, WIP→in-progress, Cycle→completed, Blocked→in-progress + honest data-note banner); SmartOps Bench-cost card pre-filters the resource pool to `status=Bench` with clearable filter pill. H4–H6 + H8 (gaps): AI Governance override log gets per-type + per-outcome filter chips; Customer Intelligence action-items + SLA incident ledger gain status/priority/breach filter chips; Risk Audit top-4 KPI cards pre-filter the register (Open-risks toggles open-only, Risk exposure toggles expected-loss ranking) with clearable filter banner; compliance rows carry `?programme=` to AI tab. H7 (data-model): Waterfall phases now expose an L5 deliverable table with status filter chips and effort-weighted reconcile banner — closes the only remaining L5 gap. BHARAT adds 2 projects (UPI 2.0 Waterfall + Swayam Citizen Scrum), seeded end-to-end with exact Adi-rule reconciliation: every sprint's planned / completed / AI card now sums exactly to the filtered backlog items. 165+ test cases, 57 total bugs fixed. |
 | **v5.5.4** | 2 fixes in Margin & EVM: waterfall drill table rows now have `tabIndex={prog ? 0 : -1}` (BUG-G1 keyboard dead-end); CR "Open in" buttons always navigate with fallback (BUG-G2). 153 test cases, 49 total bugs fixed. |
 | **v5.5.3** | Accessibility fix: AI Governance trust composite badge buttons with null programme now have `tabIndex={-1}` — keyboard Tab skips no-op buttons. 151 test cases, 47 total bugs fixed. |
 | **v5.5.2** | 6 additional drill-down fixes: EVM strip 3 dead cards; SprintDrillPanel burndown/shortfall; WaterfallView button-inside-button HTML fix; VelocityFlow blend-rule fallback; RiskAudit scorecard preserves `?programme=CODE`. 150 test cases, 46 total bugs fixed. |

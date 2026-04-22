@@ -971,6 +971,61 @@ class ProjectPhaseSeed(TypedDict):
     notes: str | None
 
 
+class PhaseDeliverableSeed(TypedDict):
+    project_code: str
+    phase_name: str  # Key back to the phase via (project_code, phase_name)
+    title: str
+    description: str | None
+    deliverable_type: str  # doc | artefact | sign-off | build | review
+    owner: str | None
+    planned_end: date | None
+    actual_end: date | None
+    status: str  # Pending | In Progress | Completed | Blocked
+    effort_days_planned: float | None
+    effort_days_actual: float | None
+    evidence_link: str | None
+    notes: str | None
+
+
+PHASE_DELIVERABLES: list[PhaseDeliverableSeed] = [
+    # ── TTN-STORE Phase 1 · Requirements (100% complete) ──
+    {"project_code": "TTN-STORE", "phase_name": "Requirements", "title": "Business requirements document v1.0", "description": "Functional + non-functional requirements signed off by client", "deliverable_type": "doc", "owner": "Kavya Nair", "planned_end": date(2025, 10, 20), "actual_end": date(2025, 10, 24), "status": "Completed", "effort_days_planned": 12, "effort_days_actual": 13.5, "evidence_link": "confluence://TTN/BRD-v1", "notes": "2 rounds of review; client SPOC accepted on 24-Oct"},
+    {"project_code": "TTN-STORE", "phase_name": "Requirements", "title": "User personas and journey maps", "description": "6 primary personas covering shopper, admin, store ops, finance", "deliverable_type": "artefact", "owner": "Divya Menon", "planned_end": date(2025, 10, 25), "actual_end": date(2025, 10, 27), "status": "Completed", "effort_days_planned": 6, "effort_days_actual": 7, "evidence_link": "figma://personas", "notes": None},
+    {"project_code": "TTN-STORE", "phase_name": "Requirements", "title": "Scope boundary sign-off", "description": "Written confirmation of in-scope vs out-of-scope integrations", "deliverable_type": "sign-off", "owner": "J. Wilson", "planned_end": date(2025, 11, 15), "actual_end": date(2025, 11, 20), "status": "Completed", "effort_days_planned": 2, "effort_days_actual": 2, "evidence_link": "email://client/scope-signoff-20251120", "notes": "5-day slip — client legal review extended"},
+    {"project_code": "TTN-STORE", "phase_name": "Requirements", "title": "Gate review — Requirements → Design", "description": "Phase-gate review with SteerCo", "deliverable_type": "review", "owner": "J. Wilson", "planned_end": date(2025, 11, 15), "actual_end": date(2025, 11, 22), "status": "Completed", "effort_days_planned": 1, "effort_days_actual": 1, "evidence_link": "minutes://gate-review-req", "notes": "Passed with minor actions"},
+
+    # ── TTN-STORE Phase 2 · Design (100% complete) ──
+    {"project_code": "TTN-STORE", "phase_name": "Design", "title": "High-level architecture document", "description": "Next.js + GraphQL + Shopify architecture with failover model", "deliverable_type": "doc", "owner": "Raj Kumar", "planned_end": date(2025, 12, 10), "actual_end": date(2025, 12, 15), "status": "Completed", "effort_days_planned": 10, "effort_days_actual": 11, "evidence_link": "confluence://TTN/HLD", "notes": None},
+    {"project_code": "TTN-STORE", "phase_name": "Design", "title": "Data model and schema", "description": "Product, order, customer, inventory entity model", "deliverable_type": "artefact", "owner": "Meera Iyer", "planned_end": date(2025, 12, 20), "actual_end": date(2025, 12, 22), "status": "Completed", "effort_days_planned": 8, "effort_days_actual": 9, "evidence_link": "dbdiagram://ttn-data-model", "notes": None},
+    {"project_code": "TTN-STORE", "phase_name": "Design", "title": "UI wireframes — desktop + mobile", "description": "22 screens across shop, cart, checkout, admin", "deliverable_type": "artefact", "owner": "Divya Menon", "planned_end": date(2026, 1, 10), "actual_end": date(2026, 1, 18), "status": "Completed", "effort_days_planned": 14, "effort_days_actual": 16, "evidence_link": "figma://ttn-wireframes", "notes": "8-day slip covered by parallel dev prep work"},
+    {"project_code": "TTN-STORE", "phase_name": "Design", "title": "Security review — Design phase", "description": "OWASP + client security team review of design artefacts", "deliverable_type": "review", "owner": "Nisha Rao", "planned_end": date(2026, 1, 15), "actual_end": date(2026, 1, 23), "status": "Completed", "effort_days_planned": 3, "effort_days_actual": 4, "evidence_link": "ticket://SEC-REVIEW-214", "notes": "3 items noted for Dev phase"},
+    {"project_code": "TTN-STORE", "phase_name": "Design", "title": "Gate review — Design → Development", "description": "Phase-gate with SteerCo; scope reduction on non-critical integrations agreed", "deliverable_type": "sign-off", "owner": "J. Wilson", "planned_end": date(2026, 1, 15), "actual_end": date(2026, 1, 27), "status": "Completed", "effort_days_planned": 1, "effort_days_actual": 1, "evidence_link": "minutes://gate-review-design", "notes": "Scope trimmed — 2 integrations deferred to v2"},
+
+    # ── TTN-STORE Phase 3 · Development (62% — in flight) ──
+    {"project_code": "TTN-STORE", "phase_name": "Development", "title": "Product catalogue service", "description": "Next.js + GraphQL layer for product browsing", "deliverable_type": "build", "owner": "Kavya Nair", "planned_end": date(2026, 2, 28), "actual_end": date(2026, 3, 5), "status": "Completed", "effort_days_planned": 20, "effort_days_actual": 22, "evidence_link": "pr://ttn-store/142", "notes": None},
+    {"project_code": "TTN-STORE", "phase_name": "Development", "title": "Cart and checkout flow", "description": "Core transactional flow incl. payment gateway integration", "deliverable_type": "build", "owner": "Raj Kumar", "planned_end": date(2026, 3, 25), "actual_end": date(2026, 3, 28), "status": "Completed", "effort_days_planned": 24, "effort_days_actual": 25.5, "evidence_link": "pr://ttn-store/187", "notes": None},
+    {"project_code": "TTN-STORE", "phase_name": "Development", "title": "Admin console", "description": "Inventory + order management console for store ops", "deliverable_type": "build", "owner": "Priya Sharma", "planned_end": date(2026, 4, 15), "actual_end": None, "status": "In Progress", "effort_days_planned": 18, "effort_days_actual": 12, "evidence_link": "pr://ttn-store/201", "notes": "On track"},
+    {"project_code": "TTN-STORE", "phase_name": "Development", "title": "Shopify integration layer", "description": "Two-way sync between Shopify admin and custom storefront", "deliverable_type": "build", "owner": "Kavya Nair", "planned_end": date(2026, 4, 25), "actual_end": None, "status": "In Progress", "effort_days_planned": 16, "effort_days_actual": 8, "evidence_link": "pr://ttn-store/216", "notes": None},
+    {"project_code": "TTN-STORE", "phase_name": "Development", "title": "Performance hardening", "description": "CDN, caching, image optimisation pass", "deliverable_type": "build", "owner": "Nisha Rao", "planned_end": date(2026, 4, 28), "actual_end": None, "status": "Pending", "effort_days_planned": 8, "effort_days_actual": None, "evidence_link": None, "notes": "Blocked on admin console completion"},
+    {"project_code": "TTN-STORE", "phase_name": "Development", "title": "Analytics + observability hook-up", "description": "GA4 + custom events + Grafana SLO dashboards", "deliverable_type": "build", "owner": "Meera Iyer", "planned_end": date(2026, 4, 30), "actual_end": None, "status": "Blocked", "effort_days_planned": 6, "effort_days_actual": None, "evidence_link": None, "notes": "Awaiting client Grafana access — escalated to SteerCo"},
+
+    # ── TTN-STORE Phase 4 · Test (0%) ──
+    {"project_code": "TTN-STORE", "phase_name": "Test", "title": "Test strategy document", "description": "Unit / integration / E2E / perf / security test approach", "deliverable_type": "doc", "owner": "Divya Menon", "planned_end": date(2026, 5, 10), "actual_end": None, "status": "Pending", "effort_days_planned": 4, "effort_days_actual": None, "evidence_link": None, "notes": None},
+    {"project_code": "TTN-STORE", "phase_name": "Test", "title": "Automated test suite", "description": "Playwright-driven E2E suite covering golden paths", "deliverable_type": "build", "owner": "Divya Menon", "planned_end": date(2026, 6, 15), "actual_end": None, "status": "Pending", "effort_days_planned": 20, "effort_days_actual": None, "evidence_link": None, "notes": None},
+    {"project_code": "TTN-STORE", "phase_name": "Test", "title": "Performance + load test report", "description": "Peak-traffic simulation with SLA validation", "deliverable_type": "doc", "owner": "Nisha Rao", "planned_end": date(2026, 6, 25), "actual_end": None, "status": "Pending", "effort_days_planned": 6, "effort_days_actual": None, "evidence_link": None, "notes": None},
+    {"project_code": "TTN-STORE", "phase_name": "Test", "title": "Gate review — Test → UAT", "description": "Entry criteria for UAT", "deliverable_type": "sign-off", "owner": "J. Wilson", "planned_end": date(2026, 6, 30), "actual_end": None, "status": "Pending", "effort_days_planned": 1, "effort_days_actual": None, "evidence_link": None, "notes": None},
+
+    # ── TTN-STORE Phase 5 · UAT (0%) ──
+    {"project_code": "TTN-STORE", "phase_name": "UAT", "title": "UAT script pack", "description": "Business-facing test scripts covering all user journeys", "deliverable_type": "doc", "owner": "Kavya Nair", "planned_end": date(2026, 7, 20), "actual_end": None, "status": "Pending", "effort_days_planned": 6, "effort_days_actual": None, "evidence_link": None, "notes": None},
+    {"project_code": "TTN-STORE", "phase_name": "UAT", "title": "Client UAT sign-off", "description": "Written acceptance from client product owner", "deliverable_type": "sign-off", "owner": "J. Wilson", "planned_end": date(2026, 8, 15), "actual_end": None, "status": "Pending", "effort_days_planned": 2, "effort_days_actual": None, "evidence_link": None, "notes": None},
+
+    # ── TTN-STORE Phase 6 · Deploy (0%) ──
+    {"project_code": "TTN-STORE", "phase_name": "Deploy", "title": "Production deployment runbook", "description": "Blue/green cutover runbook with rollback", "deliverable_type": "doc", "owner": "Nisha Rao", "planned_end": date(2026, 9, 10), "actual_end": None, "status": "Pending", "effort_days_planned": 4, "effort_days_actual": None, "evidence_link": None, "notes": None},
+    {"project_code": "TTN-STORE", "phase_name": "Deploy", "title": "Go-live", "description": "Cutover to production", "deliverable_type": "sign-off", "owner": "J. Wilson", "planned_end": date(2026, 9, 20), "actual_end": None, "status": "Pending", "effort_days_planned": 2, "effort_days_actual": None, "evidence_link": None, "notes": None},
+    {"project_code": "TTN-STORE", "phase_name": "Deploy", "title": "Hypercare closure + handover", "description": "2-week hypercare + knowledge transfer to BAU team", "deliverable_type": "doc", "owner": "Priya Sharma", "planned_end": date(2026, 9, 30), "actual_end": None, "status": "Pending", "effort_days_planned": 6, "effort_days_actual": None, "evidence_link": None, "notes": None},
+]
+
+
 PROJECT_PHASES: list[ProjectPhaseSeed] = [
     {
         "project_code": "TTN-STORE",

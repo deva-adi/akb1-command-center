@@ -65,6 +65,10 @@ export function CustomerIntelligence() {
   const [activeProgrammeId, setActiveProgrammeId] = useState<number | null>(null);
   const [expandedAction, setExpandedAction] = useState<number | null>(null);
   const [expandedIncident, setExpandedIncident] = useState<number | null>(null);
+  const [actionStatusFilter, setActionStatusFilter] = useState<string | null>(null);
+  const [actionPriorityFilter, setActionPriorityFilter] = useState<string | null>(null);
+  const [incidentPriorityFilter, setIncidentPriorityFilter] = useState<string | null>(null);
+  const [incidentBreachFilter, setIncidentBreachFilter] = useState<"breach" | "met" | null>(null);
   const actionItemsRef = useRef<HTMLDivElement>(null);
   const slaIncidentsRef = useRef<HTMLDivElement>(null);
 
@@ -435,14 +439,67 @@ export function CustomerIntelligence() {
       <Card>
         <CardHeader
           title="Action items"
-          subtitle={`${actions.data?.length ?? 0} tracked`}
-          action={<Sparkles className="size-4 text-amber-500" aria-hidden="true" />}
+          subtitle={(() => {
+            const total = actions.data?.length ?? 0;
+            const filtered = (actions.data ?? []).filter(
+              (a) =>
+                (!actionStatusFilter || a.status === actionStatusFilter) &&
+                (!actionPriorityFilter || a.priority === actionPriorityFilter),
+            ).length;
+            if (!actionStatusFilter && !actionPriorityFilter) return `${total} tracked`;
+            return `${filtered} of ${total} — filter active`;
+          })()}
+          action={
+            <div className="flex flex-wrap items-center gap-1">
+              {(() => {
+                const statuses = [...new Set((actions.data ?? []).map((a) => a.status).filter((v): v is string => !!v))].sort();
+                const priorities = [...new Set((actions.data ?? []).map((a) => a.priority).filter((v): v is string => !!v))].sort();
+                return (
+                  <>
+                    {statuses.map((s) => (
+                      <button
+                        key={`st-${s}`}
+                        type="button"
+                        onClick={() => setActionStatusFilter(actionStatusFilter === s ? null : s)}
+                        className={`rounded-full px-2 py-0.5 text-[10px] transition ${
+                          actionStatusFilter === s ? "bg-navy text-white" : "bg-ice-50 text-navy hover:bg-ice-100"
+                        }`}
+                      >
+                        {s}
+                      </button>
+                    ))}
+                    {priorities.map((p) => (
+                      <button
+                        key={`pr-${p}`}
+                        type="button"
+                        onClick={() => setActionPriorityFilter(actionPriorityFilter === p ? null : p)}
+                        className={`rounded-full px-2 py-0.5 text-[10px] transition ${
+                          actionPriorityFilter === p
+                            ? p === "P1" ? "bg-danger-600 text-white" : p === "P2" ? "bg-amber-500 text-white" : "bg-navy/70 text-white"
+                            : "bg-ice-50 text-navy hover:bg-ice-100"
+                        }`}
+                      >
+                        {p}
+                      </button>
+                    ))}
+                    <Sparkles className="size-4 text-amber-500" aria-hidden="true" />
+                  </>
+                );
+              })()}
+            </div>
+          }
         />
         {(actions.data ?? []).length === 0 ? (
           <p className="text-sm text-navy/70">No steering-committee actions recorded.</p>
         ) : (
           <ul className="flex flex-col gap-2 text-sm">
-            {(actions.data ?? []).map((a) => {
+            {(actions.data ?? [])
+              .filter(
+                (a) =>
+                  (!actionStatusFilter || a.status === actionStatusFilter) &&
+                  (!actionPriorityFilter || a.priority === actionPriorityFilter),
+              )
+              .map((a) => {
               const isOpen = expandedAction === a.id;
               return (
                 <li
@@ -522,7 +579,59 @@ export function CustomerIntelligence() {
       <Card>
         <CardHeader
           title="SLA incident ledger"
-          subtitle="Breaches incur penalty amounts — shown in the active base currency"
+          subtitle={(() => {
+            const total = incidents.data?.length ?? 0;
+            const filtered = (incidents.data ?? []).filter(
+              (i) =>
+                (!incidentPriorityFilter || i.priority === incidentPriorityFilter) &&
+                (!incidentBreachFilter || (incidentBreachFilter === "breach" ? i.sla_breached : !i.sla_breached)),
+            ).length;
+            if (!incidentPriorityFilter && !incidentBreachFilter) return "Breaches incur penalty amounts — shown in the active base currency";
+            return `${filtered} of ${total} — filter active`;
+          })()}
+          action={
+            <div className="flex flex-wrap items-center gap-1">
+              {(() => {
+                const priorities = [...new Set((incidents.data ?? []).map((i) => i.priority).filter((v): v is string => !!v))].sort();
+                return (
+                  <>
+                    {priorities.map((p) => (
+                      <button
+                        key={`ip-${p}`}
+                        type="button"
+                        onClick={() => setIncidentPriorityFilter(incidentPriorityFilter === p ? null : p)}
+                        className={`rounded-full px-2 py-0.5 text-[10px] transition ${
+                          incidentPriorityFilter === p
+                            ? p === "P1" ? "bg-danger-600 text-white" : p === "P2" ? "bg-amber-500 text-white" : "bg-navy/70 text-white"
+                            : "bg-ice-50 text-navy hover:bg-ice-100"
+                        }`}
+                      >
+                        {p}
+                      </button>
+                    ))}
+                    <button
+                      type="button"
+                      onClick={() => setIncidentBreachFilter(incidentBreachFilter === "breach" ? null : "breach")}
+                      className={`rounded-full px-2 py-0.5 text-[10px] transition ${
+                        incidentBreachFilter === "breach" ? "bg-danger-600 text-white" : "bg-danger-50 text-danger-700 hover:bg-danger-100"
+                      }`}
+                    >
+                      breach only
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setIncidentBreachFilter(incidentBreachFilter === "met" ? null : "met")}
+                      className={`rounded-full px-2 py-0.5 text-[10px] transition ${
+                        incidentBreachFilter === "met" ? "bg-success-600 text-white" : "bg-success-50 text-success-700 hover:bg-success-100"
+                      }`}
+                    >
+                      met only
+                    </button>
+                  </>
+                );
+              })()}
+            </div>
+          }
         />
         {(incidents.data ?? []).length === 0 ? (
           <p className="text-sm text-navy/70">
@@ -543,7 +652,13 @@ export function CustomerIntelligence() {
                 </tr>
               </thead>
               <tbody>
-                {(incidents.data ?? []).map((i) => {
+                {(incidents.data ?? [])
+                  .filter(
+                    (i) =>
+                      (!incidentPriorityFilter || i.priority === incidentPriorityFilter) &&
+                      (!incidentBreachFilter || (incidentBreachFilter === "breach" ? i.sla_breached : !i.sla_breached)),
+                  )
+                  .map((i) => {
                   const isOpen = expandedIncident === i.id;
                   return (
                     <Fragment key={i.id}>

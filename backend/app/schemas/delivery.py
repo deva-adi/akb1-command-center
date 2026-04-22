@@ -112,3 +112,22 @@ class MilestoneOut(BaseModel):
     dependencies: str | None = None
     owner: str | None = None
     notes: str | None = None
+
+
+class PhaseDeliverableOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    phase_id: int
+    project_id: int | None = None
+    title: str
+    description: str | None = None
+    deliverable_type: str | None = None
+    owner: str | None = None
+    planned_end: date | None = None
+    actual_end: date | None = None
+    status: str
+    effort_days_planned: float | None = None
+    effort_days_actual: float | None = None
+    evidence_link: str | None = None
+    notes: str | None = None

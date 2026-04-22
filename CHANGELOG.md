@@ -2,6 +2,67 @@
 
 All notable changes to **AKB1 Command Center** are recorded here. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning is calendar-style because this is a solo-maintained portfolio build, not a library.
 
+## 2026-04-22 — v5.6 (Drill-fidelity audit + BHARAT programme)
+
+### Principle enforced
+Every card value must reconcile to the rows that compose it. Clicking "120 completed points" must show stories whose `story_points` sum to exactly 120 — no more, no less. H1–H8 below catalogue the eight places where that principle was violated in v5.5.4 and are now fixed.
+
+### Added — new data model
+- `phase_deliverables` table (#46) — deliverable-level records per Waterfall phase. Columns: `phase_id`, `project_id`, `title`, `description`, `deliverable_type` (doc | artefact | sign-off | build | review), `owner`, `planned_end`, `actual_end`, `status` (Pending | In Progress | Completed | Blocked), `effort_days_planned`, `effort_days_actual`, `evidence_link`, `notes`.
+- `GET /api/v1/phase-deliverables?project_id=X&phase_id=Y` — new read endpoint with phase-grouped ordering.
+- `PhaseDeliverable` SQLAlchemy model + `PhaseDeliverableOut` Pydantic schema.
+
+### Added — new programme seed
+- **Bharat Digital Spine (BHARAT)** — Indian-themed demo programme added to exercise every tab end-to-end.
+  - Client: Ministry of Digital Infrastructure · BAC ₹12.5M · 28 people · INR.
+  - `BHARAT-UPI` (Waterfall, Light AI) — UPI 2.0 core modernisation · 6 phases × 22 deliverables.
+  - `BHARAT-CITIZEN` (Scrum, Heavy AI) — Swayam citizen mobile app · 8 sprints × 53 backlog items.
+  - Fully seeded: 24 EVM snapshots, 7 milestones, 7 risks, 6 CSAT months, 7 expectation dimensions, 6 actions, 3 SLA incidents, 4 commercial scenarios, 4 loss categories, 4 rate cards, 3 CRs, 8 dual velocity rows, 3 blend rules, 3 AI assignments, 31 AI usage rows, 3 trust scores, 5 overrides, 8 SDLC rows, 8 AI code metrics.
+  - Every sprint's planned / completed / AI-assisted card value equals exactly the sum of filtered backlog items (Adi's 120/140 rule verified).
+
+### Fixed — H1 (BUG)
+Kanban top-strip cards (Throughput, WIP, Cycle p50, Blocked) opened the week drill panel unfiltered when a specific metric was clicked. Now they pre-select the metric cell and apply its formula filter via a new `initialMetric` prop on `FlowDrillPanel`. A `useEffect` re-syncs `activeMetric` when `initialMetric` changes so clicking a different top-card while the panel is open retargets cleanly.
+
+### Fixed — H2 (BUG)
+Kanban Blocked-time card drilled to items whose `rework_hours` sum does not equal the card value, because per-item `blocked_hours` is not captured in `backlog_items`. Added an amber **Data note** banner (via new `dataNote` field on the FORMULAS entry) that surfaces the gap honestly: "Blocked time is stored as a weekly aggregate — per-item blocker attribution isn't captured in backlog_items today, so the list below shows in-progress items as the nearest proxy." No fake column, no silent mismatch.
+
+### Fixed — H3 (BUG)
+SmartOps "Bench cost ₹X (Y FTE on bench)" card scrolled to the resource pool but didn't filter it. Now sets `resourceStatusFilter="Bench"` and displays a clearable filter pill in the resource-pool header. Separated `programmeResources` (drives bench count on card) from `visibleResources` (respects the chip) so the headline number stays stable when the chip toggles.
+
+### Fixed — H4 (GAP)
+AI Governance override log had no click-to-filter UX. Added per-override-type and per-outcome filter chips in the card header; card subtitle reports filtered count. The chips persist until explicitly cleared.
+
+### Fixed — H5 (GAP)
+Customer Intelligence action items and SLA incident ledger were expand-only. Actions now support status + priority chips; SLA ledger supports priority + breach/met chips. Both sections show filtered count in the subtitle.
+
+### Fixed — H6 (GAP)
+Risk Audit top-4 KPI cards (Open risks, Controls tracked, Audit entries, Risk exposure) previously only scrolled or cross-navigated. Now:
+- **Open risks** → toggles a special `__open__` status filter on the register.
+- **Risk exposure** → toggles expected-loss ranking of the register.
+- **Audit entries** → scrolls and resets any active table filter.
+- **Controls tracked** → cross-navs to AI tab with programme context preserved.
+- A clearable filter banner in the register header summarises all active filters (status / severity / ranking).
+
+### Fixed — H7 (GAP)
+WaterfallView had no L4 work-item drill. Now renders an L5 deliverables table inside each expanded phase with:
+- Status filter chips (All / Completed / In Progress / Pending / Blocked) with per-status counts.
+- Reconcile banner that compares phase header `percent_complete` against both count-based and effort-weighted completion. Warns only when BOTH disagree with the header by more than 10 points — respects the reality that real `percent_complete` is usually effort-weighted.
+- Footer aggregates planned / actual effort days for the filtered subset.
+
+### Fixed — H8 (GAP)
+Risk Audit compliance-scorecard rows cross-navigated to AI tab without carrying the active programme filter. Now they do: `navigate(filteredProgramme ? '/ai?programme=' + code : '/ai')`.
+
+### Seed — existing programmes
+- TTN-STORE (NovaTech's Waterfall project) now has 24 deliverables seeded across its 6 phases (Requirements through Deploy), matching the v5.6 L5 drill.
+
+### Quality Gates
+- TypeScript compile: clean.
+- Backend `py_compile`: clean on all updated files.
+- Docker build: both containers healthy post-rebuild.
+- Reconciliation smoke test: every BHARAT-CITIZEN sprint card exactly matches the derived sum from its backlog items (8/8 sprints, 24/24 reconciliations).
+
+---
+
 ## 2026-04-21 — v5.3 (Iteration 5 complete — PRs #11 + #12)
 
 ### Added — I-5a: Live FX Rate Refresh

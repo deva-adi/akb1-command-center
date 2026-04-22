@@ -16,6 +16,7 @@ from app.models import (
     EvmSnapshot,
     FlowMetrics,
     Milestone,
+    PhaseDeliverable,
     ProjectPhase,
     SprintData,
 )
@@ -24,6 +25,7 @@ from app.schemas.delivery import (
     EvmSnapshotOut,
     FlowMetricsOut,
     MilestoneOut,
+    PhaseDeliverableOut,
     ProjectPhaseOut,
     SprintOut,
 )
@@ -33,6 +35,7 @@ backlog_router = APIRouter(prefix="/backlog-items", tags=["delivery"])
 evm_router = APIRouter(prefix="/evm", tags=["delivery"])
 flow_router = APIRouter(prefix="/flow", tags=["delivery"])
 phases_router = APIRouter(prefix="/phases", tags=["delivery"])
+phase_deliverables_router = APIRouter(prefix="/phase-deliverables", tags=["delivery"])
 milestones_router = APIRouter(prefix="/milestones", tags=["delivery"])
 
 
@@ -107,6 +110,27 @@ async def list_backlog_items(
     if sprint_number is not None:
         stmt = stmt.where(BacklogItem.sprint_number == sprint_number)
     stmt = stmt.order_by(BacklogItem.sprint_number.asc(), BacklogItem.id.asc())
+    return list((await session.execute(stmt)).scalars().all())
+
+
+@phase_deliverables_router.get("", response_model=list[PhaseDeliverableOut])
+async def list_phase_deliverables(
+    project_id: int | None = Query(default=None),
+    phase_id: int | None = Query(default=None),
+    session: AsyncSession = Depends(get_session),
+) -> list[PhaseDeliverable]:
+    """Return deliverable-level records for a project's waterfall phases.
+
+    Filter by project_id to fetch every deliverable across all phases, or
+    by phase_id to scope to a single phase. Ordered by phase_id then id so
+    the UI can render phase-grouped lists without extra client-side sort.
+    """
+    stmt = select(PhaseDeliverable)
+    if project_id is not None:
+        stmt = stmt.where(PhaseDeliverable.project_id == project_id)
+    if phase_id is not None:
+        stmt = stmt.where(PhaseDeliverable.phase_id == phase_id)
+    stmt = stmt.order_by(PhaseDeliverable.phase_id.asc(), PhaseDeliverable.id.asc())
     return list((await session.execute(stmt)).scalars().all())
 
 

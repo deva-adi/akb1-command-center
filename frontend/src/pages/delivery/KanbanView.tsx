@@ -1,6 +1,6 @@
 import { Fragment } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useMemo, useRef, useState, useCallback } from "react";
+import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import ReactECharts from "echarts-for-react";
 import { Eye, EyeOff, X } from "lucide-react";
 import { Card, CardHeader } from "@/components/ui/Card";
@@ -27,7 +27,7 @@ type ItemFilter = "all" | "completed" | "in_progress";
 
 // ─── formula definitions ─────────────────────────────────────────────────────
 
-const FORMULAS: Record<MetricKey, { title: string; formula: string; note: string; filter: ItemFilter }> = {
+const FORMULAS: Record<MetricKey, { title: string; formula: string; note: string; filter: ItemFilter; dataNote?: string }> = {
   throughput: {
     title: "Throughput",
     formula: "COUNT(items WHERE status = 'completed' AND week = N)",
@@ -69,6 +69,7 @@ const FORMULAS: Record<MetricKey, { title: string; formula: string; note: string
     formula: "Σ hours items were blocked by dependencies, missing inputs or impediments",
     note: "Aggregate impediment cost. Each blocked hour = lost throughput capacity. Track which impediment types recur — systemic blockers need process fixes, not just unblocking.",
     filter: "in_progress",
+    dataNote: "Blocked time is stored as a weekly aggregate — per-item blocker attribution isn't captured in backlog_items today, so the list below shows in-progress items as the nearest proxy. Row-level rework_hours won't sum to the card value.",
   },
 };
 
@@ -78,6 +79,9 @@ export function KanbanView({ project }: { project: ProjectListItem }) {
   const [selectedWeekIdx, setSelectedWeekIdx] = useState<number | null>(null);
   // seriesName captured from chart click — maps to a pre-filter in the drill panel
   const [clickedSeries, setClickedSeries] = useState<string | null>(null);
+  // topCardMetric captured from summary-row clicks — pre-selects the metric cell
+  // inside the drill panel and applies its formula filter to the L5 list.
+  const [topCardMetric, setTopCardMetric] = useState<MetricKey | null>(null);
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["flow", project.id],
@@ -106,6 +110,7 @@ export function KanbanView({ project }: { project: ProjectListItem }) {
         const idx = params.dataIndex ?? null;
         if (idx === null) return;
         setClickedSeries(params.seriesName ?? null);
+        setTopCardMetric(null); // chart click overrides any top-card selection
         setSelectedWeekIdx((prev) => (prev === idx ? null : idx));
       },
     }),
@@ -123,6 +128,7 @@ export function KanbanView({ project }: { project: ProjectListItem }) {
         if (len === 0) return;
         const clamped = Math.max(0, Math.min(dataIdx, len - 1));
         setClickedSeries(null); // area click — no specific series
+        setTopCardMetric(null);
         setSelectedWeekIdx((prev) => (prev === clamped ? null : clamped));
       });
     },
@@ -138,22 +144,35 @@ export function KanbanView({ project }: { project: ProjectListItem }) {
         const len = sortedRef.current.length;
         if (len === 0) return;
         const clamped = Math.max(0, Math.min(dataIdx, len - 1));
+        setTopCardMetric(null);
         setSelectedWeekIdx((prev) => (prev === clamped ? null : clamped));
       });
     },
     [],
   );
 
+  // Click handler for summary-row MetricCards: opens the latest-week drill
+  // panel with the clicked metric's formula filter pre-applied.
+  const openLatestWithMetric = (metric: MetricKey) => {
+    setTopCardMetric(metric);
+    setClickedSeries(null);
+    setSelectedWeekIdx(sorted.length - 1);
+  };
+
   const selectedWeek = selectedWeekIdx !== null ? sorted[selectedWeekIdx] ?? null : null;
   const selectedWeekNumber = selectedWeekIdx !== null ? selectedWeekIdx + 1 : null;
 
-  // Derive initial filter from which CFD band was clicked
+  // Derive initial filter — top-card click wins over CFD-band click.
+  const topCardFilter: ItemFilter | null = topCardMetric ? FORMULAS[topCardMetric].filter : null;
   const initialFilter: ItemFilter =
-    clickedSeries === "Done (cumulative)"
-      ? "completed"
-      : clickedSeries === "In Progress"
-        ? "in_progress"
-        : "all";
+    topCardFilter ?? (
+      clickedSeries === "Done (cumulative)"
+        ? "completed"
+        : clickedSeries === "In Progress"
+          ? "in_progress"
+          : "all"
+    );
+  const cycleInitialFilter: ItemFilter = topCardFilter ?? "all";
 
   if (isLoading) return <p className="text-sm text-navy/70">Loading flow metrics…</p>;
   if (error) return <p className="text-sm text-danger-600">{(error as Error).message}</p>;
@@ -170,12 +189,12 @@ export function KanbanView({ project }: { project: ProjectListItem }) {
 
   return (
     <div className="flex flex-col gap-4">
-      {/* ── Summary row — click to open latest week drill panel ── */}
+      {/* ── Summary row — click to open latest week drill panel, pre-filtered to the clicked metric ── */}
       <section className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        <MetricCard metricId="throughput" value={`${latest.throughput_items ?? 0}`} sub={`avg ${avgThroughput.toFixed(1)}`} onClick={() => setSelectedWeekIdx(sorted.length - 1)} />
-        <MetricCard metricId="wip" value={`${(latest.wip_avg ?? 0).toFixed(1)}`} sub={`limit ${latest.wip_limit ?? "—"}`} tone={wipBreach ? "red" : "green"} onClick={() => setSelectedWeekIdx(sorted.length - 1)} />
-        <MetricCard metricId="cycle_p50" value={`${(latest.cycle_time_p50 ?? 0).toFixed(1)}d`} sub={`p95 ${(latest.cycle_time_p95 ?? 0).toFixed(1)}d`} onClick={() => setSelectedWeekIdx(sorted.length - 1)} />
-        <MetricCard metricId="blocked" value={`${(latest.blocked_time_hours ?? 0).toFixed(1)}h`} tone={(latest.blocked_time_hours ?? 0) > 8 ? "red" : (latest.blocked_time_hours ?? 0) > 4 ? "amber" : "green"} onClick={() => setSelectedWeekIdx(sorted.length - 1)} />
+        <MetricCard metricId="throughput" value={`${latest.throughput_items ?? 0}`} sub={`avg ${avgThroughput.toFixed(1)}`} drillFilter="completed" onClick={() => openLatestWithMetric("throughput")} />
+        <MetricCard metricId="wip" value={`${(latest.wip_avg ?? 0).toFixed(1)}`} sub={`limit ${latest.wip_limit ?? "—"}`} tone={wipBreach ? "red" : "green"} drillFilter="in_progress" onClick={() => openLatestWithMetric("wip")} />
+        <MetricCard metricId="cycle_p50" value={`${(latest.cycle_time_p50 ?? 0).toFixed(1)}d`} sub={`p95 ${(latest.cycle_time_p95 ?? 0).toFixed(1)}d`} drillFilter="completed" onClick={() => openLatestWithMetric("cycle_p50")} />
+        <MetricCard metricId="blocked" value={`${(latest.blocked_time_hours ?? 0).toFixed(1)}h`} tone={(latest.blocked_time_hours ?? 0) > 8 ? "red" : (latest.blocked_time_hours ?? 0) > 4 ? "amber" : "green"} drillFilter="in_progress" onClick={() => openLatestWithMetric("blocked")} />
       </section>
 
       {/* ── CFD ── */}
@@ -199,7 +218,8 @@ export function KanbanView({ project }: { project: ProjectListItem }) {
             projectId={project.id}
             weekNumber={selectedWeekNumber}
             initialFilter={initialFilter}
-            onClose={() => { setSelectedWeekIdx(null); setClickedSeries(null); }}
+            initialMetric={topCardMetric}
+            onClose={() => { setSelectedWeekIdx(null); setClickedSeries(null); setTopCardMetric(null); }}
           />
         )}
         <p className="mt-2 text-xs text-navy/70">
@@ -228,8 +248,9 @@ export function KanbanView({ project }: { project: ProjectListItem }) {
             row={selectedWeek}
             projectId={project.id}
             weekNumber={selectedWeekNumber}
-            initialFilter="all"
-            onClose={() => { setSelectedWeekIdx(null); setClickedSeries(null); }}
+            initialFilter={cycleInitialFilter}
+            initialMetric={topCardMetric}
+            onClose={() => { setSelectedWeekIdx(null); setClickedSeries(null); setTopCardMetric(null); }}
           />
         )}
       </Card>
@@ -244,17 +265,30 @@ function FlowDrillPanel({
   projectId,
   weekNumber,
   initialFilter,
+  initialMetric,
   onClose,
 }: {
   row: FlowRow;
   projectId: number;
   weekNumber: number;
   initialFilter: ItemFilter;
+  initialMetric?: MetricKey | null;
   onClose: () => void;
 }) {
-  const [activeMetric, setActiveMetric] = useState<MetricKey | null>(null);
+  const [activeMetric, setActiveMetric] = useState<MetricKey | null>(initialMetric ?? null);
   const [activeFilter, setActiveFilter] = useState<ItemFilter>(initialFilter);
   const [showFormula, setShowFormula] = useState(false);
+
+  // When the parent pushes a new initialMetric (e.g. user clicks a different
+  // summary-row card while the panel is still open), re-sync the active cell
+  // and its filter so the panel reflects the new selection.
+  useEffect(() => {
+    if (initialMetric) {
+      setActiveMetric(initialMetric);
+      setActiveFilter(FORMULAS[initialMetric].filter);
+      setShowFormula(false);
+    }
+  }, [initialMetric]);
 
   const { data: flowItems } = useQuery({
     queryKey: ["flow-items", projectId, weekNumber],
@@ -419,6 +453,12 @@ function FlowDrillPanel({
               {" "}· Click 👁 to see the formula
             </p>
           )}
+          {FORMULAS[activeMetric].dataNote ? (
+            <div className="mt-2 rounded border border-amber-200 bg-amber-50 px-2 py-1.5 text-[11px] leading-relaxed text-amber-900">
+              <strong className="uppercase tracking-wide text-amber-800">Data note · </strong>
+              {FORMULAS[activeMetric].dataNote}
+            </div>
+          ) : null}
         </div>
       )}
 

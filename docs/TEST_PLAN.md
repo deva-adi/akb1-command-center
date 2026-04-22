@@ -1,13 +1,13 @@
-# AKB1 Command Center v5.5.4 — Production Test Plan
+# AKB1 Command Center v5.6 — Production Test Plan
 
 **Document type:** Executive-level Quality Assurance Test Plan  
-**Version:** 1.1  
-**Date:** 2026-04-21  
+**Version:** 1.2  
+**Date:** 2026-04-22  
 **Prepared by:** Adi Kompalli, Associate Director – Delivery  
-**Build branch:** `feat/iteration-5-integration`  
-**Test environment:** NovaTech demo (6 programmes × 12 months seeded data, including Hercules)  
-**Status:** Released after v5.4 session-audit and bug-fix pass — 10 bugs found, 10 fixed, 0 outstanding  
-**New in v5.4:** Universal Formula Reveal — all 55+ metric Eye-icon formula panels tested across all tabs
+**Build branch:** `main`  
+**Test environment:** NovaTech demo + Hercules + **Bharat Digital Spine** (7 programmes × 12 months seeded data, including new Waterfall `phase_deliverables` L5 rows)  
+**Status:** Released after v5.6 drill-fidelity audit pass — 8 issues found (H1–H8), 8 fixed, 0 outstanding  
+**New in v5.6:** Drill-fidelity principle enforcement ("click-to-slice reconciliation"), new `phase_deliverables` L5 table (46 tables total), new Indian-themed BHARAT programme exercising end-to-end drill path
 
 ---
 
@@ -129,7 +129,7 @@ The seeded dataset simulates a portfolio called **NovaTech** — an IT services 
 | NVT-HRCL | Hercules ERP — enterprise SAP rollout | Waterfall | At Risk |
 
 **Seeded data volumes:**
-- 60 monthly KPI snapshots (12 months × 5 programmes)
+- 60 monthly KPI snapshots (12 months × 5 base programmes) + 12-month series for Hercules and BHARAT
 - 240 sprint iterations (approximate, across Scrum projects)
 - 180 weekly flow metric rows (Kanban projects)
 - 45 project phase records (Waterfall projects)
@@ -649,15 +649,16 @@ Execute the following checklist after any code change to ensure no regression ha
 
 - [ ] Run full pytest suite: `docker compose exec backend pytest --tb=short`
 - [ ] Verify all API endpoints return 200 with non-empty data from the seeded NovaTech demo
-- [ ] Verify `/api/v1/programmes` returns exactly 5 NovaTech programmes after demo seed
-- [ ] Verify `/api/v1/kpi_snapshots` returns 60 rows (12 months × 5 programmes)
+- [ ] Verify `/api/v1/programmes` returns 7 programmes after demo seed (5 NovaTech + Hercules + BHARAT)
+- [ ] Verify `/api/v1/kpi_snapshots` returns 60 rows (12 months × 5 NovaTech programmes) plus BHARAT/Hercules series
 - [ ] Verify `/api/v1/flow_metrics` returns rows for Kanban projects (NVT-SNTN)
+- [ ] Verify `/api/v1/phase-deliverables?project_id=<waterfall_id>` returns L5 deliverables (new in v5.6)
 
 ### 7.6 After Database Schema Changes
 
 - [ ] Run Alembic migration: `docker compose exec backend alembic upgrade head`
 - [ ] Verify seed script runs without error: `SEED_DEMO_DATA=true docker compose up`
-- [ ] Verify all 44 tables exist post-migration
+- [ ] Verify all 46 tables exist post-migration (44 base + v5.5 auth + v5.6 `phase_deliverables`)
 - [ ] Run the full drill path from Executive Overview → delivery → velocity → margin for one programme
 
 ### 7.7 Accessibility Regression Checks
@@ -695,18 +696,19 @@ The following items are intentional design boundaries or accepted limitations fo
 
 | Tab | Route | Total TCs | Passed | Failed | Fixed (bugs in this release) | Outstanding |
 |---|---|---|---|---|---|---|
-| Executive Overview | `/` | 12 | 11 | 0 | 1 | 0 |
-| Delivery Health (all views) | `/delivery` | 35 | 29 | 0 | 4+9+4 (v5.5) | 0 |
-| Velocity & Flow | `/velocity` | 18 | 16 | 0 | 2+3+1 (v5.5) | 0 |
-| Margin & EVM | `/margin` | 16 | 15 | 0 | 1+4 (v5.5) | 0 |
-| Customer Intelligence | `/ci` | 16 | 14 | 0 | 1+4 (v5.5) | 0 |
-| AI Governance | `/ai` | 13 | 13 | 0 | 3 (v5.5) | 0 |
-| Risk & Audit | `/raid` | 12 | 12 | 0 | 3+1 (v5.5) | 0 |
-| Smart Ops | `/smart-ops` | 14 | 12 | 0 | 1+4 (v5.5) | 0 |
+| Executive Overview | `/` | 12 | 12 | 0 | 1 | 0 |
+| Delivery Health (all views) | `/delivery` | 38 | 38 | 0 | 4+9+4 (v5.5) + H1+H2+H7 (v5.6) | 0 |
+| Velocity & Flow | `/velocity` | 18 | 18 | 0 | 2+3+1 (v5.5) | 0 |
+| Margin & EVM | `/margin` | 16 | 16 | 0 | 1+4 (v5.5) | 0 |
+| Customer Intelligence | `/ci` | 18 | 18 | 0 | 1+4 (v5.5) + H5 (v5.6) | 0 |
+| AI Governance | `/ai` | 14 | 14 | 0 | 3 (v5.5) + H4 (v5.6) | 0 |
+| Risk & Audit | `/raid` | 14 | 14 | 0 | 3+1 (v5.5) + H6+H8 (v5.6) | 0 |
+| Smart Ops | `/smart-ops` | 15 | 15 | 0 | 1+4 (v5.5) + H3 (v5.6) | 0 |
 | KPI Studio | `/kpi` | 6 | 6 | 0 | 0 | 0 |
 | Data Hub | `/data` | 6 | 6 | 0 | 0 | 0 |
 | Reports | `/reports` | 4 | 4 | 0 | 0 | 0 |
-| **Grand Total** | | **153** | **143** | **0** | **10+38** | **0** |
+| BHARAT (cross-tab E2E) | n/a | 4 | 4 | 0 | — | 0 |
+| **Grand Total** | | **165** | **165** | **0** | **10+38+8** | **0** |
 
 ### 9.2 Bug Classification
 
@@ -716,8 +718,9 @@ The following items are intentional design boundaries or accepted limitations fo
 | High (formula reveal absent) | 7 | BUG-003, BUG-004 (×4), BUG-005 (×3), BUG-008, BUG-009, BUG-010 |
 | Medium (unit / metric mismatch) | 2 | BUG-006, BUG-007 |
 | **v5.5 High (dead-end drill paths + a11y)** | **38** | A-1 → D-8 + BUG-NEW-1 → BUG-NEW-4 + BUG-E1 → BUG-E6 + BUG-F1 + BUG-G1 + BUG-G2 — MetricCards, chart clicks, accordion rows, Tile components, L5 tables, button-inside-button, programme context, keyboard accessibility all fixed |
+| **v5.6 High (drill-fidelity — click-to-slice reconciliation)** | **8** | **H1** Kanban top-strip opens drill panel unfiltered when a specific metric was clicked — now pre-selects the metric cell and applies its formula filter. **H2** Kanban Blocked card drilled to items with no `blocked_hours` column to reconcile against — now shows an honest amber Data-note banner. **H3** SmartOps Bench-cost card scrolled to the resource pool but didn't pre-filter — now sets `resourceStatusFilter="Bench"` with clearable pill. **H4** AI Governance override log had no filter toggles — now has per-type + per-outcome chips. **H5** Customer Intelligence action items + SLA ledger had no click-to-filter — now status/priority/breach chips. **H6** Risk Audit top-4 KPI cards did scroll/nav but didn't pre-filter — now open-risks toggle + expected-loss ranking. **H7** Waterfall had no L4 work-item drill — new `phase_deliverables` table + per-phase deliverable list with status chips + effort-weighted reconcile banner. **H8** Risk Audit compliance rows didn't carry `?programme=` — now they do. |
 | Low | 0 | — |
-| **Total** | **49** | All fixed across v5.4 + v5.5 + v5.5.1 + v5.5.2 + v5.5.3 + v5.5.4 |
+| **Total** | **57** | All fixed across v5.4 + v5.5 + v5.5.1 + v5.5.2 + v5.5.3 + v5.5.4 + v5.6 |
 
 ### 9.3 Metric Coverage
 
@@ -759,9 +762,9 @@ The following items are intentional design boundaries or accepted limitations fo
 | pytest coverage | ≥ 70% | ≥ 70% (CI gate) |
 | Vitest coverage | ≥ 70% | ≥ 70% (CI gate) |
 
-**Release decision: APPROVED — all quality gates passed. Zero outstanding bugs. All 153 test cases pass. All drill paths fully connected (L1→L5 + cross-tab). Formula accuracy confirmed against seeded NovaTech demo data.**
+**Release decision: APPROVED — all quality gates passed. Zero outstanding bugs. All 165 test cases pass. All drill paths fully connected (L1→L5 + cross-tab). Every card now reconciles exactly to the rows that compose it (Adi's 120/140 rule verified against BHARAT seed). Formula accuracy confirmed against seeded NovaTech + Hercules + BHARAT demo data.**
 
 ---
 
-*Document prepared by Adi Kompalli, Associate Director – Delivery, 2026-04-21.*  
-*Build: AKB1 Command Center v5.5.4 · Branch: `main` · Repo: github.com/deva-adi/akb1-command-center*
+*Document prepared by Adi Kompalli, Associate Director – Delivery, 2026-04-22.*  
+*Build: AKB1 Command Center v5.6 · Branch: `main` · Repo: github.com/deva-adi/akb1-command-center*

@@ -1207,7 +1207,7 @@ CREATE INDEX idx_user_roles_user ON user_roles(user_id);
 CREATE INDEX idx_users_email ON users(email);
 ```
 
-**Total: 45 tables** (11 core + 7 new + 8 AI governance + 2 Smart Ops + 3 financial + 2 dual velocity + 3 system + 2 intelligence + 5 v5.2 + 2 security stub)
+**Total: 46 tables** (11 core + 7 new + 8 AI governance + 2 Smart Ops + 3 financial + 2 dual velocity + 3 system + 2 intelligence + 5 v5.2 + 2 security stub + 1 v5.6 `phase_deliverables`)
 
 ### NEW v5.2 PROJECTS.delivery_methodology
 
