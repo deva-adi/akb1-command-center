@@ -2,7 +2,7 @@
 
 This file is the recovery document. It is updated at the end of every milestone commit, before the git push. In any future Claude Code session starting cold after data loss or a machine reset, the first instruction is: read this file and resume from the state it describes.
 
-Last updated: 2026-04-22 (end of M7.2 Margin Bridge section)
+Last updated: 2026-04-22 (end of M7.3 Margin Waterfall section)
 
 ---
 
@@ -40,6 +40,7 @@ Last updated: 2026-04-22 (end of M7.2 Margin Bridge section)
 | M6 (/pnl stub + API client) | `d41eb3a` | 2026-04-22 | feat(ui): /pnl route + PnlCockpit.tsx stub + typed pnlApi.ts client for nine endpoints + nav entry + Vitest + Playwright (+3 Vitest, +3 Playwright) |
 | M7.1 (Revenue section) | `c083ad8` | 2026-04-22 | feat(ui): RevenueCards section — 5 cards (Booked, Billed, Collected, Unbilled WIP, AR) wired to /revenue + /dso with period-over-period delta, RAG tone by sign, 4 Vitest states, Playwright live-stack (+4 Vitest, +2 Playwright) |
 | M7.2 (Margin Bridge) | `5279eca` | 2026-04-22 | feat(ui): MarginBridge section — Recharts running-total waterfall wired to /bridge with default metric_key pnl.gross_margin_pct.programme.month; Phoenix Feb→Mar renders −340 bps total; loading/error/no-programme states; 4 Vitest + 2 Playwright |
+| M7.3 (Margin Waterfall) | `TBD` | 2026-04-22 | feat(ui): MarginWaterfall section — four-layer cascade (Gross→Contribution→Portfolio→Net) wired to /waterfall with drop-bps pills between consecutive bars; Phoenix Mar renders 28.0/12.5/8.2/4.1% with drops −1550/−430/−410 bps; 4 Vitest + 2 Playwright |
 
 Earlier v5.x milestones (pre-Tab 12, already on main): v5.6 drill-fidelity audit (`792aa0d`), v5.5.4 margin bug fixes (`22c93b1`), v5.5.3 a11y trust-badge fix (`0854876`), v5.5.2 dead-metric-card fix (`7e03e1c`). These are retained on `main`; the Tab 12 branch builds forward from there.
 
@@ -47,8 +48,8 @@ Earlier v5.x milestones (pre-Tab 12, already on main): v5.6 drill-fidelity audit
 
 ## Section 3 — Current state
 
-- **Milestone just completed:** M7.2 Margin Bridge section (second of seven per-section commits in M7)
-- **Tests:** backend 205 passed (unchanged — M7.2 is frontend-only), frontend 36 Vitest passed (up from 32 — 4 new MarginBridge state tests), 9 Playwright specs total (2 ContextRail, 3 pnl-stub, 2 pnl-revenue, 2 pnl-bridge — all against live Docker stack)
+- **Milestone just completed:** M7.3 Margin Waterfall section (third of seven per-section commits in M7)
+- **Tests:** backend 205 passed (unchanged), frontend 40 Vitest passed (up from 36 — 4 new MarginWaterfall state tests), 11 Playwright specs total (2 ContextRail, 3 pnl-stub, 2 pnl-revenue, 2 pnl-bridge, 2 pnl-waterfall — all against live Docker stack)
 - **/health output:** `{"status":"healthy","version":"5.7.0-dev","tables":47}`
 - **Docker state:** `akb1-backend` healthy on 127.0.0.1:9001, `akb1-frontend` rebuilt at M6 close and healthy on 127.0.0.1:9000
 - **Nine active endpoints registered** under `/api/v1/pnl/`: waterfall, bridge, pfa, pyramid, losses, evm, dso, revenue, lineage
@@ -57,11 +58,11 @@ Earlier v5.x milestones (pre-Tab 12, already on main): v5.6 drill-fidelity audit
 - **ContextRail (M5):** global component at `frontend/src/components/ContextRail.tsx`, mounted once in `Layout.tsx`, URL-driven
 - **PnlCockpit stub (M6):** `/pnl` route live at `frontend/src/pages/PnlCockpit.tsx`. Nav entry "P&L Cockpit — 12" appears in the sidebar via the shared TABS registry. Typed API client at `frontend/src/api/pnlApi.ts` exports fetchers for all nine endpoints plus shared types mirroring `backend/app/schemas/pnl.py`.
 - **Revenue section (M7.1):** `frontend/src/pages/pnl/sections/RevenueCards.tsx` wires `/revenue` + `/dso`. Five cards (Booked, Billed, Collected, Unbilled WIP, AR Balance) with prior-month delta. Four states (no-programme, loading, error, populated). Committed Revenue silently dropped from UI.
-- **Margin Bridge (M7.2):** `frontend/src/pages/pnl/sections/MarginBridge.tsx` wires `/bridge` with the canonical metric key `pnl.gross_margin_pct.programme.month`. Renders a Recharts ComposedChart running-total waterfall: prior margin bar (navy) on the left, four driver bars (Price/Volume/Mix/Cost — green up / red down) floating between running totals, current margin bar (navy) on the right. Each driver carries a bps label; subtitle shows prior % + current % + total delta. Phoenix Feb→Mar renders −340 bps total exactly (price +147, volume +62, mix −506, cost −43). When the URL lacks from/to, the section probes `/waterfall` for the programme's current snapshot_date and derives the prior window as (current − 1 month). Three states: loading skeleton, error banner with envelope message, populated chart.
-- **M7.2 ordering note:** Adi originally labelled M7.2 as "Margin Waterfall" but described the bridge chart in detail ("step-walk from prior to current gross margin, positive above axis, negative below"). Surfaced the ambiguity before coding; Adi confirmed Option A: M7.2 is the Bridge, M7.3 is the four-layer Waterfall. See Section 2 of this file for the endpoint-versus-section mapping.
-- **Branch state:** `feat/tab-12-pnl-cockpit-v5.7` is now twelve commits ahead of main; no merge to main yet
-- **In flight:** M7.3 (Margin Waterfall — four-layer cascade via /waterfall) next
-- **Next milestone:** M7.3 — wire `/waterfall` to render the four-layer margin waterfall (gross → contribution → portfolio → net) with layer values and lineage reveal. Hold for sign-off before starting.
+- **Margin Bridge (M7.2):** `frontend/src/pages/pnl/sections/MarginBridge.tsx` wires `/bridge` with the canonical metric key `pnl.gross_margin_pct.programme.month`. Recharts running-total waterfall: prior bar on the left, four driver bars (Price/Volume/Mix/Cost) floating between running totals, current bar on the right. Phoenix Feb→Mar renders −340 bps exactly.
+- **Margin Waterfall (M7.3):** `frontend/src/pages/pnl/sections/MarginWaterfall.tsx` wires `/waterfall`. Single-snapshot cascade: four bars (Gross, Contribution, Portfolio, Net) anchored at zero, each labelled with its percentage at the top. Between consecutive bars, white drop-pill annotations show the bps difference (three pills for four bars). Bar colours use RAG thresholds per layer (gross green ≥30%, net green ≥10%, etc.). Phoenix Mar renders 28.0% / 12.5% / 8.2% / 4.1% with drops −1550 / −430 / −410 bps. Subtitle carries snapshot date, scenario, and revenue base. Three states (prompt, loading, error) mirror M7.1 / M7.2.
+- **Branch state:** `feat/tab-12-pnl-cockpit-v5.7` is now fourteen commits ahead of main; no merge to main yet
+- **In flight:** M7.4 (PFA Triangle) next
+- **Next milestone:** M7.4 — wire `/pfa` to render the plan-forecast-actual triangle with a metric-switcher dropdown (Recharts LineChart with three series). Hold for sign-off before starting.
 
 ---
 

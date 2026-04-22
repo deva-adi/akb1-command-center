@@ -5,9 +5,10 @@ import { describe, expect, it, vi } from "vitest";
 import { PnlCockpit } from "@/pages/PnlCockpit";
 import { ContextRail } from "@/components/ContextRail";
 
-// Revenue (M7.1) and MarginBridge (M7.2) both fire axios queries on
-// mount. Stub the client so this page-level test exercises the
-// placeholder copy and the ContextRail wiring without network.
+// Revenue (M7.1), MarginBridge (M7.2), and MarginWaterfall (M7.3)
+// all fire axios queries on mount. Stub the client so this page-level
+// test exercises placeholder copy and ContextRail wiring without
+// network.
 vi.mock("@/api/pnlApi", () => ({
   fetchPnlRevenue: vi.fn(() => new Promise(() => {})),
   fetchPnlDso: vi.fn(() => new Promise(() => {})),
@@ -66,7 +67,7 @@ describe("PnlCockpit", () => {
       screen.getByRole("heading", { level: 1, name: /P&L Cockpit/i }),
     ).toBeInTheDocument();
     expect(
-      screen.getByText(/Remaining sections land in M7\.3 through M7\.7/i),
+      screen.getByText(/Remaining sections land in M7\.4 through M7\.7/i),
     ).toBeInTheDocument();
   });
 

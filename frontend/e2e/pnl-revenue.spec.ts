@@ -26,9 +26,11 @@ test.describe("/pnl Revenue section (M7.1)", () => {
     await expect(grid.getByText(/\$820\.0 K/)).toBeVisible();
     await expect(grid.getByText(/\$144\.3 K/)).toBeVisible();
 
-    // Subtitle records the snapshot the backend picked.
+    // Subtitle records the snapshot the backend picked. The Margin
+    // Waterfall section (M7.3) has a similar subtitle, so scope the
+    // match to the first occurrence, which is the Revenue card.
     await expect(
-      page.getByText(/Snapshot 2026-03-01.*scenario Monthly Actuals/),
+      page.getByText(/Snapshot 2026-03-01.*scenario Monthly Actuals/).first(),
     ).toBeVisible();
   });
 
