@@ -5,12 +5,14 @@ import { describe, expect, it, vi } from "vitest";
 import { PnlCockpit } from "@/pages/PnlCockpit";
 import { ContextRail } from "@/components/ContextRail";
 
-// The Revenue section (M7.1) fires real axios queries on mount. Stub
-// the client so this page-level test exercises the stub copy and the
-// ContextRail wiring without network activity.
+// Revenue (M7.1) and MarginBridge (M7.2) both fire axios queries on
+// mount. Stub the client so this page-level test exercises the
+// placeholder copy and the ContextRail wiring without network.
 vi.mock("@/api/pnlApi", () => ({
   fetchPnlRevenue: vi.fn(() => new Promise(() => {})),
   fetchPnlDso: vi.fn(() => new Promise(() => {})),
+  fetchPnlBridge: vi.fn(() => new Promise(() => {})),
+  fetchPnlWaterfall: vi.fn(() => new Promise(() => {})),
 }));
 
 vi.mock("@/hooks/usePortfolio", () => ({
@@ -58,13 +60,13 @@ function renderAt(url: string) {
 }
 
 describe("PnlCockpit", () => {
-  it("renders the page title and the M7.2+ remaining-sections placeholder", () => {
+  it("renders the page title and the remaining-sections placeholder", () => {
     renderAt("/pnl");
     expect(
       screen.getByRole("heading", { level: 1, name: /P&L Cockpit/i }),
     ).toBeInTheDocument();
     expect(
-      screen.getByText(/Remaining sections land in M7\.2 through M7\.7/i),
+      screen.getByText(/Remaining sections land in M7\.3 through M7\.7/i),
     ).toBeInTheDocument();
   });
 

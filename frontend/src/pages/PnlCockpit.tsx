@@ -1,4 +1,5 @@
 import { Card, CardHeader } from "@/components/ui/Card";
+import { MarginBridge } from "@/pages/pnl/sections/MarginBridge";
 import { RevenueCards } from "@/pages/pnl/sections/RevenueCards";
 
 export function PnlCockpit() {
@@ -16,11 +17,12 @@ export function PnlCockpit() {
       </div>
 
       <RevenueCards />
+      <MarginBridge />
 
       <Card>
         <CardHeader
-          title="Remaining sections land in M7.2 through M7.7"
-          subtitle="Margin Waterfall, Margin Bridge, PFA Triangle, Losses with Attribution, and Pyramid with EVM and DSO sub-cards. Revenue is live above."
+          title="Remaining sections land in M7.3 through M7.7"
+          subtitle="Margin Waterfall, PFA Triangle, Losses with Attribution, and Pyramid with EVM and DSO sub-cards. Revenue and Margin Bridge are live above."
         />
       </Card>
     </div>
