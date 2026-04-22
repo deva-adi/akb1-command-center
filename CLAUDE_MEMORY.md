@@ -39,7 +39,7 @@ Last updated: 2026-04-22 (end of M7.2 Margin Bridge section)
 | M5 (ContextRail) | `d0885dd` | 2026-04-22 | feat(ui): global ContextRail breadcrumb + drill-up/across + URL-encoded filter state; delete per-page Breadcrumb; migrate Customer to URL programme state (+8 Vitest, +2 Playwright) |
 | M6 (/pnl stub + API client) | `d41eb3a` | 2026-04-22 | feat(ui): /pnl route + PnlCockpit.tsx stub + typed pnlApi.ts client for nine endpoints + nav entry + Vitest + Playwright (+3 Vitest, +3 Playwright) |
 | M7.1 (Revenue section) | `c083ad8` | 2026-04-22 | feat(ui): RevenueCards section — 5 cards (Booked, Billed, Collected, Unbilled WIP, AR) wired to /revenue + /dso with period-over-period delta, RAG tone by sign, 4 Vitest states, Playwright live-stack (+4 Vitest, +2 Playwright) |
-| M7.2 (Margin Bridge) | `TBD` | 2026-04-22 | feat(ui): MarginBridge section — Recharts running-total waterfall wired to /bridge with default metric_key pnl.gross_margin_pct.programme.month; Phoenix Feb→Mar renders −340 bps total; loading/error/no-programme states; 4 Vitest + 2 Playwright |
+| M7.2 (Margin Bridge) | `5279eca` | 2026-04-22 | feat(ui): MarginBridge section — Recharts running-total waterfall wired to /bridge with default metric_key pnl.gross_margin_pct.programme.month; Phoenix Feb→Mar renders −340 bps total; loading/error/no-programme states; 4 Vitest + 2 Playwright |
 
 Earlier v5.x milestones (pre-Tab 12, already on main): v5.6 drill-fidelity audit (`792aa0d`), v5.5.4 margin bug fixes (`22c93b1`), v5.5.3 a11y trust-badge fix (`0854876`), v5.5.2 dead-metric-card fix (`7e03e1c`). These are retained on `main`; the Tab 12 branch builds forward from there.
 
