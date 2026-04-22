@@ -6,11 +6,15 @@ from httpx import AsyncClient
 
 @pytest.mark.asyncio
 async def test_health_endpoint_reports_table_count(app_client: AsyncClient) -> None:
+    from app.models import TABLE_COUNT
+
     response = await app_client.get("/health")
     assert response.status_code == 200
     body = response.json()
     assert body["status"] == "healthy"
-    assert body["tables"] == 44
+    # Read TABLE_COUNT dynamically so this test does not go stale again when
+    # we add tables in later releases.
+    assert body["tables"] == TABLE_COUNT
     assert body["version"] == "5.2.0"
 
 

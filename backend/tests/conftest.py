@@ -32,12 +32,24 @@ async def tmp_db_url(tmp_path_factory: pytest.TempPathFactory) -> AsyncIterator[
     tmp_dir = tmp_path_factory.mktemp("akb1-db")
     db_path = tmp_dir / "akb1_test.db"
     url = f"sqlite+aiosqlite:///{db_path}"
+    sync_url = f"sqlite:///{db_path}"
     os.environ["DATABASE_URL"] = url
+    # Sync URL must match the async URL so the Alembic bootstrap in the
+    # app lifespan writes to the same test DB file, not the default path.
+    os.environ["DATABASE_SYNC_URL"] = sync_url
     os.environ["SEED_DEMO_DATA"] = "false"
     get_settings.cache_clear()  # type: ignore[attr-defined]
     reset_engine_for_tests(url)
-    yield url
-    reset_engine_for_tests()
+    try:
+        yield url
+    finally:
+        # Clear env so a later test's migration bootstrap does not read a
+        # stale URL from a different test's fixture.
+        os.environ.pop("DATABASE_URL", None)
+        os.environ.pop("DATABASE_SYNC_URL", None)
+        os.environ.pop("SEED_DEMO_DATA", None)
+        get_settings.cache_clear()  # type: ignore[attr-defined]
+        reset_engine_for_tests()
 
 
 @pytest_asyncio.fixture()

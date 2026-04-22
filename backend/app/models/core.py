@@ -182,6 +182,14 @@ class CommercialScenario(Base):
     net_margin_pct: Mapped[float | None] = mapped_column(Float)
     snapshot_date: Mapped[date | None] = mapped_column(Date)
     notes: Mapped[str | None] = mapped_column(Text)
+    # Tab 12 P&L Cockpit billing and cash columns (v5.7.0, additive, nullable).
+    # Derived deterministically from actual_revenue via billing_ratio and
+    # collection_ratio per programme. Populated by the seed in M2.
+    billed_revenue: Mapped[float | None] = mapped_column(Float)
+    collected_revenue: Mapped[float | None] = mapped_column(Float)
+    unbilled_wip: Mapped[float | None] = mapped_column(Float)
+    ar_balance: Mapped[float | None] = mapped_column(Float)
+    billing_ratio: Mapped[float | None] = mapped_column(Float)
 
 
 class BacklogItem(Base):

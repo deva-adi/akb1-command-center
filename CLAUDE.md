@@ -33,6 +33,8 @@ Target: github.com/deva-adi/akb1-command-center (public, MIT)
 ## Key Conventions
 - Backend: FastAPI with Pydantic v2 models, SQLAlchemy 2.0, async where possible
 - Frontend: React 18 functional components, Zustand for client state, React Query for server state
-- Database: SQLite WAL mode, Alembic migrations, volume-mounted at /data/akb1.db
+- Database: SQLite WAL mode, volume-mounted at /data/akb1.db
+  - Schema is kept at head via a startup bootstrap in `app.db.migration_bootstrap`. The bootstrap classifies the DB into one of three states (fresh, legacy v5.6, already migrated) and runs the right sequence of Alembic stamp and upgrade calls for each. See `backend/app/db/migration_bootstrap.py` for the exact logic and the three grep-distinguishable log events (`migration_bootstrap.fresh_volume`, `migration_bootstrap.legacy_v5_6`, `migration_bootstrap.already_migrated`).
+  - `Base.metadata.create_all` still runs after the bootstrap as a safety net for freshly primed volumes; it is a no-op once tables exist.
 - Logging: structlog (JSON structured)
 - Import: openpyxl + pandas for Excel/CSV dual import

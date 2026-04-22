@@ -1,4 +1,4 @@
-"""SQLAlchemy ORM models — 44 tables matching ARCHITECTURE.md §5."""
+"""SQLAlchemy ORM models. Registered table count is the source of truth in TABLE_COUNT."""
 
 from app.models.ai import (
     AiCodeMetrics,
@@ -38,6 +38,7 @@ from app.models.intelligence import (
     UtilizationDetail,
 )
 from app.models.methodology import FlowMetrics, PhaseDeliverable, ProjectPhase
+from app.models.programme_rate import ProgrammeRate
 from app.models.smart_ops import ResourcePool, ScenarioExecution
 from app.models.system import (
     AppSetting,
@@ -103,9 +104,11 @@ __all__ = [
     "FlowMetrics",
     "ProjectPhase",
     "PhaseDeliverable",
+    # P&L Cockpit (1, v5.7.0)
+    "ProgrammeRate",
     # Auth (2)
     "User",
     "UserRole",
 ]
 
-TABLE_COUNT = 46
+TABLE_COUNT = 47

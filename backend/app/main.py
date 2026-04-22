@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
@@ -11,6 +12,7 @@ from slowapi.errors import RateLimitExceeded
 from app.api.v1.router import api_router
 from app.config import Settings, get_settings
 from app.database import dispose_engine, get_engine, get_session_factory
+from app.db.migration_bootstrap import ensure_migrations_applied
 from app.logging_config import configure_logging, get_logger
 from app.models import Base
 from app.rate_limit import limiter
@@ -30,6 +32,13 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         environment=settings.environment,
     )
 
+    # Bring the DB to head via Alembic. Three volume states handled:
+    # fresh, legacy v5.6, or already migrated. See migration_bootstrap.
+    # Runs on a worker thread because Alembic is synchronous.
+    await asyncio.to_thread(ensure_migrations_applied, settings.database_sync_url)
+
+    # Safety net: create_all is a no-op once the bootstrap above has run,
+    # but it rescues the case where someone drops a table by hand.
     engine = get_engine()
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
