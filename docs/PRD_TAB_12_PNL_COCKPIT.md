@@ -112,13 +112,13 @@ The residual lands in the Cost bucket so the bridge always ties out exactly. Eac
 
 Worked example one, Phoenix February to March bridge.
 
-Prior month gross margin 31.4 percent, current month 28.0 percent, delta minus 340 basis points.
+Prior month gross margin 31.4 percent, current month 28.0 percent, delta minus 340 basis points. Reconciliation target field is `commercial_scenarios.gross_margin_pct`, not `portfolio_margin_pct`; the Margin Bridge is a gross-margin bridge throughout this PRD.
 
 Price bucket: Mid Engineer rate drift planned 110 to actual 118, roughly 7.3 percent on Mid Engineer component, estimated impact minus 180 basis points on blended margin. Volume bucket: billable hours compressed, estimated minus 90 basis points. Mix bucket: Junior to Mid shift worsens pyramid, minus 40 basis points. Cost bucket: residual, minus 30 basis points (tooling and variable overhead). Total ties to minus 340.
 
 Worked example two, Atlas February to March bridge.
 
-Prior 42.1 percent, current 39.8 percent, delta minus 230 basis points. Price minus 210 basis points (Mid Engineer rate drift fifteen percent), Volume plus 20 basis points, Mix minus 30 basis points, Cost minus 10 basis points. Ties to minus 230.
+Prior 42.1 percent, current 39.8 percent, delta minus 230 basis points, also measured on `gross_margin_pct`. Price minus 210 basis points (Mid Engineer rate drift fifteen percent), Volume plus 20 basis points, Mix minus 30 basis points, Cost minus 10 basis points. Ties to minus 230.
 
 ### Section three, Plan Forecast Actual triangle
 
