@@ -6,6 +6,19 @@ from pydantic import Field, computed_field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
+def _read_package_version() -> str:
+    """Return the version string from the package single source of truth.
+
+    The value lives in ``backend/app/__init__.py`` as ``__version__``. No
+    other file carries a hardcoded version string. Import is lazy so the
+    config module can be imported cleanly in contexts where the package
+    attribute is not yet available.
+    """
+    from app import __version__
+
+    return __version__
+
+
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=".env",
@@ -15,7 +28,7 @@ class Settings(BaseSettings):
     )
 
     app_name: str = "AKB1 Command Center"
-    app_version: str = "5.2.0"
+    app_version: str = Field(default_factory=_read_package_version)
     environment: str = Field(default="development")
 
     database_url: str = Field(default="sqlite+aiosqlite:///data/akb1.db")

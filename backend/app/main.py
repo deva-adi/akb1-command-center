@@ -9,6 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 
+from app.api.v1.error_envelope import install_error_handlers
 from app.api.v1.router import api_router
 from app.config import Settings, get_settings
 from app.database import dispose_engine, get_engine, get_session_factory
@@ -71,6 +72,11 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     app.state.limiter = limiter
     app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+    # Standard error envelope for v5.7.0 Tab 12 P&L endpoints (and M9
+    # drill endpoints). Catches FilterValidationError and LineageKeyError
+    # globally so dependencies raise cleanly into a 422 response shape.
+    install_error_handlers(app)
 
     app.add_middleware(
         CORSMiddleware,

@@ -13,6 +13,7 @@ from app.api.v1 import (
     health,
     kpi,
     ops,
+    pnl,
     programmes,
     reports,
     risks,
@@ -55,3 +56,4 @@ api_router.include_router(reports.router)
 api_router.include_router(forecasts.router)
 api_router.include_router(settings.router)
 api_router.include_router(data_import.router)
+api_router.include_router(pnl.router)
