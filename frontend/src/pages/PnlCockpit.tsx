@@ -3,6 +3,7 @@ import { LossesAttribution } from "@/pages/pnl/sections/LossesAttribution";
 import { MarginBridge } from "@/pages/pnl/sections/MarginBridge";
 import { MarginWaterfall } from "@/pages/pnl/sections/MarginWaterfall";
 import { PfaTable } from "@/pages/pnl/sections/PfaTable";
+import { PyramidSection } from "@/pages/pnl/sections/PyramidSection";
 import { RevenueCards } from "@/pages/pnl/sections/RevenueCards";
 
 export function PnlCockpit() {
@@ -24,11 +25,12 @@ export function PnlCockpit() {
       <MarginWaterfall />
       <PfaTable />
       <LossesAttribution />
+      <PyramidSection />
 
       <Card>
         <CardHeader
-          title="Remaining sections land in M7.6 through M7.7"
-          subtitle="Pyramid with EVM and DSO sub-cards. Revenue, Margin Bridge, Margin Waterfall, PFA, and Losses are live above."
+          title="One section left — M7.7"
+          subtitle="Final M7 section to be scoped before M8 verification begins. All nine backend endpoints are wired."
         />
       </Card>
     </div>

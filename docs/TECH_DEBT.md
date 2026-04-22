@@ -26,6 +26,23 @@ The nine endpoints shipped in v5.7.0 (waterfall, bridge, pfa, pyramid, losses, e
 
 Shipping any of these on placeholders in v5.7.0 would have created three rewrites in v5.8. Deferring once is cheaper.
 
+---
+
+## v5.7.0 Tab 12 P&L Cockpit — M7.6 data gaps
+
+Two gaps surfaced while wiring the Pyramid section at M7.6. Both are tracked here for v5.8 pickup.
+
+| Deferred item | Scope | Deferred from | Picked up in | Trigger to reopen |
+|---|---|---|---|---|
+| Tier weight seed anomalies in `programme_rates` | Some PHOENIX rows carry `tier_weight_actual` values outside the `[0, 1.2]` expected range (e.g. Junior 1.4, Mid −0.435 on the 2026-12-01 snapshot). Normalisation across tiers breaks. The frontend renders what the endpoint returns and surfaces a data-quality footnote on the Pyramid chart when any weight is out-of-range. | v5.7.0 M7.6 | v5.8 | Fix the seed generator in `backend/app/seed/pnl_seed.py` so `sum(tier_weight_actual)` per (programme, snapshot) equals 1.0 ± 0.02 and no individual tier sits outside `[0, 1.0]`. Add a reconciliation test under `backend/tests/test_pnl_reconciliation.py` that asserts the invariant across all seeded programme_rates rows. |
+| DSO trend sparkline | The Pyramid section's DSO sub-card currently shows a single-snapshot number plus AR balance and Unbilled WIP. A six-month DSO trend line was dropped at M7.6 because it would have required six parallel `/dso` calls with rolling windows — too heavy for a small ornament. | v5.7.0 M7.6 | v5.8 | Add `metric="dso_days"` to the `/api/v1/pnl/pfa/{programme_code}` endpoint vocabulary so a single call returns the full time series, matching the existing pattern used for CPI / SPI sparklines in the EVM sub-card. Then wire the line chart into `DsoSubCard` inside `PyramidSection.tsx`. |
+
+### Why these two, not a broader backlog
+
+Both items surfaced as direct blockers to rendering the Pyramid section cleanly. The tier weight anomaly is a seed bug, not a contract bug — the endpoint behaves correctly given the data it holds. The DSO trend is a contract gap: the `/pfa` metric vocabulary should include `dso_days` but does not. Neither justified breaking the M3b endpoint scope-seal at M7.6.
+
+---
+
 ### Acceptance for reopen
 
 When v5.8 picks these up, acceptance criteria must include:

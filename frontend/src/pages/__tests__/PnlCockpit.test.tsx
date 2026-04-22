@@ -5,7 +5,7 @@ import { describe, expect, it, vi } from "vitest";
 import { PnlCockpit } from "@/pages/PnlCockpit";
 import { ContextRail } from "@/components/ContextRail";
 
-// All five shipped sections fire axios queries on mount. Stub the
+// All six shipped sections fire axios queries on mount. Stub the
 // client so this page-level test exercises placeholder copy and
 // ContextRail wiring without network.
 vi.mock("@/api/pnlApi", () => ({
@@ -15,6 +15,8 @@ vi.mock("@/api/pnlApi", () => ({
   fetchPnlWaterfall: vi.fn(() => new Promise(() => {})),
   fetchPnlPfa: vi.fn(() => new Promise(() => {})),
   fetchPnlLosses: vi.fn(() => new Promise(() => {})),
+  fetchPnlPyramid: vi.fn(() => new Promise(() => {})),
+  fetchPnlEvm: vi.fn(() => new Promise(() => {})),
 }));
 
 vi.mock("@/hooks/usePortfolio", () => ({
@@ -68,7 +70,7 @@ describe("PnlCockpit", () => {
       screen.getByRole("heading", { level: 1, name: /P&L Cockpit/i }),
     ).toBeInTheDocument();
     expect(
-      screen.getByText(/Remaining sections land in M7\.6 through M7\.7/i),
+      screen.getByText(/One section left — M7\.7/i),
     ).toBeInTheDocument();
   });
 
