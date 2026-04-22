@@ -37,9 +37,9 @@ This PRD is the single source of truth Claude Code executes against. Claude Code
 
 ## 3. Scope, balanced option two, explicit
 
-In scope for this PRD.
+In scope for v5.7.0 (five sections active, three sections deferred to v5.8).
 
-Seven sections on the new tab as specified in section six. KPI Board, Margin Bridge, Plan Forecast Actual triangle, Seven Losses with revenue attribution, Pyramid Economics with Realisation Rate, Commercial Levers panel, LLM narrative block. Drill-down and drill-up paths as specified in section eight. Backend API endpoints as specified in section ten. Frontend route at `/pnl` as specified in section eleven. Data seeds for six programmes across twelve months as specified in section nine. FORMULAS.md additions as definitions fifty through fifty-five per section seven.
+Five sections active in v5.7.0: Revenue cards, Margin Waterfall, Margin Bridge, Plan Forecast Actual triangle, Losses with Attribution. Three sub-cards ride inside the layout: Pyramid Economics, EVM, DSO. Three sections deferred to v5.8 with status notes kept in section six so v5.8 pickup has full context: KPI Board (full ten-card grid), Commercial Levers panel, LLM Narrative block. Drill-down and drill-up paths as specified in section eight. Backend API endpoints as specified in section ten. Frontend route at `/pnl` as specified in section eleven. Data seeds for seven programmes across twelve months as specified in section nine. FORMULAS.md additions as definitions fifty through fifty-five per section seven.
 
 Out of scope for this PRD, deferred to v6 Iteration 3.
 
@@ -76,6 +76,8 @@ Route: `/pnl`. Nav label: `P&L Cockpit`. Nav number: `12`.
 ## 6. Tab 12 specification, seven sections
 
 ### Section one, KPI Board
+
+**Status: deferred to v5.8.** The full ten-card KPI Board is not shipping in v5.7.0. In v5.7.0 the five revenue cards move to `/api/v1/pnl/revenue/{programme_code}` (Revenue section), the four margin layers move to `/api/v1/pnl/waterfall/{programme_code}` (Margin Waterfall section), and DSO moves to `/api/v1/pnl/dso/{programme_code}` (DSO sub-card). The unified ten-card grid is deferred to v5.8 where it will sit on top of these endpoints. Content below is retained so v5.8 implementers have full context.
 
 Ten cards in a three by four grid (three columns, four rows with the last row holding two cards). Each card shows the KPI name, current value, trend arrow, click-to-drill affordance, and a threshold indicator badge (green, amber, red).
 
@@ -166,6 +168,8 @@ Worked example. Seeded resources: Senior tier (Priya, Rajesh, Deepak, Suresh, Ni
 
 ### Section six, Commercial Levers panel
 
+**Status: deferred to v5.8.** The margin-lever action framework required to compute feasibility-weighted impact is not yet designed. Shipping levers without the framework would surface numbers a PM cannot act on. v5.8 opens with the framework design, then this panel follows. Content below is retained so v5.8 implementers have full context.
+
 Ranked list of the top five margin recovery levers across the portfolio, computed every render. Each row shows: lever name, programme, mechanism, estimated impact in basis points, owner from seed data, action window.
 
 Scoring algorithm.
@@ -185,6 +189,8 @@ Sample top five for NovaTech at 2026-03 close.
 Each row opens a modal with the full math, the affected records, and the recommended communication template.
 
 ### Section seven, LLM narrative block
+
+**Status: deferred to v5.8.** LLM orchestration layer lands in a future Tab AI PRD. Shipping a deterministic template version now would create a second narrative pattern for the Executive tab team to reconcile later. Better to land once, correctly. Content below is retained so v5.8 implementers have full context.
 
 Single paragraph, auto-generated from the sections above. Uses the existing template-driven narrative generator from the Executive tab, upgraded to pull from the P&L data shape. Must be deterministic in v5.3 (no LLM call yet), template-driven with variable substitution, to keep demo output stable.
 
@@ -288,38 +294,41 @@ Repeat pattern for ATLAS, SENTINEL, ORION, TITAN, HERCULES with programme-specif
 
 ## 10. Backend, API additions
 
-All new endpoints live under `/api/v1/pnl/`. Versioned. JSON responses. Follow existing FastAPI conventions in `backend/app/api/`.
+All new endpoints live under `/api/v1/pnl/`. Versioned. JSON responses. Follow existing FastAPI conventions in `backend/app/api/`. Nine endpoints ship in v5.7.0; three are deferred to v5.8 and must not be implemented in this iteration.
 
-| Method | Path | Returns |
-|---|---|---|
-| GET | `/api/v1/pnl/board/{scope}` | KPI Board data, scope in {portfolio, programme}. Programme takes `?programme=PHOENIX` |
-| GET | `/api/v1/pnl/bridge/{programme}/{period}` | Margin Bridge with four drivers, period in {mom, vs_plan, ytd_vs_plan} |
-| GET | `/api/v1/pnl/pfa/{programme}` | PFA triangle series per metric, query param `metric` in {revenue, gross_pct, net_pct, cpi, spi} |
-| GET | `/api/v1/pnl/losses_with_attribution` | Seven-loss list extended with revenue foregone and margin points lost |
-| GET | `/api/v1/pnl/pyramid/{programme}` | Pyramid ratio, realisation, utilisation per tier |
-| GET | `/api/v1/pnl/levers` | Top five levers with mechanism, impact, owner, window |
-| GET | `/api/v1/pnl/narrative` | Template-substituted paragraph, deterministic |
-| GET | `/api/v1/pnl/narrative?llm=true` | Reserved for v6 Iteration 3. In v5.3 must return HTTP 501 with message `LLM narrative scheduled for v6 Iteration 3` |
+| Method | Path | Status | Returns |
+|---|---|---|---|
+| GET | `/api/v1/pnl/waterfall/{programme_code}` | active v5.7.0 | Four-layer margin waterfall (gross, contribution, portfolio, net) with revenue base and layer values |
+| GET | `/api/v1/pnl/bridge/{metric_key}` | active v5.7.0 | Margin Bridge with four drivers (price, volume, mix, cost residual), `metric_key` in {gross_margin_pct, net_margin_pct} |
+| GET | `/api/v1/pnl/pfa/{programme_code}` | active v5.7.0 | PFA triangle series per metric, query param `metric` in {revenue, gross_pct, net_pct, cpi, spi} |
+| GET | `/api/v1/pnl/pyramid/{programme_code}` | active v5.7.0 | Pyramid ratio, realisation rate, utilisation per tier with RAG |
+| GET | `/api/v1/pnl/losses/{programme_code}` | active v5.7.0 | Loss-exposure list with revenue foregone and margin points lost at programme and portfolio level |
+| GET | `/api/v1/pnl/evm/{programme_code}` | active v5.7.0 | EVM sub-card: PV, EV, AC, % complete, BAC, CPI, SPI, EAC, TCPI, VAC |
+| GET | `/api/v1/pnl/dso/{programme_code}` | active v5.7.0 | DSO sub-card: billed, collected, AR balance, unbilled WIP, DSO days |
+| GET | `/api/v1/pnl/revenue/{programme_code}` | active v5.7.0 | Five revenue cards: committed, booked, billed, collected, unbilled WIP |
+| GET | `/api/v1/pnl/lineage/{metric_key}` | active v5.7.0 | Universal lineage resolver: parses 4-segment dotted metric key, returns formula + atomic contributing rows |
+| GET | `/api/v1/pnl/board/{scope}` | **deferred to v5.8** | Unified ten-card KPI Board. v5.7.0 leaves the 10 cards split across /revenue, /waterfall, /dso; the single-endpoint grid lands in v5.8 |
+| GET | `/api/v1/pnl/levers` | **deferred to v5.8** | Top five margin recovery levers. Blocked on the lever-framework design tracked in v5.8 planning |
+| GET | `/api/v1/pnl/narrative` | **deferred to v5.8** | Template-substituted paragraph. Blocked on the Tab AI PRD so the Executive and P&L narrative patterns land once |
 
-Contract tests live under `backend/tests/api/test_pnl_*.py`. Minimum seven contract tests, one per endpoint. Response schemas documented in OpenAPI, auto-generated.
+Every response wraps the shared `FiltersApplied` and `LineageBlock` shapes defined in `backend/app/schemas/pnl.py`. Every error returns the `ErrorEnvelope` shape. Contract tests live under `backend/tests/test_pnl_*.py` — minimum one test module per endpoint (nine modules), plus the pure-function engine tests in `test_pnl_engine.py`. Response schemas documented in OpenAPI, auto-generated.
 
 ---
 
 ## 11. Frontend, component plan
 
-New route `/pnl` mounted in `frontend/src/routes/` per existing convention. New files.
+New route `/pnl` mounted in `frontend/src/routes/` per existing convention. Five section files ship in v5.7.0 — `KpiBoard.jsx`, `LeversPanel.jsx`, `NarrativeBlock.jsx` are deferred to v5.8 and must not be scaffolded in this iteration.
 
 ```
 frontend/src/routes/pnl/index.jsx                    # Tab entry
-frontend/src/routes/pnl/sections/KpiBoard.jsx
-frontend/src/routes/pnl/sections/MarginBridge.jsx
-frontend/src/routes/pnl/sections/PfaTriangle.jsx
-frontend/src/routes/pnl/sections/LossesAttribution.jsx
-frontend/src/routes/pnl/sections/Pyramid.jsx
-frontend/src/routes/pnl/sections/LeversPanel.jsx
-frontend/src/routes/pnl/sections/NarrativeBlock.jsx
+frontend/src/routes/pnl/sections/RevenueCards.jsx    # Five revenue cards from /pnl/revenue
+frontend/src/routes/pnl/sections/MarginWaterfall.jsx # Four-layer waterfall from /pnl/waterfall
+frontend/src/routes/pnl/sections/MarginBridge.jsx    # Price/Volume/Mix/Cost from /pnl/bridge
+frontend/src/routes/pnl/sections/PfaTriangle.jsx     # Plan/Forecast/Actual from /pnl/pfa
+frontend/src/routes/pnl/sections/LossesAttribution.jsx # Losses with revenue foregone from /pnl/losses
+frontend/src/routes/pnl/sections/Pyramid.jsx         # Pyramid + realisation + utilisation, with EVM and DSO sub-cards
 frontend/src/components/common/ContextRail.jsx       # New right-rail drill-up component, shared across tabs
-frontend/src/lib/pnlApi.js                           # Data fetchers
+frontend/src/lib/pnlApi.js                           # Data fetchers covering the nine /api/v1/pnl/ endpoints
 ```
 
 Reuse existing primitives: `KpiCard`, `WaterfallChart` from `frontend/src/components/charts/`, `DataTable` from `frontend/src/components/common/`, `InfoModal` from `frontend/src/components/common/`. Recharts for KPI trends, ECharts where the Margin and EVM tab uses it for consistency.
@@ -378,35 +387,35 @@ Five new CTO questions to add to CTO_QUESTIONS.md.
 
 ## 14. Acceptance criteria, per section
 
-Every acceptance criterion must pass before the PR is mergeable. Run by Claude Code against the NovaTech seed after the build.
+Every acceptance criterion must pass before the PR is mergeable. Run by Claude Code against the NovaTech seed after the build. The three deferred sections (KPI Board, Commercial Levers, Narrative) have no v5.7.0 acceptance criteria and will be added in the v5.8 PRD delta.
 
-Section one, KPI Board.
+Section one, Revenue cards.
 
-Cards render all ten KPIs. Threshold colour matches the green and red rules in section six table one. Every card clickable. Info icon opens modal with formula and two worked examples. In Demo mode, cards for billed, collected, unbilled_wip, DSO carry a small "Simulated" pill.
+Five cards render for any programme with a Monthly Actuals row: committed, booked, billed, collected, unbilled WIP. Each card exposes `source_column` so the info modal can name the underlying field. In Demo mode, billed, collected, and unbilled WIP carry a small "Simulated" pill. `GET /api/v1/pnl/revenue/PHOENIX?from=2025-03-01&to=2025-03-31` returns five card rows plus a `LineageBlock` that cites the `financials` row contributing the values.
 
-Section two, Margin Bridge.
+Section two, Margin Waterfall.
 
-For Phoenix Feb to Mar the bridge ties to minus 340 basis points (plus or minus five basis points rounding). For Atlas Feb to Mar the bridge ties to minus 230 basis points. Cost bucket is the residual, all four bars always sum to the total delta exactly.
+Four layers render in the fixed order gross → contribution → portfolio → net for any programme with a Monthly Actuals row. `margin_value` equals `margin_pct * revenue` for every non-null layer. Null percentages produce null values (no fabricated zeros). `GET /api/v1/pnl/waterfall/PHOENIX?from=2025-03-01&to=2025-03-31` returns Phoenix March: gross 28.0%, contribution 12.5%, portfolio 8.2%, net 4.1%.
 
-Section three, PFA triangle.
+Section three, Margin Bridge.
 
-Dropdown renders five metrics. Orion forecast line diverges below YTD actual. Clicking a forecast point routes to Smart Ops with the Margin Cliff Projected alert preselected.
+For Phoenix Feb to Mar on `gross_margin_pct` the bridge ties to minus 340 basis points exactly (rounded to two decimals). For Atlas Feb to Mar the bridge ties to minus 230 basis points. Cost bucket is the residual by construction; `price_bps + volume_bps + mix_bps + cost_bps_residual == total_delta_bps` holds within 0.01 bps. The `test_phoenix_feb_to_mar_identity_price_mix_volume_cost_equal_total` engine test pins this identity.
 
-Section four, Seven Losses attribution.
+Section four, PFA triangle.
 
-Phoenix Bench Tax row shows loss 765K, revenue foregone 1093K, margin points lost both at programme level and portfolio level. Sort toggles work for dollars and for basis points.
+Dropdown renders five metrics (revenue, gross_pct, net_pct, cpi, spi). Orion forecast line diverges below YTD actual. Clicking a forecast point routes to Smart Ops with the Margin Cliff Projected alert preselected. `GET /api/v1/pnl/pfa/ORION?metric=gross_pct` returns three aligned series (plan, forecast, actual) keyed by snapshot_date.
 
-Section five, Pyramid and Realisation.
+Section five, Losses with attribution.
 
-Phoenix card renders ratio 50:33:17 with amber colour. Seniors show utilisation 88 percent, Juniors show zero. Realisation card shows 95.8 percent for Phoenix March.
+Phoenix Bench Tax row shows loss amount 765K, revenue foregone 1,093K (using target_gross_margin_pct = 0.30), margin points lost at both programme and portfolio level. Sort toggles work for dollars and for basis points. `GET /api/v1/pnl/losses/PHOENIX` returns the row list plus programme_revenue, portfolio_revenue, and the shared target denominator echoed for transparency.
 
-Section six, Commercial Levers.
+Section six, Pyramid with EVM and DSO sub-cards.
 
-Top five levers rendered with owner names drawn from `resources.csv`. Each modal opens with formula breakdown and a plaintext communication template.
+Phoenix card renders ratio 50:33:17 with amber RAG. Seniors show utilisation 88 percent, Juniors show zero. Realisation card shows 95.8 percent for Phoenix March. `GET /api/v1/pnl/pyramid/PHOENIX` returns all three tiers with planned and actual headcount and weights plus the realisation rate. `GET /api/v1/pnl/evm/PHOENIX` returns the full earned-value ten-metric set. `GET /api/v1/pnl/dso/PHOENIX` returns DSO days plus its four inputs.
 
-Section seven, Narrative.
+Lineage resolver.
 
-Paragraph renders with all seven variables substituted. Deterministic, no LLM call, same input produces same output.
+`GET /api/v1/pnl/lineage/tab12.margin.programme.waterfall_gross` for PHOENIX March returns `supported=true`, parsed dotted-key segments, the formula expression, the computed value, unit, and the list of atomic contributing rows with stable composite keys. Unsupported keys return `supported=false` with an empty atomic row list, not a 404.
 
 ContextRail.
 
@@ -428,7 +437,7 @@ Step four, open the app at `http://localhost:9000/pnl`, verify all seven section
 
 Step five, run each drill-down and drill-up route manually. Every link must land on the correct tab with the correct programme preselected.
 
-Step six, take four screenshots: full Tab 12 top, Margin Bridge zoomed, Pyramid section zoomed, Commercial Levers modal open. Save under `docs/screenshots/tab-12-pnl-cockpit/` and reference them in `DEMO_GUIDE.md`.
+Step six, take four screenshots: full Tab 12 top, Margin Bridge zoomed, Pyramid section zoomed, Revenue cards with info modal open. Save under `docs/screenshots/tab-12-pnl-cockpit/` and reference them in `DEMO_GUIDE.md`. (The Commercial Levers modal screenshot from earlier drafts is dropped — that section is deferred to v5.8.)
 
 Step seven, generate a verification note at `docs/VERIFICATION_REPORT_TAB_12.md` listing every acceptance criterion with pass or fail and the command that proved it.
 
@@ -556,10 +565,10 @@ STEP THREE, seed deltas
 Implement section 9 exactly. Regenerate financials.csv with five new columns using the deterministic billing_ratio and collection_ratio rules. Regenerate programme_rates.csv for six programmes times three tiers times twelve months. Show me the diff before committing.
 
 STEP FOUR, backend endpoints
-Implement the seven endpoints in section 10, one commit per endpoint. Each endpoint gets a contract test. All pytest tests pass before moving on.
+Implement the nine active endpoints in section 10 (waterfall, bridge, pfa, pyramid, losses, evm, dso, revenue, lineage), one commit per endpoint. Each endpoint gets a contract test. All pytest tests pass before moving on. The three deferred endpoints (board, levers, narrative) are out of scope for v5.7.0.
 
 STEP FIVE, frontend sections
-Scaffold /pnl route, then implement the seven sections in the order listed in section 11. One commit per section. Lint and component tests must pass before moving on.
+Scaffold /pnl route, then implement the five sections in the order listed in section 11 (Revenue cards, Margin Waterfall, Margin Bridge, PFA triangle, Losses with attribution, Pyramid with EVM and DSO sub-cards). KPI Board, Commercial Levers, Narrative are deferred to v5.8 and must not be scaffolded in this iteration. One commit per section. Lint and component tests must pass before moving on.
 
 STEP SIX, ContextRail
 Implement the shared drill-up rail per section 12. Mount on Executive, Margin and EVM, Customer, Delivery, and P&L Cockpit. URL-driven programme selection.

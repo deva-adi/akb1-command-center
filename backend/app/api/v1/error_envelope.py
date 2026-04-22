@@ -113,3 +113,4 @@ def install_error_handlers(app: FastAPI) -> None:
     app.add_exception_handler(FilterValidationError, _handle_filter_validation_error)  # type: ignore[arg-type]
     app.add_exception_handler(LineageKeyError, _handle_lineage_key_error)  # type: ignore[arg-type]
     app.add_exception_handler(RequestValidationError, _handle_request_validation_error)
+    app.add_exception_handler(StarletteHTTPException, _handle_http_exception)  # type: ignore[arg-type]
