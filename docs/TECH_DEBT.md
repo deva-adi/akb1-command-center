@@ -52,3 +52,11 @@ When v5.8 picks these up, acceptance criteria must include:
 3. Ten-card grid visually validated against the Executive-tab refresh.
 4. All three endpoints return the shared `FiltersApplied` + `LineageBlock` shape (no deviation from the v5.7.0 envelope).
 5. The three deferred-to-v5.8 banners in `docs/PRD_TAB_12_PNL_COCKPIT.md` sections 6.1, 6.6, 6.7 are removed and replaced with live worked examples.
+
+---
+
+## v5.7.0 M9 audit findings
+
+| Area | Issue | Severity | Fix | Introduced |
+|------|-------|----------|-----|------------|
+| `frontend/src/components/Layout.tsx` | Sidebar NavLink computed accessible name includes the tab number (e.g. `"Data Hub 11"` not `"Data Hub"`) because each NavLink renders two children: a `<span>` for the label and a `<span>` for the number. Breaks strict-mode `getByRole("link", { name: "Data Hub", exact: true })` locators. The M9 audit spec works around it by passing the full `"<label> <number>"` string. | Low | Add `aria-label={tab.label}` to the NavLink in `Layout.tsx` so the accessible name resolves to just the label regardless of inner-span layout. One-line frontend change. After landing it, simplify the `clickTabAndAssert` helper in `frontend/e2e/m9-drill-audit.spec.ts` to match by label only. | Pre-existing (surfaced during M9 audit on 2026-04-23) |
