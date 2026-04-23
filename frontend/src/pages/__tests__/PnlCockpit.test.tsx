@@ -64,13 +64,13 @@ function renderAt(url: string) {
 }
 
 describe("PnlCockpit", () => {
-  it("renders the page title and the remaining-sections placeholder", () => {
+  it("renders the page title and the seven-sections summary paragraph", () => {
     renderAt("/pnl");
     expect(
       screen.getByRole("heading", { level: 1, name: /P&L Cockpit/i }),
     ).toBeInTheDocument();
     expect(
-      screen.getByText(/One section left — M7\.7/i),
+      screen.getByText(/Seven sections active in v5\.7\.0/i),
     ).toBeInTheDocument();
   });
 
