@@ -18,8 +18,8 @@ describe("formatCurrency — USD (default)", () => {
   it("uses plain grouping below 1K", () => {
     expect(formatCurrency(850)).toBe("$850");
   });
-  it("returns em dash for null", () => {
-    expect(formatCurrency(null)).toBe("—");
+  it("returns n/a for null", () => {
+    expect(formatCurrency(null)).toBe("n/a");
   });
 });
 

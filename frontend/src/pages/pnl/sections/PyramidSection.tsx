@@ -90,12 +90,12 @@ function dsoPalette(days: number | null): Palette {
 }
 
 function formatRatio(value: number | null, digits = 2): string {
-  if (value === null) return "—";
+  if (value === null) return "n/a";
   return value.toFixed(digits);
 }
 
 function formatDays(value: number | null): string {
-  if (value === null) return "—";
+  if (value === null) return "n/a";
   return `${value.toFixed(1)} d`;
 }
 
@@ -210,10 +210,10 @@ function PyramidBlock({
     <div data-testid="pyramid-block">
       <div className="mb-2 flex flex-wrap items-baseline justify-between gap-2 text-xs text-navy/60">
         <span>
-          Snapshot {p.snapshot_date ?? "—"} · realisation{" "}
+          Snapshot {p.snapshot_date ?? "n/a"} · realisation{" "}
           {p.realisation_rate_pct != null
             ? `${p.realisation_rate_pct.toFixed(1)}%`
-            : "—"}
+            : "n/a"}
         </span>
         <span className="flex items-center gap-2">
           Overall RAG
@@ -291,7 +291,7 @@ function EvmSubCard({
       title="Earned value (CPI · SPI)"
       subtitle={
         e.snapshot_date
-          ? `Snapshot ${e.snapshot_date}. % complete ${e.percent_complete != null ? `${e.percent_complete.toFixed(1)}%` : "—"}.`
+          ? `Snapshot ${e.snapshot_date}. % complete ${e.percent_complete != null ? `${e.percent_complete.toFixed(1)}%` : "n/a"}.`
           : "No EVM snapshot for this window."
       }
       testId="evm-sub-card"

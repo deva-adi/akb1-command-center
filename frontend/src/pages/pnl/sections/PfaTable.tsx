@@ -106,7 +106,7 @@ function marginRagPalette(
 }
 
 function formatSignedCurrency(delta: number | null): string {
-  if (delta === null) return "—";
+  if (delta === null) return "n/a";
   const sign = delta > 0 ? "+" : delta < 0 ? "−" : "";
   return `${sign}${formatCurrency(Math.abs(delta))}`;
 }
@@ -118,18 +118,18 @@ function formatSignedPct(delta: number | null): string {
 }
 
 function formatSignedBps(delta: number | null): string {
-  if (delta === null) return "—";
+  if (delta === null) return "n/a";
   const sign = delta > 0 ? "+" : delta < 0 ? "−" : "";
   return `${sign}${Math.abs(Math.round(delta))} bps`;
 }
 
 function formatPctValue(value: number | null): string {
-  if (value === null) return "—";
+  if (value === null) return "n/a";
   return `${(value * 100).toFixed(1)}%`;
 }
 
 function formatCurrencyValue(value: number | null): string {
-  if (value === null) return "—";
+  if (value === null) return "n/a";
   return formatCurrency(value);
 }
 
@@ -137,7 +137,7 @@ function currencyVarianceText(
   plan: number | null,
   actual: number | null,
 ): string {
-  if (plan === null || actual === null) return "—";
+  if (plan === null || actual === null) return "n/a";
   const abs = actual - plan;
   const pct = plan !== 0 ? (actual - plan) / Math.abs(plan) : null;
   const pctText = pct === null ? "" : ` (${formatSignedPct(pct)})`;

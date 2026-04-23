@@ -16,7 +16,7 @@ export function formatCurrency(
   amount: number | null | undefined,
   code: CurrencyCode = "USD",
 ): string {
-  if (amount === null || amount === undefined) return "—";
+  if (amount === null || amount === undefined) return "n/a";
   const symbol = SYMBOLS[code];
   const abs = Math.abs(amount);
 
@@ -38,17 +38,17 @@ export const formatCurrencyINR = (amount: number | null | undefined) =>
   formatCurrency(amount, "INR");
 
 export function formatPct(value: number | null | undefined, fractionDigits = 1): string {
-  if (value === null || value === undefined) return "—";
+  if (value === null || value === undefined) return "n/a";
   return `${(value * 100).toFixed(fractionDigits)}%`;
 }
 
 export function formatRatio(value: number | null | undefined, fractionDigits = 2): string {
-  if (value === null || value === undefined) return "—";
+  if (value === null || value === undefined) return "n/a";
   return value.toFixed(fractionDigits);
 }
 
 export function formatDate(iso: string | null | undefined): string {
-  if (!iso) return "—";
+  if (!iso) return "n/a";
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return iso;
   return d.toLocaleDateString("en-GB", {

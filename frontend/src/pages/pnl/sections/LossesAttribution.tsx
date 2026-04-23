@@ -82,17 +82,17 @@ function paletteClass(p: "green" | "amber" | "red" | "neutral"): string {
 }
 
 function formatPct(ratio: number | null, digits = 1): string {
-  if (ratio === null) return "—";
+  if (ratio === null) return "n/a";
   return `${(ratio * 100).toFixed(digits)}%`;
 }
 
 function formatBps(value: number | null): string {
-  if (value === null) return "—";
+  if (value === null) return "n/a";
   return `${Math.round(value).toLocaleString("en-US")} bps`;
 }
 
 function formatDate(iso: string | null): string {
-  if (!iso) return "—";
+  if (!iso) return "n/a";
   return iso;
 }
 
@@ -243,7 +243,7 @@ export function LossesAttribution() {
                   {row.loss_category}
                 </td>
                 <td className="py-2 pr-4 text-navy/70">
-                  {row.mitigation_status ?? "—"}
+                  {row.mitigation_status ?? "n/a"}
                 </td>
                 <td className="py-2 pr-4 text-right font-mono tabular-nums text-navy">
                   {formatCurrency(row.amount)}
@@ -291,7 +291,7 @@ export function LossesAttribution() {
                       ? "Amber"
                       : palette === "green"
                         ? "Green"
-                        : "—"}
+                        : "n/a"}
                 </span>
               </td>
             </tr>

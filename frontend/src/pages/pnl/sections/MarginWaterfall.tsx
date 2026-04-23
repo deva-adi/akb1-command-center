@@ -64,7 +64,7 @@ function toneFor(layer: LayerKey, pct: number | null): string {
 }
 
 function formatPctLabel(value: number | null): string {
-  if (value === null) return "—";
+  if (value === null) return "n/a";
   return `${(value * 100).toFixed(1)}%`;
 }
 
@@ -281,7 +281,7 @@ export function MarginWaterfall() {
                   {formatDropBps(d.bps)}
                 </span>
               ) : (
-                <span className="text-[11px] text-navy/40">—</span>
+                <span className="text-[11px] text-navy/40">n/a</span>
               )}
             </div>
           ))}

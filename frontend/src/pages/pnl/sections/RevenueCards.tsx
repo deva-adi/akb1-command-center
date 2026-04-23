@@ -113,12 +113,12 @@ function formatDeltaSub(
   current: number | null,
   prior: number | null,
 ): string {
-  if (current === null) return "—";
-  if (prior === null) return "— (no prior snapshot)";
+  if (current === null) return "n/a";
+  if (prior === null) return "n/a (no prior snapshot)";
   const delta = current - prior;
   const sign = delta > 0 ? "+" : delta < 0 ? "−" : "";
   const abs = formatCurrency(Math.abs(delta));
-  if (prior === 0) return `${sign}${abs} (—)`;
+  if (prior === 0) return `${sign}${abs} (n/a)`;
   const pct = ((delta / Math.abs(prior)) * 100).toFixed(1);
   const pctSign = delta > 0 ? "+" : delta < 0 ? "−" : "";
   return `${sign}${abs} (${pctSign}${Math.abs(Number(pct))}%)`;

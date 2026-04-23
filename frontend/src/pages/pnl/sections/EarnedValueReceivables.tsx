@@ -77,17 +77,17 @@ function errorMessage(err: unknown): string {
 }
 
 function formatRatio(value: number | null): string {
-  if (value === null) return "—";
+  if (value === null) return "n/a";
   return value.toFixed(2);
 }
 
 function formatMillions(value: number | null): string {
-  if (value === null) return "—";
+  if (value === null) return "n/a";
   return `$${(value / 1_000_000).toFixed(2)} M`;
 }
 
 function formatDsoDays(value: number | null): string {
-  if (value === null) return "—";
+  if (value === null) return "n/a";
   return `${value.toFixed(1)} days`;
 }
 
