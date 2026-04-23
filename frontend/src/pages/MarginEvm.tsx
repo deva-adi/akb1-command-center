@@ -27,17 +27,17 @@ import { useProgrammes } from "@/hooks/usePortfolio";
 import { useCurrency } from "@/hooks/useCurrency";
 import { formatPct } from "@/lib/format";
 
-const WATERFALL_FIELD: Record<string, keyof typeof WATERFALL_LABELS> = {
+type WaterfallLabelKey =
+  | "gross_margin_pct"
+  | "contribution_margin_pct"
+  | "portfolio_margin_pct"
+  | "net_margin_pct";
+
+const WATERFALL_FIELD: Record<string, WaterfallLabelKey> = {
   Gross: "gross_margin_pct",
   Contribution: "contribution_margin_pct",
   Portfolio: "portfolio_margin_pct",
   Net: "net_margin_pct",
-};
-const WATERFALL_LABELS = {
-  gross_margin_pct: "Gross margin",
-  contribution_margin_pct: "Contribution margin",
-  portfolio_margin_pct: "Portfolio margin",
-  net_margin_pct: "Net margin",
 };
 
 export function MarginEvm() {

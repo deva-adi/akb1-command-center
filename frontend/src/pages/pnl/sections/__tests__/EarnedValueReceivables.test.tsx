@@ -3,11 +3,8 @@ import { MemoryRouter, Routes, Route } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
 import { AxiosError, AxiosHeaders } from "axios";
-import {
-  EarnedValueReceivables,
-  cpiSpiPalette,
-  dsoPalette,
-} from "@/pages/pnl/sections/EarnedValueReceivables";
+import { EarnedValueReceivables } from "@/pages/pnl/sections/EarnedValueReceivables";
+import { cpiSpiPalette, dsoPalette } from "@/pages/pnl/sections/palettes";
 import * as pnlApi from "@/api/pnlApi";
 
 vi.mock("recharts", async () => {

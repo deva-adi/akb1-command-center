@@ -19,6 +19,11 @@ import {
   type PnlFilters,
 } from "@/api/pnlApi";
 import { cn } from "@/lib/cn";
+import {
+  cpiSpiPalette,
+  dsoPalette,
+  type Palette,
+} from "@/pages/pnl/sections/palettes";
 
 /**
  * Section 7 of Tab 12: Earned Value and Receivables.
@@ -36,22 +41,6 @@ import { cn } from "@/lib/cn";
 
 const CPI_STROKE = "#1E3A5F";
 const SPI_STROKE = "#2E6DA4";
-
-type Palette = "neutral" | "green" | "amber" | "red";
-
-export function cpiSpiPalette(value: number | null): Palette {
-  if (value === null) return "neutral";
-  if (value >= 1.0) return "green";
-  if (value >= 0.9) return "amber";
-  return "red";
-}
-
-export function dsoPalette(days: number | null): Palette {
-  if (days === null) return "neutral";
-  if (days < 45) return "green";
-  if (days <= 60) return "amber";
-  return "red";
-}
 
 function paletteClass(p: Palette): string {
   switch (p) {
