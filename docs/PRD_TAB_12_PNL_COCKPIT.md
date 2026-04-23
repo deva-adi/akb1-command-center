@@ -1,13 +1,15 @@
-# PRD, Tab 12 P&L Cockpit, AKB1 Command Center v5.3
+# PRD, Tab 12 P&L Cockpit, AKB1 Command Center v5.7.0
 
 **Document ID:** PRD-T12-PNL-COCKPIT
 **Version:** 1.0
-**Status:** Locked for Claude Code execution
+**Status:** Shipped in v5.7.0 (in-scope sections). KPI Board, Commercial Levers, and LLM Narrative remain deferred to v5.8 per the per-section status notes.
 **Author:** Adi Kompalli
-**Date:** 2026-04-22
-**Target release:** v5.3 (Iteration 2 delta on top of v5.2)
+**Date:** 2026-04-22 (locked) / 2026-04-23 (implementation complete)
+**Target release:** v5.7.0
 **Repo:** github.com/deva-adi/akb1-command-center
 **Decision record:** Balanced scope, option two, as selected on 2026-04-22. Strategic scope (option three) is a separate ROADMAP entry for v6.
+
+**Implementation status (2026-04-23):** All in-scope sections shipped on branch `feat/tab-12-pnl-cockpit-v5.7`. M7.1 Revenue (`c083ad8`), M7.2 Margin Bridge (`5279eca`), M7.3 Margin Waterfall (`b38278c`), M7.4 PFA (`e94b2c2`), M7.5 Losses with Attribution (`e8c1a45`), M7.6 Pyramid + EVM/DSO sub-cards (`a683841`), M7.7 standalone Earned Value and Receivables (`f1b5b9a`). M8 cleanup: null placeholder swap (`29e18f4`), ESLint fix (`b929a13`). KPI Board, Commercial Levers, and LLM Narrative remain deferred to v5.8. See CLAUDE_MEMORY.md Section 2 for the full milestone log.
 
 ---
 
@@ -98,6 +100,8 @@ Cards must carry an information icon that opens a modal with the formula and the
 
 ### Section two, Margin Bridge
 
+**Status: Shipped in v5.7.0** (M7.2 commit `5279eca`). Implementation at `frontend/src/pages/pnl/sections/MarginBridge.tsx` wires `/api/v1/pnl/bridge/{metric_key}` with the canonical key `pnl.gross_margin_pct.programme.month`.
+
 Single waterfall chart showing month over month margin change decomposed into four drivers: Price, Volume, Mix, Cost. Three bridge views available via a toggle: current month versus prior month, current month versus plan, YTD actual versus plan.
 
 Decomposition formulas.
@@ -124,6 +128,8 @@ Prior 42.1 percent, current 39.8 percent, delta minus 230 basis points, also mea
 
 ### Section three, Plan Forecast Actual triangle
 
+**Status: Shipped in v5.7.0** (M7.4 commit `e94b2c2`). Implementation at `frontend/src/pages/pnl/sections/PfaTable.tsx` wires `/api/v1/pnl/pfa/{programme_code}` with two calls (revenue + gross_pct), cost derived client-side. Iron Triangle dropped (Gap 3 Option A at M7.4 sign-off).
+
 Three-line trend chart per metric. Metrics selectable from a dropdown: Revenue, Gross margin percent, Net margin percent, CPI, SPI.
 
 Lines: Plan (from planned_revenue and planned_cost), Forecast (from `scenario_name = Forecast at Completion` rows in `financials.csv`, extended month by month), Actual (from `scenario_name = Monthly Actuals`).
@@ -131,6 +137,8 @@ Lines: Plan (from planned_revenue and planned_cost), Forecast (from `scenario_na
 Worked example, Orion Data Platform. Plan revenue 5.1M at margin 18.0 percent. Forecast at completion revenue 5.05M at margin 13.8 percent. YTD actual revenue 415K at March at margin 24.1 percent. Triangle shows YTD actual looking healthy but forecast diverging downward, which is the margin cliff already flagged in Smart Ops. Clicking the forecast line routes to Smart Ops with the Margin Cliff Projected alert preselected.
 
 ### Section four, Seven Losses with revenue attribution
+
+**Status: Shipped in v5.7.0** (M7.5 commit `e8c1a45`). Implementation at `frontend/src/pages/pnl/sections/LossesAttribution.tsx` wires `/api/v1/pnl/losses/{programme_code}`. Seven-column ledger plus horizontal Recharts breakdown chart by category, total row with RAG chip.
 
 Extends the existing seven-loss bar on the Margin tab. Each loss category now also shows revenue foregone and margin-points lost, not only dollar loss.
 
@@ -145,6 +153,8 @@ Worked example, Phoenix Bench Tax 765K at target 30 percent. Revenue foregone eq
 Each category row is clickable, drills to the underlying programme and to Smart Ops for any matching active alert.
 
 ### Section five, Pyramid Economics and Realisation Rate
+
+**Status: Shipped in v5.7.0** (M7.6 commit `a683841`, plus standalone Earned Value and Receivables in M7.7 commit `f1b5b9a`). Implementation at `frontend/src/pages/pnl/sections/PyramidSection.tsx` wires `/api/v1/pnl/pyramid/{programme_code}` plus `/evm` and `/dso` for the two sub-cards inside the section. The standalone treatment for EVM and DSO ships as `frontend/src/pages/pnl/sections/EarnedValueReceivables.tsx` and reuses the same three endpoints. Five Option-A gap decisions taken at M7.6 close, see CLAUDE_MEMORY.md Section 3.
 
 Three sub-cards.
 

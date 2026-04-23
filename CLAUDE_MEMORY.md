@@ -2,7 +2,7 @@
 
 This file is the recovery document. It is updated at the end of every milestone commit, before the git push. In any future Claude Code session starting cold after data loss or a machine reset, the first instruction is: read this file and resume from the state it describes.
 
-Last updated: 2026-04-22 (end of M7.6 Pyramid + EVM + DSO section)
+Last updated: 2026-04-23 (end of M7.7 Earned Value and Receivables + M8 ESLint and null-placeholder cleanup, before M9 drill audit)
 
 ---
 
@@ -44,6 +44,9 @@ Last updated: 2026-04-22 (end of M7.6 Pyramid + EVM + DSO section)
 | M7.4 (PFA table) | `e94b2c2` | 2026-04-22 | feat(ui): PfaTable section — three-row table (Revenue / Cost derived / Gross margin) with Plan / Forecast / Actual / Variance columns. Two /pfa calls (revenue + gross_pct), cost derived as revenue×(1−margin), RAG on margin variance. Forecast row reads — with v5.8 footnote. 4 Vitest + 2 Playwright. Iron Triangle dropped (Gap 3 Option A). |
 | M7.5 (Losses with Attribution) | `e8c1a45` | 2026-04-22 | feat(ui): LossesAttribution section — 7-column table (Date / Category / Mitigation / Amount / Revenue foregone / Margin lost bps / Cumulative) + horizontal Recharts breakdown chart by category + total row with RAG chip. Phoenix: four rows $1.95M total 237.8% of programme revenue = red. 5 Vitest + 2 Playwright. |
 | M7.6 (Pyramid + EVM + DSO) | `a683841` | 2026-04-22 | feat(ui): PyramidSection with 3 endpoints wired independently (/pyramid + /evm + /dso) + 2 /pfa calls for CPI/SPI sparklines. Adi-provided PyramidChart component used verbatim. Independent state handling per sub-card. TECH_DEBT.md updated with seed anomaly + DSO-trend v5.8 entries. 4 Vitest + 2 Playwright. |
+| M7.7 (Earned Value + Receivables) | `f1b5b9a` | 2026-04-23 | feat(ui): standalone EarnedValueReceivables section with two sub-cards. Earned Value shows CPI/SPI as hero numbers with RAG chips and a combined six-month sparkline (CPI navy / SPI mid-blue) pulling from /evm and two /pfa calls. Receivables shows DSO days as hero with AR and Unbilled WIP in $M 2dp. Reuses fetchPnlEvm, fetchPnlPfa, fetchPnlDso. No backend changes. PnlCockpit placeholder removed and intro paragraph updated to "Seven sections active in v5.7.0". 18 new Vitest + 3 new Playwright. |
+| M8a (null placeholder) | `29e18f4` | 2026-04-23 | refactor: replace em-dash null placeholder with "n/a" across 7 source files (format.ts + 6 pnl section files, 28 swaps) plus 1 test assertion in format.test.ts. Display strings only, no comments or operators touched. |
+| M8b (ESLint fix) | `b929a13` | 2026-04-23 | fix(lint): resolve all 7 pre-existing ESLint errors. MarginEvm.tsx WATERFALL_LABELS const converted to WaterfallLabelKey type alias. KanbanView.tsx six any types replaced with minimal local EChartsInstance and EChartsTooltipParam types. New palettes.ts file extracts cpiSpiPalette and dsoPalette out of EarnedValueReceivables.tsx to silence the two react-refresh warnings. Targeted lint and full-repo lint both report zero errors zero warnings. |
 
 Earlier v5.x milestones (pre-Tab 12, already on main): v5.6 drill-fidelity audit (`792aa0d`), v5.5.4 margin bug fixes (`22c93b1`), v5.5.3 a11y trust-badge fix (`0854876`), v5.5.2 dead-metric-card fix (`7e03e1c`). These are retained on `main`; the Tab 12 branch builds forward from there.
 
@@ -51,8 +54,8 @@ Earlier v5.x milestones (pre-Tab 12, already on main): v5.6 drill-fidelity audit
 
 ## Section 3 — Current state
 
-- **Milestone just completed:** M7.6 Pyramid + EVM + DSO sub-cards (sixth of seven per-section commits in M7)
-- **Tests:** backend 205 passed (unchanged), frontend 53 Vitest passed (up from 49 — 4 new PyramidSection state tests), 17 Playwright specs total (2 ContextRail + 3 pnl-stub + 2 × 7 pnl-section specs — all against live Docker stack)
+- **Milestone just completed:** M8b ESLint fix (7 pre-existing errors resolved + palettes.ts extracted). M7.7 Earned Value and Receivables shipped earlier in the same morning. M8c docs commit and M8d version bump still pending in the M8 sequence.
+- **Tests:** backend 205 passed (unchanged), frontend 71 Vitest passed (up from 53 — 18 new in EarnedValueReceivables.test.tsx covering RAG boundary helpers and component states), 23 of 28 Playwright passed against the live Docker stack. The 5 failures are pre-existing baseline regressions, see Section 4.5.
 - **/health output:** `{"status":"healthy","version":"5.7.0-dev","tables":47}`
 - **Docker state:** `akb1-backend` healthy on 127.0.0.1:9001, `akb1-frontend` rebuilt at M6 close and healthy on 127.0.0.1:9000
 - **Nine active endpoints registered** under `/api/v1/pnl/`: waterfall, bridge, pfa, pyramid, losses, evm, dso, revenue, lineage
@@ -65,10 +68,13 @@ Earlier v5.x milestones (pre-Tab 12, already on main): v5.6 drill-fidelity audit
 - **Margin Waterfall (M7.3):** `frontend/src/pages/pnl/sections/MarginWaterfall.tsx` wires `/waterfall`. Four-bar cascade with drop-pill annotations between bars. Phoenix Mar: 28.0 / 12.5 / 8.2 / 4.1% with drops −1550 / −430 / −410 bps.
 - **PFA table (M7.4):** `frontend/src/pages/pnl/sections/PfaTable.tsx` wires `/pfa` with two calls (revenue + gross_pct). Cost derived client-side. Three rows × four cols with RAG on the gross-margin variance. Phoenix March: Revenue −$30K neutral, Cost +$40.4K neutral, Gross margin −729 bps red.
 - **Losses with Attribution (M7.5):** `/losses` wired, seven-col table + horizontal breakdown + red total RAG.
-- **Pyramid + EVM + DSO (M7.6):** `frontend/src/pages/pnl/sections/PyramidSection.tsx` wires three endpoints independently so a slow endpoint does not block the others. `PyramidChart.tsx` is Adi's provided component used verbatim (do not edit). The section layout is: pyramid header with overall RAG chip and realisation-rate subtitle, the pyramid bar chart in the middle, two side-by-side sub-cards below — **EVM sub-card** (CPI 0.87 red / SPI 0.84 red for Phoenix, each with formula under the number and a 6-point Recharts LineChart sparkline fed by `/pfa?metric=cpi` and `/pfa?metric=spi`), **DSO sub-card** (DSO 6.0 d green, AR $144.3 K, Unbilled WIP $98.4 K — no trend, deferred to v5.8). Per-sub-card snapshot dates in subtitles since all three endpoints reference different months (/pyramid 2026-12-01, /evm 2026-04-01, /dso 2026-03-01). Footnote on pyramid chart fires when any tier weight is outside [0, 1.2] — Phoenix's anomalous weights trigger it. Five Option-A gap decisions documented at M7.6: tiers = Junior/Mid/Senior only, per-tier margin not rendered, /pfa feeds sparklines, no DSO trend, Unbilled WIP replaces Accrued Margin. `docs/TECH_DEBT.md` has two new entries (tier-weight seed anomaly, /pfa?metric=dso_days for v5.8).
-- **Branch state:** `feat/tab-12-pnl-cockpit-v5.7` is now twenty commits ahead of main; no merge to main yet
-- **In flight:** M7.7 (final M7 section — to be scoped) next
-- **Next milestone:** M7.7 — final section of M7. Scope not yet defined by Adi. After M7.7 lands, M8 verification protocol begins (including fixing the 7 pre-existing lint errors in Section 4.5).
+- **Pyramid + EVM + DSO (M7.6):** `frontend/src/pages/pnl/sections/PyramidSection.tsx` wires three endpoints independently so a slow endpoint does not block the others. `PyramidChart.tsx` is Adi's provided component used verbatim (do not edit). EVM and DSO render as compact sub-cards inside this section. M7.7 added the standalone treatment alongside.
+- **Earned Value + Receivables (M7.7):** `frontend/src/pages/pnl/sections/EarnedValueReceivables.tsx` is the seventh and final M7 section. Two sub-cards in a 50/50 grid. Earned Value shows CPI 0.87 and SPI 0.84 for Phoenix as large two-decimal numbers with inline RAG chips (red below 0.90, amber 0.90 to 0.99, green at or above 1.00), the formula line "CPI = EV / AC | SPI = EV / PV", and a combined six-month Recharts LineChart sparkline 200 by 52 (CPI navy `#1E3A5F`, SPI mid-blue `#2E6DA4`, no axes, no tooltip, dot legend underneath). Receivables shows DSO 6.0 days with green RAG chip (under 45 days), AR balance $0.14 M, Unbilled WIP $0.10 M (currency in millions to two decimal places). No DSO trend sparkline, deferred to v5.8 same as the M7.6 sub-card. RAG palette helpers split out into `palettes.ts` in M8b.
+- **Null placeholder (M8a):** the em-dash null placeholder used across the cockpit and `lib/format.ts` was replaced with `"n/a"` to comply with the no-em-dash rule. 28 source swaps + 1 test assertion. Out-of-scope: comments, prose UI strings (`"Tier weight anomaly detected — see TECH_DEBT.md"` and similar), and `frontend/src/components/TopRisksCard.tsx` which is outside the pnl directory.
+- **ESLint baseline at zero (M8b):** all 7 pre-existing errors resolved. MarginEvm.tsx unused const now a type alias. KanbanView.tsx six `any` replaced with minimal local types (`EChartsInstance`, `EChartsTooltipParam`). New `frontend/src/pages/pnl/sections/palettes.ts` extracts `cpiSpiPalette` and `dsoPalette` so `EarnedValueReceivables.tsx` only exports React components.
+- **Branch state:** `feat/tab-12-pnl-cockpit-v5.7` is twenty-three commits ahead of main at M8b close (twenty after M7.6 + M7.7 + M8a + M8b). No merge to main yet. Push to origin happens after M8d (version bump), immediately before `gh pr create`.
+- **In flight:** M8c docs commit (this file plus README and PRD updates) and M8d version bump (`backend/app/__init__.py` 5.7.0-dev → 5.7.0 + `test_health.py` assertion update) still to land. Then verification protocol, then push, then PR open.
+- **Next milestone:** **M9 drill-integrity audit across all 12 tabs.** PR does not merge until M9 closes. M9 is a separate prompt; do not start it speculatively.
 
 ---
 
@@ -89,16 +95,29 @@ PRD §6.1, §6.6, §6.7 carry "Status: deferred to v5.8" banners at the top with
 
 ---
 
-## Section 4.5 — Known issues (must be fixed before M8 verification)
+## Section 4.5 — Known issues
 
-These are pre-existing issues carried forward from before the Tab 12 build began. They are not blockers for intermediate milestones but must be resolved before the M8 verification protocol runs, per Adi's note at the close of M5.
+This section tracks pre-existing issues. ESLint errors LINT-1 and LINT-2 were resolved in M8b. Five Playwright pre-existing failures were uncovered while running the full suite for M7.7 sign-off, are not regressions from any Tab 12 work, and are scheduled for the M9 drill audit pass.
 
-| ID | File | Line(s) | Description | Detected in |
+### ESLint — resolved in M8b (`b929a13`)
+
+| ID | File | Line(s) | Description | Resolved in |
 |---|---|---|---|---|
-| LINT-1 | `frontend/src/pages/MarginEvm.tsx` | 36 | `WATERFALL_LABELS` is assigned a value but only used as a type. Rule: `@typescript-eslint/no-unused-vars`. | pre-M5 baseline |
-| LINT-2 | `frontend/src/pages/delivery/KanbanView.tsx` | 122, 139, 722, 725, 780, 783 | Six uses of `any`. Rule: `@typescript-eslint/no-explicit-any`. Columns-value typing or generic narrowing needed. | pre-M5 baseline |
+| LINT-1 | `frontend/src/pages/MarginEvm.tsx` | 36 | `WATERFALL_LABELS` was assigned a value but only used as a type. Rule: `@typescript-eslint/no-unused-vars`. | `b929a13` (converted to `WaterfallLabelKey` type alias) |
+| LINT-2 | `frontend/src/pages/delivery/KanbanView.tsx` | 122, 139, 722, 725, 780, 783 | Six uses of `any`. Rule: `@typescript-eslint/no-explicit-any`. | `b929a13` (replaced with minimal local `EChartsInstance` and `EChartsTooltipParam` types) |
 
-Fix target: before the M8 verification protocol begins. Rerun `npm --prefix frontend run lint` after fixes and confirm the error count is zero. Record the resolving commit hashes in this table when done.
+Current ESLint error count across the repo: **zero errors, zero warnings**. Confirm with `npm --prefix frontend run lint`.
+
+### Playwright — pre-existing baseline failures (not regressions from Tab 12 work)
+
+Detected while running the full `npx playwright test` suite during M7.7 sign-off. None of the failing assertions touch any code added during the Tab 12 build (Tab 12 specs all pass). Tracked here so the M9 drill audit pass can address them as part of the broader cross-tab cleanup.
+
+| ID | Spec | Tests failing | Root cause |
+|---|---|---|---|
+| PW-1 | `frontend/e2e/golden-path.spec.ts` | `executive → delivery → kpi round-trip with currency switch`, `no axe-core violations on the executive dashboard` | Currency-round-trip and axe-core regressions on executive dashboard. Predates Tab 12. |
+| PW-2 | `frontend/e2e/hercules-drill.spec.ts` | `Hercules visible in Executive Overview with At Risk status`, `Hercules drill-down to delivery — renders empty-state placeholder (no projects)`, `RAG counts on executive overview updated to include Hercules At Risk` | All three fail with the same strict-mode locator error: `getByText("Hercules Workload Consolidation")` resolves to two elements (the table cell **and** a narrative paragraph that mentions the same string). The narrative paragraph was added to executive overview before Tab 12 began. Fix is to use a more specific role-based locator (`getByRole("button", { name: "Drill into Hercules Workload" })` for the table cell). |
+
+Fix target: M9 drill audit pass. Tab 12 PR can merge before these are fixed (M8 release notes and PR body call them out as known baseline gaps).
 
 ---
 
