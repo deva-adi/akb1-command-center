@@ -12,8 +12,10 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { useState } from "react";
 import { Card, CardHeader } from "@/components/ui/Card";
 import { PnlSectionInfo } from "@/components/PnlSectionInfo";
+import { DrillPanel } from "@/components/DrillPanel";
 import {
   fetchPnlWaterfall,
   type PnlErrorEnvelope,
@@ -131,6 +133,7 @@ function buildDrops(
 export function MarginWaterfall() {
   const [searchParams] = useSearchParams();
   const programme = searchParams.get("programme");
+  const [drillOpen, setDrillOpen] = useState<BarDatum | null>(null);
 
   const filters: PnlFilters = {
     from: searchParams.get("from") ?? undefined,
@@ -226,6 +229,14 @@ export function MarginWaterfall() {
           <BarChart
             data={bars}
             margin={{ top: 28, right: 16, bottom: 8, left: 8 }}
+            onClick={(state: { activePayload?: Array<{ payload: BarDatum }> }) => {
+              const payload = state?.activePayload?.[0]?.payload;
+              if (payload) {
+                setDrillOpen((cur) =>
+                  cur?.label === payload.label ? null : payload,
+                );
+              }
+            }}
           >
             <CartesianGrid
               strokeDasharray="3 3"
@@ -301,7 +312,30 @@ export function MarginWaterfall() {
         Bars cascade left to right through the four margin layers. The
         pill between consecutive bars shows the drop in basis points.
         Phoenix demo thresholds: gross green ≥ 30%, net green ≥ 10%.
+        Click any bar for the cost composition stub.
       </p>
+      {drillOpen && (
+        <DrillPanel
+          title={`${drillOpen.label} Margin — Cost Composition`}
+          onClose={() => setDrillOpen(null)}
+          stubNote="Per-overhead category breakdown coming v5.8. The /api/v1/pnl/waterfall endpoint returns aggregate layer values today; the named overhead categories that compose each drop are not yet seeded."
+          crossTab={{
+            label: "Full P&L in Margin & EVM",
+            href: programme
+              ? `/margin?programme=${encodeURIComponent(programme)}`
+              : "/margin",
+          }}
+        >
+          <div>
+            <span className="text-[10px] uppercase tracking-wide text-navy/60">
+              Layer margin
+            </span>
+            <div className="mt-1 font-mono text-lg font-semibold text-navy">
+              {drillOpen.displayPct}
+            </div>
+          </div>
+        </DrillPanel>
+      )}
     </Card>
   );
 }

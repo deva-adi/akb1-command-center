@@ -1,3 +1,7 @@
+import { useState } from "react";
+import { useSearchParams } from "react-router-dom";
+import { ProgrammePickerModal } from "@/components/ProgrammePickerModal";
+import { useProgrammes } from "@/hooks/usePortfolio";
 import { EarnedValueReceivables } from "@/pages/pnl/sections/EarnedValueReceivables";
 import { LossesAttribution } from "@/pages/pnl/sections/LossesAttribution";
 import { MarginBridge } from "@/pages/pnl/sections/MarginBridge";
@@ -7,6 +11,20 @@ import { PyramidSection } from "@/pages/pnl/sections/PyramidSection";
 import { RevenueCards } from "@/pages/pnl/sections/RevenueCards";
 
 export function PnlCockpit() {
+  const [searchParams] = useSearchParams();
+  const programme = searchParams.get("programme");
+  // On bare /pnl (no programme) the per-section "pick a programme"
+  // placeholders are confusing. Open a modal listing every programme
+  // by default. The user can dismiss it (X) to fall back to the
+  // section-level placeholders.
+  const [pickerOpen, setPickerOpen] = useState(true);
+  const programmesQuery = useProgrammes();
+  const programmes = (programmesQuery.data ?? []).map((p) => ({
+    code: p.code,
+    name: p.name,
+  }));
+  const showPicker = !programme && pickerOpen;
+
   return (
     <div className="flex flex-col gap-6">
       <div>
@@ -28,6 +46,12 @@ export function PnlCockpit() {
       <LossesAttribution />
       <PyramidSection />
       <EarnedValueReceivables />
+
+      <ProgrammePickerModal
+        open={showPicker}
+        onClose={() => setPickerOpen(false)}
+        programmes={programmes}
+      />
     </div>
   );
 }

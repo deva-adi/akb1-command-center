@@ -68,9 +68,11 @@ export type PyramidChartInput = {
 export function PyramidChart({
   data,
   programmeRevenue,
+  onBarClick,
 }: {
   data: PyramidChartInput[];
   programmeRevenue: number;
+  onBarClick?: (tier: string) => void;
 }) {
   const chartData = data.map((t) => ({
     tier: t.tier,
@@ -87,6 +89,10 @@ export function PyramidChart({
           layout="vertical"
           data={chartData}
           margin={{ top: 8, right: 80, bottom: 8, left: 64 }}
+          onClick={(state: { activePayload?: Array<{ payload: { tier: string } }> }) => {
+            const tier = state?.activePayload?.[0]?.payload?.tier;
+            if (tier && onBarClick) onBarClick(tier);
+          }}
         >
           <XAxis
             type="number"

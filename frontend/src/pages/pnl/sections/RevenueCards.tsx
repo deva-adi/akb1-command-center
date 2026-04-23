@@ -1,8 +1,10 @@
+import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { AxiosError } from "axios";
 import { Card, CardHeader } from "@/components/ui/Card";
 import { MetricCard } from "@/components/ui/MetricCard";
+import { DrillPanel } from "@/components/DrillPanel";
 import {
   fetchPnlDso,
   fetchPnlRevenue,
@@ -127,6 +129,10 @@ function formatDeltaSub(
 export function RevenueCards() {
   const [searchParams] = useSearchParams();
   const programme = searchParams.get("programme");
+  const [drillOpen, setDrillOpen] = useState<CardKey | null>(null);
+  const drillOpenSpec = drillOpen
+    ? CARDS.find((c) => c.key === drillOpen)
+    : undefined;
 
   const filters: PnlFilters = {
     from: searchParams.get("from") ?? undefined,
@@ -262,10 +268,58 @@ export function RevenueCards() {
               value={formatCurrency(current)}
               sub={formatDeltaSub(current, prior)}
               tone={toneFor(spec.positiveIsGood, delta)}
+              active={drillOpen === spec.key}
+              onClick={() =>
+                setDrillOpen((cur) => (cur === spec.key ? null : spec.key))
+              }
             />
           );
         })}
       </div>
+      {drillOpenSpec && (
+        <DrillPanel
+          title={`${drillOpenSpec.label} — Monthly Breakdown`}
+          onClose={() => setDrillOpen(null)}
+          stubNote="Monthly trend coming v5.8. The /api/v1/pnl/revenue endpoint returns a single snapshot today; per-month series will land alongside the v5.8 KPI Board uplift."
+          crossTab={{
+            label: "View revenue KPIs in KPI Studio",
+            href: programme
+              ? `/kpi?programme=${encodeURIComponent(programme)}`
+              : "/kpi",
+          }}
+        >
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <div>
+              <div className="text-[10px] uppercase tracking-wide text-navy/60">
+                Current snapshot
+              </div>
+              <div className="mt-1 font-mono text-lg font-semibold text-navy">
+                {formatCurrency(
+                  cardValue(
+                    drillOpenSpec.key,
+                    revenueQuery.data,
+                    dsoQuery.data,
+                  ),
+                )}
+              </div>
+            </div>
+            <div>
+              <div className="text-[10px] uppercase tracking-wide text-navy/60">
+                Prior snapshot
+              </div>
+              <div className="mt-1 font-mono text-lg font-semibold text-navy">
+                {formatCurrency(
+                  cardValue(
+                    drillOpenSpec.key,
+                    priorRevenueQuery.data,
+                    priorDsoQuery.data,
+                  ),
+                )}
+              </div>
+            </div>
+          </div>
+        </DrillPanel>
+      )}
     </Card>
   );
 }

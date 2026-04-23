@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { AxiosError } from "axios";
@@ -9,6 +9,7 @@ import {
 } from "recharts";
 import { Card, CardHeader } from "@/components/ui/Card";
 import { PnlSectionInfo } from "@/components/PnlSectionInfo";
+import { DrillPanel } from "@/components/DrillPanel";
 import {
   fetchPnlDso,
   fetchPnlEvm,
@@ -128,6 +129,7 @@ function EarnedValueCard({
   programme: string;
   searchParams: URLSearchParams;
 }) {
+  const [drillMetric, setDrillMetric] = useState<"cpi" | "spi" | null>(null);
   const filters: PnlFilters = {
     from: searchParams.get("from") ?? undefined,
     to: searchParams.get("to") ?? undefined,
@@ -215,6 +217,9 @@ function EarnedValueCard({
           value={formatRatio(e.cpi)}
           palette={cpiPal}
           testId="evr-cpi"
+          onClick={() =>
+            setDrillMetric((cur) => (cur === "cpi" ? null : "cpi"))
+          }
         />
         <RatioBlock
           label="SPI"
@@ -230,6 +235,9 @@ function EarnedValueCard({
           value={formatRatio(e.spi)}
           palette={spiPal}
           testId="evr-spi"
+          onClick={() =>
+            setDrillMetric((cur) => (cur === "spi" ? null : "spi"))
+          }
         />
       </div>
       <div
@@ -291,6 +299,45 @@ function EarnedValueCard({
           </span>
         </div>
       </div>
+      {drillMetric && (
+        <DrillPanel
+          title={`${drillMetric.toUpperCase()} Trend — Last 6 Months`}
+          onClose={() => setDrillMetric(null)}
+          crossTab={{
+            label: "Full EVM in Margin & EVM",
+            href: programme
+              ? `/margin?programme=${encodeURIComponent(programme)}`
+              : "/margin",
+          }}
+        >
+          <table className="w-full text-xs" data-testid="evr-trend-table">
+            <thead className="border-b border-ice-100 text-left text-[10px] uppercase tracking-wide text-navy/60">
+              <tr>
+                <th className="py-1 pr-4 font-semibold">Month</th>
+                <th className="py-1 pr-4 text-right font-semibold">
+                  {drillMetric.toUpperCase()}
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {((drillMetric === "cpi" ? cpiSeries.data : spiSeries.data)
+                ?.series.actual.slice(-6) ?? []).map((p) => (
+                <tr
+                  key={p.snapshot_date}
+                  className="border-b border-ice-100 last:border-b-0"
+                >
+                  <td className="py-1 pr-4 font-mono text-navy">
+                    {p.snapshot_date}
+                  </td>
+                  <td className="py-1 pr-4 text-right font-mono text-navy">
+                    {p.value !== null ? p.value.toFixed(2) : "n/a"}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </DrillPanel>
+      )}
     </SubCard>
   );
 }
@@ -302,6 +349,7 @@ function ReceivablesCard({
   programme: string;
   searchParams: URLSearchParams;
 }) {
+  const [dsoDrillOpen, setDsoDrillOpen] = useState(false);
   const filters: PnlFilters = {
     from: searchParams.get("from") ?? undefined,
     to: searchParams.get("to") ?? undefined,
@@ -344,7 +392,13 @@ function ReceivablesCard({
       }
       testId="evr-receivables-card"
     >
-      <div className="flex items-baseline gap-3">
+      <div
+        className="flex cursor-pointer items-baseline gap-3 rounded p-1 hover:bg-slate-50"
+        role="button"
+        tabIndex={0}
+        onClick={() => setDsoDrillOpen((cur) => !cur)}
+        onKeyDown={(e) => e.key === "Enter" && setDsoDrillOpen((cur) => !cur)}
+      >
         <div
           className="font-mono text-3xl font-bold tabular-nums text-navy"
           data-testid="evr-dso-days"
@@ -392,8 +446,57 @@ function ReceivablesCard({
       </div>
       <p className="mt-3 text-xs text-navy/60">
         RAG: green under 45 days, amber 45 to 60, red above 60. DSO trend
-        sparkline is deferred to v5.8.
+        sparkline is deferred to v5.8. Click the DSO hero for the open
+        invoices drill stub.
       </p>
+      {dsoDrillOpen && (
+        <DrillPanel
+          title="Receivables Detail"
+          onClose={() => setDsoDrillOpen(false)}
+          stubNote="Open invoice ledger coming v5.8. The /api/v1/pnl/dso endpoint returns aggregate balances today; per-invoice Reference / Raised Date / Days Outstanding / Status lands alongside the v5.8 KPI Board uplift."
+          crossTab={{
+            label: "View in Reports",
+            href: programme
+              ? `/reports?programme=${encodeURIComponent(programme)}`
+              : "/reports",
+          }}
+        >
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <div>
+              <div className="text-[10px] uppercase tracking-wide text-navy/60">
+                DSO days
+              </div>
+              <div className="mt-1 font-mono text-sm font-semibold text-navy">
+                {formatDsoDays(d.dso_days)}
+              </div>
+            </div>
+            <div>
+              <div className="text-[10px] uppercase tracking-wide text-navy/60">
+                AR balance
+              </div>
+              <div className="mt-1 font-mono text-sm font-semibold text-navy">
+                {formatMillions(d.ar_balance)}
+              </div>
+            </div>
+            <div>
+              <div className="text-[10px] uppercase tracking-wide text-navy/60">
+                Unbilled WIP
+              </div>
+              <div className="mt-1 font-mono text-sm font-semibold text-navy">
+                {formatMillions(d.unbilled_wip)}
+              </div>
+            </div>
+            <div>
+              <div className="text-[10px] uppercase tracking-wide text-navy/60">
+                Billed revenue
+              </div>
+              <div className="mt-1 font-mono text-sm font-semibold text-navy">
+                {formatMillions(d.billed_revenue)}
+              </div>
+            </div>
+          </div>
+        </DrillPanel>
+      )}
     </SubCard>
   );
 }
@@ -404,15 +507,24 @@ function RatioBlock({
   value,
   palette,
   testId,
+  onClick,
 }: {
   label: string;
   labelAdornment?: React.ReactNode;
   value: string;
   palette: Palette;
   testId: string;
+  onClick?: () => void;
 }) {
   return (
-    <div data-testid={testId}>
+    <div
+      data-testid={testId}
+      className={onClick ? "cursor-pointer rounded p-1 hover:bg-slate-50" : undefined}
+      onClick={onClick}
+      role={onClick ? "button" : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      onKeyDown={onClick ? (e) => e.key === "Enter" && onClick() : undefined}
+    >
       <div className="flex items-baseline justify-between">
         <span className="text-xs uppercase tracking-wide text-navy/60">
           {label}

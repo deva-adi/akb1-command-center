@@ -1,8 +1,19 @@
+import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { AxiosError } from "axios";
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  ResponsiveContainer,
+  Tooltip as RechartsTooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
 import { Card, CardHeader } from "@/components/ui/Card";
 import { PnlSectionInfo } from "@/components/PnlSectionInfo";
+import { DrillPanel } from "@/components/DrillPanel";
 import {
   fetchPnlPfa,
   type PfaOut,
@@ -220,6 +231,7 @@ function buildRows(revenue: PfaOut, margin: PfaOut, from: string | null, to: str
 export function PfaTable() {
   const [searchParams] = useSearchParams();
   const programme = searchParams.get("programme");
+  const [drillRow, setDrillRow] = useState<string | null>(null);
   const fromParam = searchParams.get("from");
   const toParam = searchParams.get("to");
 
@@ -355,11 +367,14 @@ export function PfaTable() {
             {rows.map((row) => (
               <tr
                 key={row.label}
-                className="border-b border-ice-100 last:border-b-0"
+                className="cursor-pointer border-b border-ice-100 last:border-b-0 hover:bg-slate-50"
                 data-testid={`pfa-row-${row.label
                   .toLowerCase()
                   .replace(/\W+/g, "-")
                   .replace(/^-+|-+$/g, "")}`}
+                onClick={() =>
+                  setDrillRow((cur) => (cur === row.label ? null : row.label))
+                }
               >
                 <td className="py-2 pr-4 font-semibold text-navy">
                   {row.label}
@@ -395,8 +410,129 @@ export function PfaTable() {
       <p className="mt-1 text-xs text-navy/60">
         Gross margin variance uses RAG: red if actual is more than 200
         bps below plan, amber between 0 and 200 bps below, green at or
-        above plan. Revenue and Cost variance cells stay neutral.
+        above plan. Revenue and Cost variance cells stay neutral. Click
+        any row for the plan vs actual trend.
       </p>
+      {drillRow === "Revenue" && (
+        <DrillPanel
+          title="Revenue — Plan vs Actual Trend"
+          onClose={() => setDrillRow(null)}
+          crossTab={{
+            label: "Full margin analysis",
+            href: programme
+              ? `/margin?programme=${encodeURIComponent(programme)}`
+              : "/margin",
+          }}
+        >
+          <PfaTrendChart
+            actual={revenueQuery.data.series.actual}
+            plan={revenueQuery.data.series.plan}
+            valueFormatter={(v) => formatCurrency(v)}
+            unitLabel="currency"
+          />
+        </DrillPanel>
+      )}
+      {drillRow === "Gross margin" && (
+        <DrillPanel
+          title="Gross margin — Plan vs Actual Trend"
+          onClose={() => setDrillRow(null)}
+          crossTab={{
+            label: "Full margin analysis",
+            href: programme
+              ? `/margin?programme=${encodeURIComponent(programme)}`
+              : "/margin",
+          }}
+        >
+          <PfaTrendChart
+            actual={marginQuery.data.series.actual}
+            plan={marginQuery.data.series.plan}
+            valueFormatter={(v) => `${(v * 100).toFixed(1)}%`}
+            unitLabel="percent"
+          />
+        </DrillPanel>
+      )}
+      {drillRow === "Cost (derived)" && (
+        <DrillPanel
+          title="Cost (derived) — Plan vs Actual Trend"
+          onClose={() => setDrillRow(null)}
+          stubNote="The Cost row is derived client-side as Revenue × (1 minus Gross margin %); there is no separate /pfa series for it. A first-class cost endpoint lands alongside the v5.8 KPI Board uplift."
+          crossTab={{
+            label: "Full margin analysis",
+            href: programme
+              ? `/margin?programme=${encodeURIComponent(programme)}`
+              : "/margin",
+          }}
+        >
+          <p className="text-navy/70">
+            Open the Revenue or Gross margin rows to see their underlying
+            time series.
+          </p>
+        </DrillPanel>
+      )}
     </Card>
+  );
+}
+
+function PfaTrendChart({
+  actual,
+  plan,
+  valueFormatter,
+  unitLabel,
+}: {
+  actual: PfaPoint[];
+  plan: PfaPoint[];
+  valueFormatter: (v: number) => string;
+  unitLabel: string;
+}) {
+  // Merge actual and plan series on snapshot_date so a single chart
+  // can show side-by-side bars per month for the last six months.
+  const dates = new Set<string>();
+  actual.forEach((p) => dates.add(p.snapshot_date));
+  plan.forEach((p) => dates.add(p.snapshot_date));
+  const planMap = new Map(plan.map((p) => [p.snapshot_date, p.value]));
+  const actualMap = new Map(actual.map((p) => [p.snapshot_date, p.value]));
+  const merged = Array.from(dates)
+    .sort()
+    .slice(-6)
+    .map((d) => ({
+      snapshot_date: d,
+      plan: planMap.get(d) ?? null,
+      actual: actualMap.get(d) ?? null,
+    }));
+  if (merged.length === 0) {
+    return (
+      <p className="text-navy/60">
+        No trend points returned by /pfa for this row in the current
+        window.
+      </p>
+    );
+  }
+  return (
+    <div className="h-40 w-full" data-testid="pfa-drill-chart">
+      <ResponsiveContainer width="100%" height="100%">
+        <BarChart data={merged} margin={{ top: 8, right: 16, bottom: 8, left: 8 }}>
+          <CartesianGrid strokeDasharray="3 3" stroke="#d5e8f0" vertical={false} />
+          <XAxis
+            dataKey="snapshot_date"
+            tick={{ fontSize: 10, fill: "#1B2A4A" }}
+            axisLine={{ stroke: "#d5e8f0" }}
+            tickLine={false}
+          />
+          <YAxis
+            tick={{ fontSize: 10, fill: "#1B2A4A" }}
+            axisLine={{ stroke: "#d5e8f0" }}
+            tickLine={false}
+            tickFormatter={(v: number) => valueFormatter(v)}
+          />
+          <RechartsTooltip
+            formatter={(v: number | string) =>
+              typeof v === "number" ? [valueFormatter(v), unitLabel] : [v, unitLabel]
+            }
+          />
+          <Bar dataKey="plan" name="Plan" fill="#94A3B8" />
+          <Bar dataKey="actual" name="Actual" fill="#1E3A5F" />
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
   );
 }
