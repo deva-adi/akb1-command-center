@@ -12,8 +12,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { BookOpen, ChevronRight, Home, Pencil, Save, X } from "lucide-react";
-import { Breadcrumb } from "@/components/Breadcrumb";
+import { BookOpen, ChevronRight, Pencil, Save, X } from "lucide-react";
 import { Card, CardHeader } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import {
@@ -171,24 +170,8 @@ export function KpiStudio() {
     return <p className="text-sm text-danger-600">{(definitions.error as Error).message}</p>;
   }
 
-  const breadcrumbItems = [
-    { label: "Portfolio", to: "/", icon: <Home className="size-3" aria-hidden="true" /> },
-    { label: "KPI Studio", to: filteredProgramme || selectedKpi ? "/kpi" : undefined },
-    ...(filteredProgramme
-      ? [
-          {
-            label: filteredProgramme.name,
-            to: selectedKpi ? `/kpi?programme=${filteredProgramme.code}` : undefined,
-          },
-        ]
-      : []),
-    ...(selectedKpi ? [{ label: selectedKpi.name }] : []),
-  ];
-
   return (
     <div className="flex flex-col gap-4">
-      <Breadcrumb items={breadcrumbItems} />
-
       {filteredProgramme ? (
         <div className="inline-flex items-center gap-2 self-start rounded-full border border-navy/30 bg-navy/5 px-3 py-1 text-xs text-navy">
           Focused on <strong>{filteredProgramme.name}</strong>

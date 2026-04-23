@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
@@ -8,9 +9,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 
+from app.api.v1.error_envelope import install_error_handlers
 from app.api.v1.router import api_router
 from app.config import Settings, get_settings
 from app.database import dispose_engine, get_engine, get_session_factory
+from app.db.migration_bootstrap import ensure_migrations_applied
 from app.logging_config import configure_logging, get_logger
 from app.models import Base
 from app.rate_limit import limiter
@@ -30,6 +33,13 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         environment=settings.environment,
     )
 
+    # Bring the DB to head via Alembic. Three volume states handled:
+    # fresh, legacy v5.6, or already migrated. See migration_bootstrap.
+    # Runs on a worker thread because Alembic is synchronous.
+    await asyncio.to_thread(ensure_migrations_applied, settings.database_sync_url)
+
+    # Safety net: create_all is a no-op once the bootstrap above has run,
+    # but it rescues the case where someone drops a table by hand.
     engine = get_engine()
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
@@ -62,6 +72,11 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     app.state.limiter = limiter
     app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+    # Standard error envelope for v5.7.0 Tab 12 P&L endpoints (and M9
+    # drill endpoints). Catches FilterValidationError and LineageKeyError
+    # globally so dependencies raise cleanly into a 422 response shape.
+    install_error_handlers(app)
 
     app.add_middleware(
         CORSMiddleware,

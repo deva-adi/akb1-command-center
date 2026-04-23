@@ -10,6 +10,7 @@ import { DeliveryHealth } from "@/pages/DeliveryHealth";
 import { KpiStudio } from "@/pages/KpiStudio";
 import { MarginEvm } from "@/pages/MarginEvm";
 import { NotFound } from "@/pages/NotFound";
+import { PnlCockpit } from "@/pages/PnlCockpit";
 import { Reports } from "@/pages/Reports";
 import { RiskAudit } from "@/pages/RiskAudit";
 import { SmartOps } from "@/pages/SmartOps";
@@ -31,6 +32,7 @@ const router = createBrowserRouter([
       { path: "raid", element: <RiskAudit /> },
       { path: "reports", element: <Reports /> },
       { path: "data-hub", element: <DataHub /> },
+      { path: "pnl", element: <PnlCockpit /> },
       { path: "*", element: <NotFound /> },
     ],
   },

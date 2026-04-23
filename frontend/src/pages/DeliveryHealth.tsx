@@ -11,11 +11,10 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { ChevronLeft, ChevronRight, Home, Layers, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, Layers, X } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Card, CardHeader } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
-import { Breadcrumb } from "@/components/Breadcrumb";
 import {
   fetchEvm,
   fetchProjectsForProgramme,
@@ -157,23 +156,8 @@ export function DeliveryHealth() {
         ? projects[0]
         : null;
 
-  const breadcrumbItems = [
-    { label: "Portfolio", to: "/", icon: <Home className="size-3" aria-hidden="true" /> },
-    { label: "Delivery Health", to: filteredProgramme ? "/delivery" : undefined },
-    ...(filteredProgramme
-      ? [
-          {
-            label: filteredProgramme.name,
-            to: selected ? `/delivery?programme=${filteredProgramme.code}` : undefined,
-          },
-        ]
-      : []),
-    ...(selected ? [{ label: selected.code }] : []),
-  ];
-
   return (
     <div className="flex flex-col gap-6">
-      <Breadcrumb items={breadcrumbItems} />
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold text-navy">Delivery Health</h1>

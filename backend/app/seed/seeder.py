@@ -85,6 +85,7 @@ from app.seed.delivery_data import (
     SPRINTS,
     TTN_STORE_ITEMS,
 )
+from app.seed.pnl_seed import seed_pnl
 from app.seed.bharat_data import (
     BHARAT_AI_CODE_METRICS,
     BHARAT_AI_OVERRIDE_LOG,
@@ -137,15 +138,32 @@ from app.seed.hercules_data import (
 log = get_logger(__name__)
 
 
-async def seed_demo_data(session: AsyncSession, *, force: bool = False) -> bool:
-    """Populate the NovaTech demo portfolio.
+async def _load_existing_programme_ids(session: AsyncSession) -> dict[str, int]:
+    """Return {code: id} for every programme currently in the DB."""
+    rows = (await session.execute(select(Program.code, Program.id))).all()
+    return {code: pid for code, pid in rows}
 
-    Returns True if seed data was inserted, False if the database already
-    contained programmes and `force` was not set.
+
+async def seed_demo_data(session: AsyncSession, *, force: bool = False) -> bool:
+    """Populate the NovaTech demo portfolio and run additive v5.7.0 seeds.
+
+    Returns True if the base NovaTech + Hercules + BHARAT seed was inserted
+    on this run. Returns False if the DB already contained programmes and
+    ``force`` was not set. The Tab 12 P&L Cockpit seed (``seed_pnl``) runs
+    unconditionally because it is fully idempotent and must land on every
+    container start so legacy v5.6 volumes pick up the new rows on upgrade.
     """
     existing = (await session.execute(select(Program.id).limit(1))).first()
     if existing is not None and not force:
         log.info("seed.skip", reason="programmes_already_present")
+        # Tab 12 seed is idempotent. Run it against the existing programmes
+        # so a v5.6 volume upgrading to v5.7.0 gets the 252 programme_rates,
+        # the 14 monthly_actuals rows, and the billing-column backfill.
+        programme_ids = await _load_existing_programme_ids(session)
+        if programme_ids:
+            pnl_summary = await seed_pnl(session, programme_ids)
+            await session.commit()
+            log.info("seed.pnl_only", summary=pnl_summary)
         return False
 
     await _seed_app_settings(session)
@@ -219,6 +237,12 @@ async def seed_demo_data(session: AsyncSession, *, force: bool = False) -> bool:
     await _seed_hercules_evm(session, herc_proj_ids)
     await _seed_hercules_milestones(session, herc_proj_ids)
     await _seed_hercules_commercial(session, herc_prog_ids)
+
+    # v5.7.0 Tab 12 P&L Cockpit seed (programme_rates, Feb-Mar monthly
+    # actuals, billing-column backfill). Idempotent by construction.
+    all_program_ids: dict[str, int] = {**program_ids, **herc_prog_ids, **bharat_prog_ids}
+    pnl_summary = await seed_pnl(session, all_program_ids)
+    log.info("seed.pnl", summary=pnl_summary)
 
     await session.commit()
     log.info(

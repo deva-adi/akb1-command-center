@@ -11,8 +11,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { ChevronDown, ChevronUp, Home } from "lucide-react";
-import { Breadcrumb } from "@/components/Breadcrumb";
+import { ChevronDown, ChevronUp } from "lucide-react";
 import { ProgrammeFilterBar } from "@/components/ProgrammeFilterBar";
 import { PROGRAMME_CROSS_LINKS } from "@/components/programmeCrossLinks";
 import { Card, CardHeader } from "@/components/ui/Card";
@@ -28,17 +27,17 @@ import { useProgrammes } from "@/hooks/usePortfolio";
 import { useCurrency } from "@/hooks/useCurrency";
 import { formatPct } from "@/lib/format";
 
-const WATERFALL_FIELD: Record<string, keyof typeof WATERFALL_LABELS> = {
+type WaterfallLabelKey =
+  | "gross_margin_pct"
+  | "contribution_margin_pct"
+  | "portfolio_margin_pct"
+  | "net_margin_pct";
+
+const WATERFALL_FIELD: Record<string, WaterfallLabelKey> = {
   Gross: "gross_margin_pct",
   Contribution: "contribution_margin_pct",
   Portfolio: "portfolio_margin_pct",
   Net: "net_margin_pct",
-};
-const WATERFALL_LABELS = {
-  gross_margin_pct: "Gross margin",
-  contribution_margin_pct: "Contribution margin",
-  portfolio_margin_pct: "Portfolio margin",
-  net_margin_pct: "Net margin",
 };
 
 export function MarginEvm() {
@@ -134,15 +133,8 @@ export function MarginEvm() {
     0,
   );
 
-  const breadcrumbItems = [
-    { label: "Portfolio", to: "/", icon: <Home className="size-3" aria-hidden="true" /> },
-    { label: "Margin & EVM", to: filteredProgramme ? "/margin" : undefined },
-    ...(filteredProgramme ? [{ label: filteredProgramme.name }] : []),
-  ];
-
   return (
     <div className="flex flex-col gap-6">
-      <Breadcrumb items={breadcrumbItems} />
 
       <div>
         <h1 className="text-2xl font-semibold text-navy">Margin & EVM</h1>

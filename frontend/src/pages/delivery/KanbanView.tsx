@@ -25,6 +25,26 @@ type FlowRow = {
 type MetricKey = "throughput" | "wip" | "cycle_p50" | "cycle_p85" | "cycle_p95" | "lead_time" | "blocked";
 type ItemFilter = "all" | "completed" | "in_progress";
 
+type EChartsInstance = {
+  getZr: () => {
+    on: (
+      event: string,
+      handler: (e: { offsetX: number; offsetY: number }) => void,
+    ) => void;
+  };
+  convertFromPixel: (
+    finder: { gridIndex: number },
+    value: number[],
+  ) => number[] | string;
+};
+
+type EChartsTooltipParam = {
+  name: string;
+  marker: string;
+  seriesName: string;
+  value: number | string;
+};
+
 // ─── formula definitions ─────────────────────────────────────────────────────
 
 const FORMULAS: Record<MetricKey, { title: string; formula: string; note: string; filter: ItemFilter; dataNote?: string }> = {
@@ -119,7 +139,7 @@ export function KanbanView({ project }: { project: ProjectListItem }) {
 
   // ── ZRender raw-canvas click — fires anywhere on the chart ──
   const makeCfdReady = useCallback(
-    (instance: any) => {
+    (instance: EChartsInstance) => {
       instance.getZr().on("click", (e: { offsetX: number; offsetY: number }) => {
         const point = instance.convertFromPixel({ gridIndex: 0 }, [e.offsetX, e.offsetY]);
         if (!Array.isArray(point) || point.length < 1) return;
@@ -136,7 +156,7 @@ export function KanbanView({ project }: { project: ProjectListItem }) {
   );
 
   const makeCycleReady = useCallback(
-    (instance: any) => {
+    (instance: EChartsInstance) => {
       instance.getZr().on("click", (e: { offsetX: number; offsetY: number }) => {
         const point = instance.convertFromPixel({ gridIndex: 0 }, [e.offsetX, e.offsetY]);
         if (!Array.isArray(point) || point.length < 1) return;
@@ -719,10 +739,10 @@ function buildCfdOption(
   return {
     tooltip: {
       trigger: "axis",
-      formatter: (params: any[]) => {
+      formatter: (params: EChartsTooltipParam[]) => {
         const week = params[0]?.name ?? "";
         return params
-          .map((p: any) => `${p.marker}${p.seriesName}: <b>${p.value}</b>`)
+          .map((p: EChartsTooltipParam) => `${p.marker}${p.seriesName}: <b>${p.value}</b>`)
           .join("<br/>") + `<br/><span style="font-size:10px;color:#888">Week: ${week} · click to drill ↓</span>`;
       },
     },
@@ -777,10 +797,10 @@ function buildCyclePercentileOption(
   return {
     tooltip: {
       trigger: "axis",
-      formatter: (params: any[]) => {
+      formatter: (params: EChartsTooltipParam[]) => {
         const week = params[0]?.name ?? "";
         return params
-          .map((p: any) => `${p.marker}${p.seriesName}: <b>${p.value}d</b>`)
+          .map((p: EChartsTooltipParam) => `${p.marker}${p.seriesName}: <b>${p.value}d</b>`)
           .join("<br/>") + `<br/><span style="font-size:10px;color:#888">Week: ${week} · click to drill ↓</span>`;
       },
     },

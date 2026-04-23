@@ -1849,7 +1849,7 @@ The demo data tells this story. Every chart, every alert, every narrative is gro
 | Data persistence | Docker volume mount — survives restarts |
 | **Backup** | **Automated daily SQLite backup, 30-day rolling retention** |
 | **Data import safety** | **Snapshot + one-click rollback via data_import_snapshots table** |
-| **Schema migration** | **Alembic migrations run on container start** |
+| **Schema migration** | **Startup bootstrap in `app.db.migration_bootstrap` classifies the DB volume (fresh, legacy v5.6, already migrated) and runs the right Alembic stamp and upgrade sequence for each. `Base.metadata.create_all` remains as a no-op safety net after the bootstrap. Idempotent, runs on every container start.** |
 | Demo data | Pre-loaded on first run, resettable via UI |
 | **First real data** | **15 minutes via guided wizard (minimum viable: 2 CSV/XLSX files)** |
 | **xlsx support** | **Native .xlsx import/export via openpyxl** |

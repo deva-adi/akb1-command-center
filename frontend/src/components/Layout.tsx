@@ -1,23 +1,13 @@
 import { useEffect } from "react";
 import { NavLink, Outlet } from "react-router-dom";
 import { CurrencySelector } from "@/components/CurrencySelector";
+import { ContextRail } from "@/components/ContextRail";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useUiStore } from "@/stores/uiStore";
 import { cn } from "@/lib/cn";
+import { TABS } from "@/lib/tabRegistry";
 
-const tabs = [
-  { to: "/", label: "Executive", num: "01" },
-  { to: "/kpi", label: "KPI Studio", num: "02" },
-  { to: "/delivery", label: "Delivery", num: "03" },
-  { to: "/velocity", label: "Velocity & Flow", num: "04" },
-  { to: "/margin", label: "Margin & EVM", num: "05" },
-  { to: "/customer", label: "Customer", num: "06" },
-  { to: "/ai", label: "AI Governance", num: "07" },
-  { to: "/smart-ops", label: "Smart Ops", num: "08" },
-  { to: "/raid", label: "Risk & Audit", num: "09" },
-  { to: "/reports", label: "Reports", num: "10" },
-  { to: "/data-hub", label: "Data Hub", num: "11" },
-];
+const tabs = TABS.map((t) => ({ to: t.path, label: t.label, num: t.number }));
 
 export function Layout() {
   const fiscalYearLabel = useUiStore((s) => s.fiscalYearLabel);
@@ -72,8 +62,11 @@ export function Layout() {
           ))}
         </nav>
 
-        <main className="flex-1 overflow-x-hidden p-6">
-          <Outlet />
+        <main className="flex-1 overflow-x-hidden">
+          <ContextRail />
+          <div className="p-6">
+            <Outlet />
+          </div>
         </main>
       </div>
 

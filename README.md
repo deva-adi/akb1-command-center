@@ -1,4 +1,4 @@
-# AKB1 Command Center v5.6
+# AKB1 Command Center v5.7.0
 
 **The open-source delivery intelligence platform that answers every question your CTO, CIO, or CEO would ask — driven entirely by your data.**
 
@@ -109,7 +109,7 @@ For full benchmark against 18 open-source applications (Plausible, Grafana, Meta
 
 ---
 
-## Dashboard Tabs (11)
+## Dashboard Tabs (12)
 
 | # | Tab | Purpose | Key Question |
 |---|-----|---------|-------------|
@@ -124,6 +124,7 @@ For full benchmark against 18 open-source applications (Plausible, Grafana, Meta
 | 9 | Risk & Audit | RAID register, SLA incidents, governance maturity, AI audit trail, data lineage, exportable audit package | "What can go wrong? Are we audit-ready?" |
 | 10 | Reports & Exports | Auto-generated narratives, steering committee packs, PDF/Excel export, scheduled reports | "Give me the board pack." |
 | 11 | Data Hub & Settings | Guided onboarding wizard, drag-drop Excel/CSV upload, auto-mapper, **live commit + one-click rollback**, base currency, fiscal year, locale, backup/restore | "How do I get my data in?" |
+| 12 | P&L Cockpit (v5.7.0) | Programme-level P&L view: Revenue cards (Booked / Billed / Collected / Unbilled WIP / AR), Margin Bridge (Price / Volume / Mix / Cost decomposition), Margin Waterfall (Gross → Contribution → Portfolio → Net), Plan-Forecast-Actual triangle, Losses with Attribution, Resource Pyramid with EVM and DSO sub-cards, standalone Earned Value and Receivables section. Seven sections active. Three (KPI Board, Commercial Levers, LLM Narrative) deferred to v5.8. | "Where is the money? Why did margin move? What can we recover?" |
 
 For detailed wireframes of every tab with metric dictionaries: see [`docs/WIREFRAMES.md`](docs/WIREFRAMES.md).
 
