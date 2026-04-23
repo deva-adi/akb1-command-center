@@ -37,4 +37,21 @@ test.describe("/pnl stub (M6)", () => {
     await expect(nav.getByText("P&L Cockpit")).toBeVisible();
     await expect(nav.getByText("12")).toBeVisible();
   });
+
+  test("P&L Cockpit nav forwards an active programme query param", async ({
+    page,
+  }) => {
+    // Regression for the post-v5.7.0 housekeeping fix: when the user
+    // is on a programme-filtered tab and clicks P&L Cockpit in the
+    // sidebar, the ?programme= param must travel with them so the
+    // cockpit lands on the same programme. Other tab NavLinks are
+    // unchanged on purpose.
+    await page.goto("/delivery?programme=PHOENIX");
+    const nav = page.getByRole("navigation", { name: /primary/i });
+    await nav.getByRole("link", { name: "P&L Cockpit 12", exact: true }).click();
+    await expect(page).toHaveURL(/\/pnl\?programme=PHOENIX$/);
+    await expect(
+      page.getByRole("heading", { level: 1, name: /P&L Cockpit/i }),
+    ).toBeVisible();
+  });
 });
