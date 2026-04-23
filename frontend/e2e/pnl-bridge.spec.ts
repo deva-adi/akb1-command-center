@@ -27,10 +27,10 @@ test.describe("/pnl Margin Bridge section (M7.2)", () => {
     expect(label).toContain("prior 31.4%");
     expect(label).toContain("current 28.0%");
     expect(label).toContain("total −340 bps");
-    expect(label).toContain("price +147 bps");
-    expect(label).toContain("volume +62 bps");
-    expect(label).toContain("mix −506 bps");
-    expect(label).toContain("cost −43 bps");
+    expect(label).toContain("price +156 bps");
+    expect(label).toContain("volume −361 bps");
+    expect(label).toContain("mix −85 bps");
+    expect(label).toContain("cost −50 bps");
   });
 
   test("shows the pick-a-programme prompt when ?programme= is absent", async ({

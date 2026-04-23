@@ -21,6 +21,7 @@ import {
   type PnlFilters,
 } from "@/api/pnlApi";
 import { cn } from "@/lib/cn";
+import { formatCurrency } from "@/lib/format";
 import {
   cpiSpiPalette,
   dsoPalette,
@@ -70,11 +71,6 @@ function errorMessage(err: unknown): string {
 function formatRatio(value: number | null): string {
   if (value === null) return "n/a";
   return value.toFixed(2);
-}
-
-function formatMillions(value: number | null): string {
-  if (value === null) return "n/a";
-  return `$${(value / 1_000_000).toFixed(2)} M`;
 }
 
 function formatDsoDays(value: number | null): string {
@@ -432,7 +428,7 @@ function ReceivablesCard({
             AR balance
           </div>
           <div className="font-mono text-lg font-semibold tabular-nums text-navy">
-            {formatMillions(d.ar_balance)}
+            {formatCurrency(d.ar_balance)}
           </div>
         </div>
         <div data-testid="evr-dso-unbilled">
@@ -440,7 +436,7 @@ function ReceivablesCard({
             Unbilled WIP
           </div>
           <div className="font-mono text-lg font-semibold tabular-nums text-navy">
-            {formatMillions(d.unbilled_wip)}
+            {formatCurrency(d.unbilled_wip)}
           </div>
         </div>
       </div>
@@ -475,7 +471,7 @@ function ReceivablesCard({
                 AR balance
               </div>
               <div className="mt-1 font-mono text-sm font-semibold text-navy">
-                {formatMillions(d.ar_balance)}
+                {formatCurrency(d.ar_balance)}
               </div>
             </div>
             <div>
@@ -483,7 +479,7 @@ function ReceivablesCard({
                 Unbilled WIP
               </div>
               <div className="mt-1 font-mono text-sm font-semibold text-navy">
-                {formatMillions(d.unbilled_wip)}
+                {formatCurrency(d.unbilled_wip)}
               </div>
             </div>
             <div>
@@ -491,7 +487,7 @@ function ReceivablesCard({
                 Billed revenue
               </div>
               <div className="mt-1 font-mono text-sm font-semibold text-navy">
-                {formatMillions(d.billed_revenue)}
+                {formatCurrency(d.billed_revenue)}
               </div>
             </div>
           </div>

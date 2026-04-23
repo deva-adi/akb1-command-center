@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { ProgrammePickerModal } from "@/components/ProgrammePickerModal";
+import { UnavailableSection } from "@/components/UnavailableSection";
 import { useProgrammes } from "@/hooks/usePortfolio";
 import { EarnedValueReceivables } from "@/pages/pnl/sections/EarnedValueReceivables";
 import { LossesAttribution } from "@/pages/pnl/sections/LossesAttribution";
@@ -46,6 +47,10 @@ export function PnlCockpit() {
       <LossesAttribution />
       <PyramidSection />
       <EarnedValueReceivables />
+
+      <UnavailableSection title="KPI Board" />
+      <UnavailableSection title="Commercial Levers" />
+      <UnavailableSection title="Narrative" />
 
       <ProgrammePickerModal
         open={showPicker}

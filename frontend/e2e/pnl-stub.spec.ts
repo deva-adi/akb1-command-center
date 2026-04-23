@@ -48,7 +48,7 @@ test.describe("/pnl stub (M6)", () => {
     // unchanged on purpose.
     await page.goto("/delivery?programme=PHOENIX");
     const nav = page.getByRole("navigation", { name: /primary/i });
-    await nav.getByRole("link", { name: "P&L Cockpit 12", exact: true }).click();
+    await nav.getByRole("link", { name: "P&L Cockpit", exact: true }).click();
     await expect(page).toHaveURL(/\/pnl\?programme=PHOENIX$/);
     await expect(
       page.getByRole("heading", { level: 1, name: /P&L Cockpit/i }),

@@ -285,8 +285,8 @@ describe("EarnedValueReceivables", () => {
       "data-rag-palette",
       "green",
     );
-    expect(screen.getByTestId("evr-dso-ar")).toHaveTextContent("$0.14 M");
-    expect(screen.getByTestId("evr-dso-unbilled")).toHaveTextContent("$0.10 M");
+    expect(screen.getByTestId("evr-dso-ar")).toHaveTextContent("$144.3 K");
+    expect(screen.getByTestId("evr-dso-unbilled")).toHaveTextContent("$98.4 K");
   });
 
   it("renders the Phoenix snapshot dates in each sub-card subtitle", async () => {

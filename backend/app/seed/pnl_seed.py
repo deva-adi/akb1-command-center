@@ -138,7 +138,14 @@ def _actual_rate_for_month(planned: float, mar_actual: float, month_idx: int) ->
 
 
 def _tier_weight_for_month(planned: float, mar_actual: float, month_idx: int) -> float:
-    slope = (mar_actual - planned) / 2.0
+    # Linearly interpolate tier weight from planned (April, month_idx 0)
+    # to mar_actual (March, month_idx 11). There are eleven month-gaps
+    # between the two anchors; the previous divisor of 2 extrapolated at
+    # 5.5x the correct rate, producing values like PHOENIX Junior 1.40
+    # and Mid -0.435 in the March snapshot. With the correct divisor the
+    # month 11 value equals mar_actual by construction and every
+    # intermediate month falls within [planned, mar_actual].
+    slope = (mar_actual - planned) / 11.0
     return round(planned + slope * month_idx, 4)
 
 

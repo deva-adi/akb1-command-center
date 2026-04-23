@@ -12,16 +12,15 @@ test.describe("/pnl Pyramid section (M7.6)", () => {
   }) => {
     await page.goto("/pnl?programme=PHOENIX");
 
-    // Pyramid chart renders with an RAG chip and footnote.
+    // Pyramid chart renders with an RAG chip.
     const pyramidBlock = page.getByTestId("pyramid-block");
     await expect(pyramidBlock).toBeVisible();
     await expect(page.getByTestId("pyramid-chart")).toBeVisible();
     await expect(page.getByTestId("pyramid-rag")).toBeVisible();
-
-    // Phoenix carries anomalous weights so the footnote fires.
-    await expect(page.getByTestId("pyramid-chart-footnote")).toContainText(
-      /Tier weight anomaly detected/,
-    );
+    // Tier weight anomaly footnote no longer fires after the v5.8 seed
+    // formula fix (the buggy divisor produced PHOENIX Junior 1.4 and
+    // Mid -0.435 in March; with the correct interpolation tiers now
+    // land at 0.50 / 0.33 / 0.17, well within the [0, 1.2] guard).
 
     // EVM sub-card.
     const evmCard = page.getByTestId("evm-sub-card");
