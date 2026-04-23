@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { AxiosError } from "axios";
@@ -13,6 +14,8 @@ import {
   YAxis,
 } from "recharts";
 import { Card, CardHeader } from "@/components/ui/Card";
+import { PnlSectionInfo } from "@/components/PnlSectionInfo";
+import { DrillPanel } from "@/components/DrillPanel";
 import {
   fetchPnlBridge,
   fetchPnlWaterfall,
@@ -151,6 +154,7 @@ export function MarginBridge() {
   const programme = searchParams.get("programme");
   const urlFrom = searchParams.get("from");
   const urlTo = searchParams.get("to");
+  const [drillOpen, setDrillOpen] = useState<BridgeBar | null>(null);
 
   const baseFilters: PnlFilters = {
     scenario_name: searchParams.get("scenario_name") ?? undefined,
@@ -256,6 +260,15 @@ export function MarginBridge() {
       <CardHeader
         title="Margin bridge"
         subtitle={`Gross margin ${formatPctLabel(bridge.prior_value)} on ${bridge.prior_snapshot_date} → ${formatPctLabel(bridge.current_value)} on ${bridge.current_snapshot_date} · total delta ${totalLabel} bps`}
+        titleAdornment={
+          <PnlSectionInfo
+            title="Margin bridge"
+            whatItShows="Decomposes the change in gross margin percentage between last month and this month into four independent drivers."
+            formula="Delta Gross Margin = Price Effect + Volume Effect + Mix Effect + Cost Effect. Each effect isolates one variable. Sum of four effects equals total delta."
+            howToRead="The tallest bar is your primary driver. Green bars improve margin, red bars destroy it. Mix going red means you are doing more low-margin work."
+            thresholds="Any single driver exceeding 300 bps warrants investigation."
+          />
+        }
       />
       <div
         className="h-64 w-full"
@@ -266,6 +279,14 @@ export function MarginBridge() {
           <ComposedChart
             data={bars}
             margin={{ top: 24, right: 16, bottom: 8, left: 8 }}
+            onClick={(state: { activePayload?: Array<{ payload: BridgeBar }> }) => {
+              const payload = state?.activePayload?.[0]?.payload;
+              if (payload && payload.kind !== "anchor") {
+                setDrillOpen((cur) =>
+                  cur?.name === payload.name ? null : payload,
+                );
+              }
+            }}
           >
             <CartesianGrid
               strokeDasharray="3 3"
@@ -318,8 +339,31 @@ export function MarginBridge() {
         Prior and current bars anchor from zero. Green steps raise the
         running margin; red steps drop it. The four drivers sum to
         the total delta by construction (see formulas 50 through 53 in
-        docs/FORMULAS.md).
+        docs/FORMULAS.md). Click any driver bar for the per-programme
+        breakdown stub.
       </p>
+      {drillOpen && (
+        <DrillPanel
+          title={`${drillOpen.name} Driver Detail`}
+          onClose={() => setDrillOpen(null)}
+          stubNote="Per-programme breakdown coming v5.8. The /api/v1/pnl/bridge endpoint returns a single aggregate driver value today; a per-programme decomposition lands alongside the v5.8 KPI Board uplift."
+          crossTab={{
+            label: "Full margin analysis",
+            href: programme
+              ? `/margin?programme=${encodeURIComponent(programme)}`
+              : "/margin",
+          }}
+        >
+          <div>
+            <span className="text-[10px] uppercase tracking-wide text-navy/60">
+              Aggregate driver value
+            </span>
+            <div className="mt-1 font-mono text-lg font-semibold text-navy">
+              {drillOpen.label}
+            </div>
+          </div>
+        </DrillPanel>
+      )}
     </Card>
   );
 }

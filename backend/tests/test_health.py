@@ -15,10 +15,10 @@ async def test_health_endpoint_reports_table_count(app_client: AsyncClient) -> N
     # Read TABLE_COUNT dynamically so this test does not go stale again when
     # we add tables in later releases.
     assert body["tables"] == TABLE_COUNT
-    # M8 release commit dropped the -dev suffix on the feature branch
-    # ahead of the v5.7.0 PR open. Reads through the single source of
-    # truth in backend/app/__init__.py via settings.app_version.
-    assert body["version"] == "5.7.0"
+    # Bumped to 5.8.0 in the final v5.8 cockpit interactivity PR. Reads
+    # through the single source of truth in backend/app/__init__.py via
+    # settings.app_version. Development stops after the v5.8.0 tag.
+    assert body["version"] == "5.8.0"
 
 
 @pytest.mark.asyncio

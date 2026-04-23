@@ -17,10 +17,18 @@ type CardHeaderProps = {
   title: string;
   subtitle?: string;
   action?: ReactNode;
+  /** Optional inline node rendered next to the title (e.g. an info icon). */
+  titleAdornment?: ReactNode;
   className?: string;
 };
 
-export function CardHeader({ title, subtitle, action, className }: CardHeaderProps) {
+export function CardHeader({
+  title,
+  subtitle,
+  action,
+  titleAdornment,
+  className,
+}: CardHeaderProps) {
   return (
     <div
       className={cn(
@@ -29,7 +37,10 @@ export function CardHeader({ title, subtitle, action, className }: CardHeaderPro
       )}
     >
       <div>
-        <h3 className="text-base font-semibold text-navy dark:text-navy-50">{title}</h3>
+        <h3 className="text-base font-semibold text-navy dark:text-navy-50">
+          {title}
+          {titleAdornment}
+        </h3>
         {subtitle ? (
           <p className="mt-0.5 text-xs text-navy/70 dark:text-navy-100/70">{subtitle}</p>
         ) : null}

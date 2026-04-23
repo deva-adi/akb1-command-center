@@ -13,7 +13,10 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { useState } from "react";
 import { Card, CardHeader } from "@/components/ui/Card";
+import { PnlSectionInfo } from "@/components/PnlSectionInfo";
+import { DrillPanel } from "@/components/DrillPanel";
 import {
   fetchPnlLosses,
   type LossesOut,
@@ -101,6 +104,7 @@ type RunningRow = LossRow & { cumulative: number };
 export function LossesAttribution() {
   const [searchParams] = useSearchParams();
   const programme = searchParams.get("programme");
+  const [drillOpen, setDrillOpen] = useState<LossRow | null>(null);
 
   const filters: PnlFilters = {
     from: searchParams.get("from") ?? undefined,
@@ -207,6 +211,15 @@ export function LossesAttribution() {
       <CardHeader
         title="Losses with attribution"
         subtitle="Loss events recorded against programme for selected period."
+        titleAdornment={
+          <PnlSectionInfo
+            title="Losses with attribution"
+            whatItShows="Every identified delivery loss event (money spent on non-billable work) categorised by root cause and converted to revenue equivalent impact."
+            formula="Revenue Foregone = Loss Amount divided by (1 minus Target Gross Margin pct). Margin Lost bps = Amount divided by Programme Revenue times 10000."
+            howToRead="Total losses as percent of revenue is the headline. Above 5 percent is a red flag. PHOENIX at 237.8 percent is critically distressed. Sort by Amount to find where to intervene first."
+            thresholds="Green under 1 percent of revenue. Amber 1 to 5 percent. Red above 5 percent."
+          />
+        }
       />
 
       <div className="overflow-x-auto" data-testid="losses-table">
@@ -219,22 +232,49 @@ export function LossesAttribution() {
               <th className="py-2 pr-4 text-right font-semibold">Amount</th>
               <th className="py-2 pr-4 text-right font-semibold">
                 Revenue foregone
+                <PnlSectionInfo
+                  title="Revenue foregone"
+                  whatItShows="Converts a cost loss into revenue equivalent: how much you would need to bill to recover it at target margin."
+                  formula="Revenue foregone = Amount divided by (1 minus target margin)"
+                  howToRead="Use this to size the commercial recovery needed to absorb the loss without dropping below target margin."
+                />
               </th>
               <th className="py-2 pr-4 text-right font-semibold">
                 Margin lost
+                <PnlSectionInfo
+                  title="Margin lost"
+                  whatItShows="Loss expressed as basis points of programme revenue."
+                  formula="Margin lost (bps) = Amount divided by Programme Revenue times 10000"
+                  howToRead="One bps equals 0.01 percent of programme revenue."
+                />
               </th>
-              <th className="py-2 pr-4 text-right font-semibold">Cumulative</th>
+              <th className="py-2 pr-4 text-right font-semibold">
+                Cumulative
+                <PnlSectionInfo
+                  title="Cumulative loss"
+                  whatItShows="Running total of all losses to this row, sorted by date."
+                  howToRead="Read top-down to see how losses compound over the period."
+                />
+              </th>
             </tr>
           </thead>
           <tbody>
             {withCumulative.map((row) => (
               <tr
                 key={`${row.loss_category}-${row.snapshot_date ?? "nd"}`}
-                className="border-b border-ice-100 last:border-b-0"
+                className="cursor-pointer border-b border-ice-100 last:border-b-0 hover:bg-slate-50"
                 data-testid={`losses-row-${row.loss_category
                   .toLowerCase()
                   .replace(/\W+/g, "-")
                   .replace(/^-+|-+$/g, "")}`}
+                onClick={() =>
+                  setDrillOpen((cur) =>
+                    cur?.loss_category === row.loss_category &&
+                    cur?.snapshot_date === row.snapshot_date
+                      ? null
+                      : row,
+                  )
+                }
               >
                 <td className="py-2 pr-4 font-mono tabular-nums text-navy/80">
                   {formatDate(row.snapshot_date)}
@@ -370,8 +410,56 @@ export function LossesAttribution() {
         Revenue foregone uses target gross margin {formatPct(data.target_gross_margin_pct, 0)}:
         revenue_foregone = amount / (1 − target_gross_margin_pct). Margin lost in bps is
         amount / programme_revenue × 10,000. Total RAG: red above 2% of programme revenue,
-        amber 1–2%, green under 1%.
+        amber 1–2%, green under 1%. Click any row for the loss-event drill stub.
       </p>
+      {drillOpen && (
+        <DrillPanel
+          title={`${drillOpen.loss_category} — Loss Events`}
+          onClose={() => setDrillOpen(null)}
+          stubNote="Individual events coming v5.8. The /api/v1/pnl/losses endpoint returns category totals today; per-event detail (date, description, status) lands alongside the v5.8 KPI Board uplift."
+          crossTab={{
+            label: "View in Smart Ops",
+            href: programme
+              ? `/smart-ops?programme=${encodeURIComponent(programme)}`
+              : "/smart-ops",
+          }}
+        >
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <div>
+              <div className="text-[10px] uppercase tracking-wide text-navy/60">
+                Amount
+              </div>
+              <div className="mt-1 font-mono text-sm font-semibold text-navy">
+                {formatCurrency(drillOpen.amount)}
+              </div>
+            </div>
+            <div>
+              <div className="text-[10px] uppercase tracking-wide text-navy/60">
+                Revenue foregone
+              </div>
+              <div className="mt-1 font-mono text-sm font-semibold text-navy">
+                {formatCurrency(drillOpen.revenue_foregone)}
+              </div>
+            </div>
+            <div>
+              <div className="text-[10px] uppercase tracking-wide text-navy/60">
+                Snapshot date
+              </div>
+              <div className="mt-1 font-mono text-sm text-navy">
+                {formatDate(drillOpen.snapshot_date)}
+              </div>
+            </div>
+            <div>
+              <div className="text-[10px] uppercase tracking-wide text-navy/60">
+                Mitigation status
+              </div>
+              <div className="mt-1 text-sm text-navy">
+                {drillOpen.mitigation_status ?? "n/a"}
+              </div>
+            </div>
+          </div>
+        </DrillPanel>
+      )}
     </Card>
   );
 }

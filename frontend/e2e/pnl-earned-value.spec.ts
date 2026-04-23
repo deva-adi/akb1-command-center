@@ -33,9 +33,9 @@ test.describe("/pnl Earned Value and Receivables (M7.7)", () => {
       "data-rag-palette",
       "green",
     );
-    await expect(page.getByTestId("evr-dso-ar")).toContainText("$0.14 M");
+    await expect(page.getByTestId("evr-dso-ar")).toContainText("$144.3 K");
     await expect(page.getByTestId("evr-dso-unbilled")).toContainText(
-      "$0.10 M",
+      "$98.4 K",
     );
   });
 

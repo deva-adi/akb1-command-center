@@ -12,7 +12,10 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { useState } from "react";
 import { Card, CardHeader } from "@/components/ui/Card";
+import { PnlSectionInfo } from "@/components/PnlSectionInfo";
+import { DrillPanel } from "@/components/DrillPanel";
 import {
   fetchPnlWaterfall,
   type PnlErrorEnvelope,
@@ -130,6 +133,7 @@ function buildDrops(
 export function MarginWaterfall() {
   const [searchParams] = useSearchParams();
   const programme = searchParams.get("programme");
+  const [drillOpen, setDrillOpen] = useState<BarDatum | null>(null);
 
   const filters: PnlFilters = {
     from: searchParams.get("from") ?? undefined,
@@ -206,6 +210,15 @@ export function MarginWaterfall() {
       <CardHeader
         title="Margin waterfall"
         subtitle={`Snapshot ${data.snapshot_date} · scenario ${data.scenario_name} · revenue base ${data.revenue.toLocaleString("en-US")}`}
+        titleAdornment={
+          <PnlSectionInfo
+            title="Margin waterfall"
+            whatItShows="How gross margin erodes through four layers of cost allocation, from raw delivery margin to the net return after all overheads."
+            formula="Gross = Revenue minus Direct Cost. Contribution = Gross minus Shared Overhead. Portfolio = Contribution minus Programme Overhead. Net = Portfolio minus Corporate Overhead."
+            howToRead="Each drop shows what a cost layer consumes. Net Margin near zero means the programme is structurally unprofitable even if gross looks acceptable."
+            thresholds="Gross target 30 percent. Net target 10 percent. PHOENIX current: Gross 28 percent (RED), Net 4.1 percent (RED)."
+          />
+        }
       />
       <div
         className="relative h-64 w-full"
@@ -216,6 +229,14 @@ export function MarginWaterfall() {
           <BarChart
             data={bars}
             margin={{ top: 28, right: 16, bottom: 8, left: 8 }}
+            onClick={(state: { activePayload?: Array<{ payload: BarDatum }> }) => {
+              const payload = state?.activePayload?.[0]?.payload;
+              if (payload) {
+                setDrillOpen((cur) =>
+                  cur?.label === payload.label ? null : payload,
+                );
+              }
+            }}
           >
             <CartesianGrid
               strokeDasharray="3 3"
@@ -291,7 +312,30 @@ export function MarginWaterfall() {
         Bars cascade left to right through the four margin layers. The
         pill between consecutive bars shows the drop in basis points.
         Phoenix demo thresholds: gross green ≥ 30%, net green ≥ 10%.
+        Click any bar for the cost composition stub.
       </p>
+      {drillOpen && (
+        <DrillPanel
+          title={`${drillOpen.label} Margin — Cost Composition`}
+          onClose={() => setDrillOpen(null)}
+          stubNote="Per-overhead category breakdown coming v5.8. The /api/v1/pnl/waterfall endpoint returns aggregate layer values today; the named overhead categories that compose each drop are not yet seeded."
+          crossTab={{
+            label: "Full P&L in Margin & EVM",
+            href: programme
+              ? `/margin?programme=${encodeURIComponent(programme)}`
+              : "/margin",
+          }}
+        >
+          <div>
+            <span className="text-[10px] uppercase tracking-wide text-navy/60">
+              Layer margin
+            </span>
+            <div className="mt-1 font-mono text-lg font-semibold text-navy">
+              {drillOpen.displayPct}
+            </div>
+          </div>
+        </DrillPanel>
+      )}
     </Card>
   );
 }

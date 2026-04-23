@@ -60,6 +60,7 @@ export function Layout() {
                 key={tab.to}
                 to={targetTo}
                 end={tab.to === "/"}
+                aria-label={tab.label}
                 className={({ isActive }) =>
                   cn(
                     "group flex items-center justify-between rounded-md px-3 py-2 text-sm font-medium transition",

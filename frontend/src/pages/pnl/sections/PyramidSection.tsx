@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { AxiosError } from "axios";
@@ -11,6 +11,8 @@ import {
   YAxis,
 } from "recharts";
 import { Card, CardHeader } from "@/components/ui/Card";
+import { PnlSectionInfo } from "@/components/PnlSectionInfo";
+import { DrillPanel } from "@/components/DrillPanel";
 import {
   fetchPnlDso,
   fetchPnlEvm,
@@ -128,6 +130,15 @@ export function PyramidSection() {
       <CardHeader
         title="Resource pyramid"
         subtitle="Tier distribution, earned value, and receivables. Each sub-card shows its own snapshot date since the three endpoints reference different months."
+        titleAdornment={
+          <PnlSectionInfo
+            title="Resource pyramid"
+            whatItShows="Staffing mix by seniority tier and cost-weighted delivery contribution. Sub-cards show Earned Value (CPI and SPI) and Days Sales Outstanding."
+            formula="Bar width = Tier Weight times Programme Revenue. CPI = EV divided by AC. SPI = EV divided by PV. DSO = (AR Balance divided by Billed Revenue) times 30."
+            howToRead="Healthy pyramid: Senior narrow, Mid wide, Junior widest. CPI below 0.9 means cost overrun. SPI below 0.9 means schedule slip. DSO above 60 days means payment risk."
+            thresholds="CPI and SPI: Green above 1.0, Amber 0.9 to 1.0, Red below 0.9. DSO: Green under 45 days, Amber 45 to 60, Red above 60."
+          />
+        }
       />
       <PyramidBlock programme={programme} searchParams={searchParams} />
       <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -147,6 +158,7 @@ function PyramidBlock({
   programme: string;
   searchParams: URLSearchParams;
 }) {
+  const [pyramidDrillTier, setPyramidDrillTier] = useState<string | null>(null);
   const filters: PnlFilters = {
     from: searchParams.get("from") ?? undefined,
     to: searchParams.get("to") ?? undefined,
@@ -229,7 +241,57 @@ function PyramidBlock({
           </span>
         </span>
       </div>
-      <PyramidChart data={data} programmeRevenue={programmeRevenue} />
+      <PyramidChart
+        data={data}
+        programmeRevenue={programmeRevenue}
+        onBarClick={(tier) =>
+          setPyramidDrillTier((cur) => (cur === tier ? null : tier))
+        }
+      />
+      {pyramidDrillTier && (
+        <DrillPanel
+          title={`${pyramidDrillTier} Resources — ${
+            data.find((d) => d.tier === pyramidDrillTier)?.actual_headcount ?? 0
+          } headcount`}
+          onClose={() => setPyramidDrillTier(null)}
+          stubNote="Individual resource roster coming v5.8. The /api/v1/pnl/pyramid endpoint returns aggregated tier counts and weights today; per-person Name / Role / Utilisation / Start Date lands alongside the v5.8 KPI Board uplift."
+          crossTab={{
+            label: "Delivery health",
+            href: programme
+              ? `/delivery?programme=${encodeURIComponent(programme)}`
+              : "/delivery",
+          }}
+        >
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <div>
+              <div className="text-[10px] uppercase tracking-wide text-navy/60">
+                Headcount
+              </div>
+              <div className="mt-1 font-mono text-sm font-semibold text-navy">
+                {data.find((d) => d.tier === pyramidDrillTier)?.actual_headcount ?? "n/a"}
+              </div>
+            </div>
+            <div>
+              <div className="text-[10px] uppercase tracking-wide text-navy/60">
+                Tier weight
+              </div>
+              <div className="mt-1 font-mono text-sm font-semibold text-navy">
+                {(
+                  data.find((d) => d.tier === pyramidDrillTier)?.actual_weight ?? 0
+                ).toFixed(3)}
+              </div>
+            </div>
+            <div>
+              <div className="text-[10px] uppercase tracking-wide text-navy/60">
+                Blended rate
+              </div>
+              <div className="mt-1 font-mono text-sm font-semibold text-navy">
+                ${data.find((d) => d.tier === pyramidDrillTier)?.rate ?? 0}/hr
+              </div>
+            </div>
+          </div>
+        </DrillPanel>
+      )}
     </div>
   );
 }
@@ -243,6 +305,7 @@ function EvmSubCard({
   programme: string;
   searchParams: URLSearchParams;
 }) {
+  const [evmDrillMetric, setEvmDrillMetric] = useState<"cpi" | "spi" | null>(null);
   const filters: PnlFilters = {
     from: searchParams.get("from") ?? undefined,
     to: searchParams.get("to") ?? undefined,
@@ -299,6 +362,15 @@ function EvmSubCard({
       <div className="grid grid-cols-2 gap-4">
         <EvmMetric
           label="CPI"
+          labelAdornment={
+            <PnlSectionInfo
+              title="CPI (Cost Performance Index)"
+              whatItShows="Cost Performance Index. Above 1.0 means under budget. Below 0.9 means cost overrun."
+              formula="CPI = EV / AC"
+              howToRead="PHOENIX 0.87 means spending 1.15 dollars per 1 dollar of value delivered."
+              thresholds="Green at or above 1.0, Amber 0.9 to 1.0, Red below 0.9."
+            />
+          }
           value={formatRatio(e.cpi)}
           formula="CPI = EV / AC"
           palette={cpiPalette}
@@ -308,9 +380,21 @@ function EvmSubCard({
           sparklineLoading={cpiSeries.isLoading}
           sparklineError={!!cpiSeries.error}
           testId="evm-cpi"
+          onClick={() =>
+            setEvmDrillMetric((cur) => (cur === "cpi" ? null : "cpi"))
+          }
         />
         <EvmMetric
           label="SPI"
+          labelAdornment={
+            <PnlSectionInfo
+              title="SPI (Schedule Performance Index)"
+              whatItShows="Schedule Performance Index. Above 1.0 means ahead of schedule. Below 0.9 means behind schedule."
+              formula="SPI = EV / PV"
+              howToRead="PHOENIX 0.84 means 84 percent of planned work completed on time."
+              thresholds="Green at or above 1.0, Amber 0.9 to 1.0, Red below 0.9."
+            />
+          }
           value={formatRatio(e.spi)}
           formula="SPI = EV / PV"
           palette={spiPal}
@@ -320,18 +404,80 @@ function EvmSubCard({
           sparklineLoading={spiSeries.isLoading}
           sparklineError={!!spiSeries.error}
           testId="evm-spi"
+          onClick={() =>
+            setEvmDrillMetric((cur) => (cur === "spi" ? null : "spi"))
+          }
         />
       </div>
       <p className="mt-3 text-xs text-navy/60">
         RAG: red below 0.9, amber 0.9–1.0, green at or above 1.0. Sparkline
-        shows the last six actuals from /pfa for the matching metric.
+        shows the last six actuals from /pfa for the matching metric. Click
+        either CPI or SPI for the six-month trend table.
       </p>
+      {evmDrillMetric && (
+        <DrillPanel
+          title={`${evmDrillMetric.toUpperCase()} Trend — Last 6 Months`}
+          onClose={() => setEvmDrillMetric(null)}
+          crossTab={{
+            label: "Full EVM in Margin & EVM",
+            href: programme
+              ? `/margin?programme=${encodeURIComponent(programme)}`
+              : "/margin",
+          }}
+        >
+          <EvmTrendTable
+            series={
+              (evmDrillMetric === "cpi" ? cpiSeries.data : spiSeries.data)
+                ?.series.actual.slice(-6) ?? []
+            }
+            metricLabel={evmDrillMetric.toUpperCase()}
+          />
+        </DrillPanel>
+      )}
     </SubCard>
+  );
+}
+
+function EvmTrendTable({
+  series,
+  metricLabel,
+}: {
+  series: Array<{ snapshot_date: string; value: number | null }>;
+  metricLabel: string;
+}) {
+  if (series.length === 0) {
+    return (
+      <p className="text-navy/60">
+        No trend points returned by /pfa for this metric in the current
+        window.
+      </p>
+    );
+  }
+  return (
+    <table className="w-full text-xs" data-testid="evm-trend-table">
+      <thead className="border-b border-ice-100 text-left text-[10px] uppercase tracking-wide text-navy/60">
+        <tr>
+          <th className="py-1 pr-4 font-semibold">Month</th>
+          <th className="py-1 pr-4 text-right font-semibold">{metricLabel}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {series.map((p) => (
+          <tr key={p.snapshot_date} className="border-b border-ice-100 last:border-b-0">
+            <td className="py-1 pr-4 font-mono text-navy">{p.snapshot_date}</td>
+            <td className="py-1 pr-4 text-right font-mono text-navy">
+              {p.value !== null ? p.value.toFixed(2) : "n/a"}
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
   );
 }
 
 function EvmMetric({
   label,
+  labelAdornment,
   value,
   formula,
   palette,
@@ -339,8 +485,10 @@ function EvmMetric({
   sparklineLoading,
   sparklineError,
   testId,
+  onClick,
 }: {
   label: string;
+  labelAdornment?: React.ReactNode;
   value: string;
   formula: string;
   palette: Palette;
@@ -348,12 +496,21 @@ function EvmMetric({
   sparklineLoading: boolean;
   sparklineError: boolean;
   testId: string;
+  onClick?: () => void;
 }) {
   return (
-    <div data-testid={testId}>
+    <div
+      data-testid={testId}
+      className={onClick ? "cursor-pointer rounded p-1 hover:bg-slate-50" : undefined}
+      onClick={onClick}
+      role={onClick ? "button" : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      onKeyDown={onClick ? (e) => e.key === "Enter" && onClick() : undefined}
+    >
       <div className="flex items-baseline justify-between">
         <span className="text-xs uppercase tracking-wide text-navy/60">
           {label}
+          {labelAdornment}
         </span>
         <span
           className={cn(
@@ -410,6 +567,7 @@ function DsoSubCard({
   programme: string;
   searchParams: URLSearchParams;
 }) {
+  const [dsoDrillOpen, setDsoDrillOpen] = useState(false);
   const filters: PnlFilters = {
     from: searchParams.get("from") ?? undefined,
     to: searchParams.get("to") ?? undefined,
@@ -452,10 +610,23 @@ function DsoSubCard({
       }
       testId="dso-sub-card"
     >
-      <div>
+      <div
+        className="cursor-pointer rounded p-1 hover:bg-slate-50"
+        role="button"
+        tabIndex={0}
+        onClick={() => setDsoDrillOpen((cur) => !cur)}
+        onKeyDown={(e) => e.key === "Enter" && setDsoDrillOpen((cur) => !cur)}
+      >
         <div className="flex items-baseline justify-between">
           <span className="text-xs uppercase tracking-wide text-navy/60">
             DSO days
+            <PnlSectionInfo
+              title="DSO (Days Sales Outstanding)"
+              whatItShows="Days Sales Outstanding. The average number of days between invoicing and payment receipt."
+              formula="DSO = (AR Balance / Billed Revenue) × 30"
+              howToRead="PHOENIX 6.0 days is GREEN. Client pays within one week of invoice. Industry average 45 to 60 days."
+              thresholds="Green under 45 days, Amber 45 to 60, Red above 60."
+            />
           </span>
           <span
             className={cn(
@@ -498,8 +669,57 @@ function DsoSubCard({
       </div>
       <p className="mt-3 text-xs text-navy/60">
         RAG: green under 45 d, amber 45–60 d, red above 60 d. DSO trend
-        sparkline is deferred to v5.8 (see TECH_DEBT.md).
+        sparkline is deferred to v5.8 (see TECH_DEBT.md). Click the DSO
+        days hero for the receivables drill stub.
       </p>
+      {dsoDrillOpen && (
+        <DrillPanel
+          title="Receivables Detail"
+          onClose={() => setDsoDrillOpen(false)}
+          stubNote="Open invoice ledger coming v5.8. The /api/v1/pnl/dso endpoint returns aggregate balances today; per-invoice Reference / Raised Date / Days Outstanding / Status lands alongside the v5.8 KPI Board uplift."
+          crossTab={{
+            label: "View in Reports",
+            href: programme
+              ? `/reports?programme=${encodeURIComponent(programme)}`
+              : "/reports",
+          }}
+        >
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <div>
+              <div className="text-[10px] uppercase tracking-wide text-navy/60">
+                DSO days
+              </div>
+              <div className="mt-1 font-mono text-sm font-semibold text-navy">
+                {formatDays(d.dso_days)}
+              </div>
+            </div>
+            <div>
+              <div className="text-[10px] uppercase tracking-wide text-navy/60">
+                AR balance
+              </div>
+              <div className="mt-1 font-mono text-sm font-semibold text-navy">
+                {formatCurrency(d.ar_balance)}
+              </div>
+            </div>
+            <div>
+              <div className="text-[10px] uppercase tracking-wide text-navy/60">
+                Unbilled WIP
+              </div>
+              <div className="mt-1 font-mono text-sm font-semibold text-navy">
+                {formatCurrency(d.unbilled_wip)}
+              </div>
+            </div>
+            <div>
+              <div className="text-[10px] uppercase tracking-wide text-navy/60">
+                Billed revenue
+              </div>
+              <div className="mt-1 font-mono text-sm font-semibold text-navy">
+                {formatCurrency(d.billed_revenue)}
+              </div>
+            </div>
+          </div>
+        </DrillPanel>
+      )}
     </SubCard>
   );
 }

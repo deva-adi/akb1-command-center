@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { AxiosError } from "axios";
@@ -8,6 +8,8 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { Card, CardHeader } from "@/components/ui/Card";
+import { PnlSectionInfo } from "@/components/PnlSectionInfo";
+import { DrillPanel } from "@/components/DrillPanel";
 import {
   fetchPnlDso,
   fetchPnlEvm,
@@ -19,6 +21,7 @@ import {
   type PnlFilters,
 } from "@/api/pnlApi";
 import { cn } from "@/lib/cn";
+import { formatCurrency } from "@/lib/format";
 import {
   cpiSpiPalette,
   dsoPalette,
@@ -70,11 +73,6 @@ function formatRatio(value: number | null): string {
   return value.toFixed(2);
 }
 
-function formatMillions(value: number | null): string {
-  if (value === null) return "n/a";
-  return `$${(value / 1_000_000).toFixed(2)} M`;
-}
-
 function formatDsoDays(value: number | null): string {
   if (value === null) return "n/a";
   return `${value.toFixed(1)} days`;
@@ -100,6 +98,14 @@ export function EarnedValueReceivables() {
       <CardHeader
         title="Earned Value and Receivables"
         subtitle="Cost and schedule indices on the left with a six-month CPI and SPI trend. DSO days and the receivables stack on the right. Each sub-card carries its own snapshot date."
+        titleAdornment={
+          <PnlSectionInfo
+            title="Earned Value and Receivables"
+            whatItShows="Standalone deep-dive on two financial health dimensions: delivery cost efficiency (EVM) and cash flow speed (receivables)."
+            formula="CPI = EV divided by AC. SPI = EV divided by PV. DSO = (AR Balance divided by Billed Revenue) times 30."
+            howToRead="CPI below 1.0 means you are spending more than the value delivered. DSO above 60 means your client is slow to pay. Both red simultaneously means programme in financial distress on two dimensions."
+          />
+        }
       />
       <div
         className="grid grid-cols-1 gap-4 md:grid-cols-2"
@@ -119,6 +125,7 @@ function EarnedValueCard({
   programme: string;
   searchParams: URLSearchParams;
 }) {
+  const [drillMetric, setDrillMetric] = useState<"cpi" | "spi" | null>(null);
   const filters: PnlFilters = {
     from: searchParams.get("from") ?? undefined,
     to: searchParams.get("to") ?? undefined,
@@ -194,15 +201,39 @@ function EarnedValueCard({
       <div className="grid grid-cols-2 gap-4">
         <RatioBlock
           label="CPI"
+          labelAdornment={
+            <PnlSectionInfo
+              title="CPI (Cost Performance Index)"
+              whatItShows="Cost Performance Index. Above 1.0 means under budget. Below 0.9 means cost overrun."
+              formula="CPI = EV / AC"
+              howToRead="PHOENIX 0.87 means spending 1.15 dollars per 1 dollar of value delivered."
+              thresholds="Green at or above 1.0, Amber 0.9 to 1.0, Red below 0.9."
+            />
+          }
           value={formatRatio(e.cpi)}
           palette={cpiPal}
           testId="evr-cpi"
+          onClick={() =>
+            setDrillMetric((cur) => (cur === "cpi" ? null : "cpi"))
+          }
         />
         <RatioBlock
           label="SPI"
+          labelAdornment={
+            <PnlSectionInfo
+              title="SPI (Schedule Performance Index)"
+              whatItShows="Schedule Performance Index. Above 1.0 means ahead of schedule. Below 0.9 means behind schedule."
+              formula="SPI = EV / PV"
+              howToRead="PHOENIX 0.84 means 84 percent of planned work completed on time."
+              thresholds="Green at or above 1.0, Amber 0.9 to 1.0, Red below 0.9."
+            />
+          }
           value={formatRatio(e.spi)}
           palette={spiPal}
           testId="evr-spi"
+          onClick={() =>
+            setDrillMetric((cur) => (cur === "spi" ? null : "spi"))
+          }
         />
       </div>
       <div
@@ -264,6 +295,45 @@ function EarnedValueCard({
           </span>
         </div>
       </div>
+      {drillMetric && (
+        <DrillPanel
+          title={`${drillMetric.toUpperCase()} Trend — Last 6 Months`}
+          onClose={() => setDrillMetric(null)}
+          crossTab={{
+            label: "Full EVM in Margin & EVM",
+            href: programme
+              ? `/margin?programme=${encodeURIComponent(programme)}`
+              : "/margin",
+          }}
+        >
+          <table className="w-full text-xs" data-testid="evr-trend-table">
+            <thead className="border-b border-ice-100 text-left text-[10px] uppercase tracking-wide text-navy/60">
+              <tr>
+                <th className="py-1 pr-4 font-semibold">Month</th>
+                <th className="py-1 pr-4 text-right font-semibold">
+                  {drillMetric.toUpperCase()}
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {((drillMetric === "cpi" ? cpiSeries.data : spiSeries.data)
+                ?.series.actual.slice(-6) ?? []).map((p) => (
+                <tr
+                  key={p.snapshot_date}
+                  className="border-b border-ice-100 last:border-b-0"
+                >
+                  <td className="py-1 pr-4 font-mono text-navy">
+                    {p.snapshot_date}
+                  </td>
+                  <td className="py-1 pr-4 text-right font-mono text-navy">
+                    {p.value !== null ? p.value.toFixed(2) : "n/a"}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </DrillPanel>
+      )}
     </SubCard>
   );
 }
@@ -275,6 +345,7 @@ function ReceivablesCard({
   programme: string;
   searchParams: URLSearchParams;
 }) {
+  const [dsoDrillOpen, setDsoDrillOpen] = useState(false);
   const filters: PnlFilters = {
     from: searchParams.get("from") ?? undefined,
     to: searchParams.get("to") ?? undefined,
@@ -317,12 +388,25 @@ function ReceivablesCard({
       }
       testId="evr-receivables-card"
     >
-      <div className="flex items-baseline gap-3">
+      <div
+        className="flex cursor-pointer items-baseline gap-3 rounded p-1 hover:bg-slate-50"
+        role="button"
+        tabIndex={0}
+        onClick={() => setDsoDrillOpen((cur) => !cur)}
+        onKeyDown={(e) => e.key === "Enter" && setDsoDrillOpen((cur) => !cur)}
+      >
         <div
           className="font-mono text-3xl font-bold tabular-nums text-navy"
           data-testid="evr-dso-days"
         >
           {formatDsoDays(d.dso_days)}
+          <PnlSectionInfo
+            title="DSO (Days Sales Outstanding)"
+            whatItShows="Days Sales Outstanding. The average number of days between invoicing and payment receipt."
+            formula="DSO = (AR Balance / Billed Revenue) × 30"
+            howToRead="PHOENIX 6.0 days is GREEN. Client pays within one week of invoice. Industry average 45 to 60 days."
+            thresholds="Green under 45 days, Amber 45 to 60, Red above 60."
+          />
         </div>
         <span
           className={cn(
@@ -344,7 +428,7 @@ function ReceivablesCard({
             AR balance
           </div>
           <div className="font-mono text-lg font-semibold tabular-nums text-navy">
-            {formatMillions(d.ar_balance)}
+            {formatCurrency(d.ar_balance)}
           </div>
         </div>
         <div data-testid="evr-dso-unbilled">
@@ -352,34 +436,95 @@ function ReceivablesCard({
             Unbilled WIP
           </div>
           <div className="font-mono text-lg font-semibold tabular-nums text-navy">
-            {formatMillions(d.unbilled_wip)}
+            {formatCurrency(d.unbilled_wip)}
           </div>
         </div>
       </div>
       <p className="mt-3 text-xs text-navy/60">
         RAG: green under 45 days, amber 45 to 60, red above 60. DSO trend
-        sparkline is deferred to v5.8.
+        sparkline is deferred to v5.8. Click the DSO hero for the open
+        invoices drill stub.
       </p>
+      {dsoDrillOpen && (
+        <DrillPanel
+          title="Receivables Detail"
+          onClose={() => setDsoDrillOpen(false)}
+          stubNote="Open invoice ledger coming v5.8. The /api/v1/pnl/dso endpoint returns aggregate balances today; per-invoice Reference / Raised Date / Days Outstanding / Status lands alongside the v5.8 KPI Board uplift."
+          crossTab={{
+            label: "View in Reports",
+            href: programme
+              ? `/reports?programme=${encodeURIComponent(programme)}`
+              : "/reports",
+          }}
+        >
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <div>
+              <div className="text-[10px] uppercase tracking-wide text-navy/60">
+                DSO days
+              </div>
+              <div className="mt-1 font-mono text-sm font-semibold text-navy">
+                {formatDsoDays(d.dso_days)}
+              </div>
+            </div>
+            <div>
+              <div className="text-[10px] uppercase tracking-wide text-navy/60">
+                AR balance
+              </div>
+              <div className="mt-1 font-mono text-sm font-semibold text-navy">
+                {formatCurrency(d.ar_balance)}
+              </div>
+            </div>
+            <div>
+              <div className="text-[10px] uppercase tracking-wide text-navy/60">
+                Unbilled WIP
+              </div>
+              <div className="mt-1 font-mono text-sm font-semibold text-navy">
+                {formatCurrency(d.unbilled_wip)}
+              </div>
+            </div>
+            <div>
+              <div className="text-[10px] uppercase tracking-wide text-navy/60">
+                Billed revenue
+              </div>
+              <div className="mt-1 font-mono text-sm font-semibold text-navy">
+                {formatCurrency(d.billed_revenue)}
+              </div>
+            </div>
+          </div>
+        </DrillPanel>
+      )}
     </SubCard>
   );
 }
 
 function RatioBlock({
   label,
+  labelAdornment,
   value,
   palette,
   testId,
+  onClick,
 }: {
   label: string;
+  labelAdornment?: React.ReactNode;
   value: string;
   palette: Palette;
   testId: string;
+  onClick?: () => void;
 }) {
   return (
-    <div data-testid={testId}>
+    <div
+      data-testid={testId}
+      className={onClick ? "cursor-pointer rounded p-1 hover:bg-slate-50" : undefined}
+      onClick={onClick}
+      role={onClick ? "button" : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      onKeyDown={onClick ? (e) => e.key === "Enter" && onClick() : undefined}
+    >
       <div className="flex items-baseline justify-between">
         <span className="text-xs uppercase tracking-wide text-navy/60">
           {label}
+          {labelAdornment}
         </span>
         <span
           className={cn(

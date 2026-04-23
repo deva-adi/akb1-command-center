@@ -33,20 +33,17 @@ async function clickTabAndAssert(
   page: import("@playwright/test").Page,
   startRoute: string,
   navLabel: string,
-  tabNumber: string,
+  _tabNumber: string,
   expectedPath: string,
   pageAnchorText: RegExp | string,
 ) {
   await page.goto(startRoute);
   const nav = page.getByRole("navigation", { name: "Primary" });
   await expect(nav).toBeVisible();
-  // Sidebar NavLink renders two spans (label + number) so the
-  // accessible name is "<label> <number>". Match the full computed
-  // name so the locator is unambiguous in strict mode.
-  const accessibleName = `${navLabel} ${tabNumber}`;
-  await nav
-    .getByRole("link", { name: accessibleName, exact: true })
-    .click();
+  // NavLink now carries an explicit aria-label={tab.label} (see
+  // docs/TECH_DEBT.md M9 finding) so the accessible name is just the
+  // label. Match by label exactly.
+  await nav.getByRole("link", { name: navLabel, exact: true }).click();
   await expect(page).toHaveURL(new RegExp(`${expectedPath.replace(/\//g, "\\/")}$`));
   await expect(page.getByText(pageAnchorText).first()).toBeVisible();
 }

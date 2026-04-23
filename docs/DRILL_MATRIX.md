@@ -8,7 +8,8 @@
 ## Status legend
 
 - **PASS** — drill fires and the assertion that the result rendered passes.
-- **PASS-RENDER** — section visible and renders without error, no click-drill handler exists by design.
+- **PASS-RENDER** — section visible and renders without error, no click-drill handler exists by design. (Replaced by PASS-DRILL across Tab 12 in the v5.8 cockpit interactivity PR.)
+- **PASS-DRILL** — drill handler wired and panel opens. Some panels carry "coming v5.8" stub notes where the backend endpoint does not yet return per-row or per-month detail; the drill mechanic itself works today.
 - **SKIP-BASELINE** — pre-existing strict-mode locator regression, tracked in CLAUDE_MEMORY.md Section 4.5, not introduced by Tab 12 work.
 - **GAP** — element exists but has no handler; pre-existing, scheduled for v5.8 or M9-followup. No Tab 12 row carries this status because Tab 12 read-only-by-design is captured under PASS-RENDER.
 
@@ -39,17 +40,17 @@
 | 10 Reports & Exports | Report type card | Click ReportCard to populate builder | Builder form appears with KPI/period/currency options | GAP — no M9 assertion. Pre-existing handler. |
 | 11 Data Hub & Settings | Sidebar nav | Sidebar NavLink "Data Hub 11" | `/data-hub` Data Hub & Settings heading visible | PASS |
 | 11 Data Hub & Settings | CSV upload button | File input click to upload CSV | Preview state populated, preview table renders | GAP — no M9 assertion. Pre-existing. |
-| 12 P&L Cockpit | Revenue section | None by design — section-scroll cockpit, not panel-open | `data-testid="revenue-cards"` visible at `/pnl?programme=PHOENIX` | PASS-RENDER — section renders, no click-drill handler. By design, Tab 12 is a section-scroll model not a panel model. Click-drills deferred to v5.8. |
-| 12 P&L Cockpit | Losses with Attribution | None by design — section-scroll cockpit | `data-testid="losses-table"` + `data-testid="losses-total-rag"` red palette visible | PASS-RENDER — section renders, no click-drill handler. By design, Tab 12 is a section-scroll model not a panel model. Click-drills deferred to v5.8. |
-| 12 P&L Cockpit | Resource Pyramid | None by design — section-scroll cockpit | `data-testid="pyramid-block"` + `data-testid="pyramid-rag"` visible | PASS-RENDER — section renders, no click-drill handler. By design, Tab 12 is a section-scroll model not a panel model. Click-drills deferred to v5.8. |
-| 12 P&L Cockpit | Earned Value & Receivables | None by design — section-scroll cockpit | `data-testid="evr-section"` + EVM and Receivables sub-cards visible | PASS-RENDER — section renders, no click-drill handler. By design, Tab 12 is a section-scroll model not a panel model. Click-drills deferred to v5.8. |
+| 12 P&L Cockpit | Revenue section | Click any of the five MetricCards | DrillPanel opens below the row with current and prior snapshot values | PASS-DRILL — handler wired in v5.8 cockpit interactivity PR. Per-month bar chart is a v5.8 stub note (the /api/v1/pnl/revenue endpoint returns single snapshots today). |
+| 12 P&L Cockpit | Losses with Attribution | Click any loss row in the seven-column table | DrillPanel opens with that row's amount, revenue foregone, snapshot date, and mitigation status | PASS-DRILL — handler wired. Per-event ledger is a v5.8 stub note. |
+| 12 P&L Cockpit | Resource Pyramid | Click any tier bar (Senior / Mid / Junior) | DrillPanel opens with headcount, tier weight, and blended rate for the clicked tier | PASS-DRILL — handler wired via new `onBarClick` prop on PyramidChart. Per-person roster is a v5.8 stub note. |
+| 12 P&L Cockpit | Earned Value & Receivables | Click CPI, SPI, or DSO hero on either the Pyramid sub-cards or the standalone EVR section | DrillPanel opens. CPI and SPI render the real six-month trend table from /pfa(cpi) and /pfa(spi). DSO panel shows aggregate balances with a v5.8 stub note for the open invoice ledger. | PASS-DRILL — CPI and SPI panels are real drills against /pfa time series. DSO panel content is a v5.8 stub. All three drill mechanics work today. |
 
 ## Roll-up
 
 | Status | Count |
 |---|---|
 | PASS | 11 |
-| PASS-RENDER | 4 |
+| PASS-DRILL | 4 |
 | SKIP-BASELINE | 1 |
 | GAP | 11 |
 | **Total rows** | **27** |
@@ -57,7 +58,7 @@
 ## Notes
 
 - The 11 PASS rows correspond to the 11 sidebar-navigation drill tests in `m9-drill-audit.spec.ts` (one per Tab 01 to Tab 11). Sidebar nav is the most stable cross-tab drill path because it is anchored on `<nav aria-label="Primary">` in `Layout.tsx` with labels from the canonical `TABS` registry in `frontend/src/lib/tabRegistry.ts`.
-- The 4 PASS-RENDER rows correspond to the four Tab 12 section render smoke tests in `m9-drill-audit.spec.ts`. Tab 12 has zero `onClick`, `navigate(`, or `<Link to=` calls in `frontend/src/pages/pnl/`. Click-drills are deferred to v5.8 alongside the three other deferred Tab 12 sections (KPI Board, Commercial Levers, LLM Narrative).
+- The 4 PASS-DRILL rows replace the previous PASS-RENDER state. The v5.8 cockpit interactivity PR wires nine drill handlers across Tab 12 (Revenue cards, Bridge bars, Waterfall bars, PFA rows, Losses rows, Pyramid bars, CPI/SPI cards in two places, DSO card in two places) plus a Portfolio programme picker modal. CPI/SPI and PFA Revenue/Gross-margin drills render real six-month series from /pfa; the other six drills open panels with current snapshot values and a "coming v5.8" stub note for the per-row or per-event detail that needs new endpoint fields. The audit spec assertions still test render visibility and pass green.
 - The 11 GAP rows are pre-existing partial drill wirings on Tabs 01 to 11. None were introduced by the Tab 12 build. They are scheduled for the v5.8 dedicated drill harness or earlier as bandwidth allows.
 - The 1 SKIP-BASELINE row tracks the strict-mode locator regression on `getByText("Hercules Workload Consolidation")` documented in CLAUDE_MEMORY.md Section 4.5 PW-2.
 - 12 screenshot files in `docs/drill-evidence/` provide visual evidence that every tab renders end-to-end with its primary content visible. Tab 12's screenshot frames the Losses section with all four Phoenix loss rows and the red total RAG chip in view, per Adi sign-off 2026-04-23.
