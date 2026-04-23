@@ -13,6 +13,7 @@ import {
   YAxis,
 } from "recharts";
 import { Card, CardHeader } from "@/components/ui/Card";
+import { PnlSectionInfo } from "@/components/PnlSectionInfo";
 import {
   fetchPnlBridge,
   fetchPnlWaterfall,
@@ -256,6 +257,15 @@ export function MarginBridge() {
       <CardHeader
         title="Margin bridge"
         subtitle={`Gross margin ${formatPctLabel(bridge.prior_value)} on ${bridge.prior_snapshot_date} → ${formatPctLabel(bridge.current_value)} on ${bridge.current_snapshot_date} · total delta ${totalLabel} bps`}
+        titleAdornment={
+          <PnlSectionInfo
+            title="Margin bridge"
+            whatItShows="Decomposes the change in gross margin percentage between last month and this month into four independent drivers."
+            formula="Delta Gross Margin = Price Effect + Volume Effect + Mix Effect + Cost Effect. Each effect isolates one variable. Sum of four effects equals total delta."
+            howToRead="The tallest bar is your primary driver. Green bars improve margin, red bars destroy it. Mix going red means you are doing more low-margin work."
+            thresholds="Any single driver exceeding 300 bps warrants investigation."
+          />
+        }
       />
       <div
         className="h-64 w-full"

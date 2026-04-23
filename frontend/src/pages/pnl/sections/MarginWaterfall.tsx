@@ -13,6 +13,7 @@ import {
   YAxis,
 } from "recharts";
 import { Card, CardHeader } from "@/components/ui/Card";
+import { PnlSectionInfo } from "@/components/PnlSectionInfo";
 import {
   fetchPnlWaterfall,
   type PnlErrorEnvelope,
@@ -206,6 +207,15 @@ export function MarginWaterfall() {
       <CardHeader
         title="Margin waterfall"
         subtitle={`Snapshot ${data.snapshot_date} · scenario ${data.scenario_name} · revenue base ${data.revenue.toLocaleString("en-US")}`}
+        titleAdornment={
+          <PnlSectionInfo
+            title="Margin waterfall"
+            whatItShows="How gross margin erodes through four layers of cost allocation, from raw delivery margin to the net return after all overheads."
+            formula="Gross = Revenue minus Direct Cost. Contribution = Gross minus Shared Overhead. Portfolio = Contribution minus Programme Overhead. Net = Portfolio minus Corporate Overhead."
+            howToRead="Each drop shows what a cost layer consumes. Net Margin near zero means the programme is structurally unprofitable even if gross looks acceptable."
+            thresholds="Gross target 30 percent. Net target 10 percent. PHOENIX current: Gross 28 percent (RED), Net 4.1 percent (RED)."
+          />
+        }
       />
       <div
         className="relative h-64 w-full"

@@ -2,6 +2,7 @@ import { useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { AxiosError } from "axios";
 import { Card, CardHeader } from "@/components/ui/Card";
+import { PnlSectionInfo } from "@/components/PnlSectionInfo";
 import {
   fetchPnlPfa,
   type PfaOut,
@@ -307,16 +308,47 @@ export function PfaTable() {
       <CardHeader
         title="Plan vs forecast vs actual"
         subtitle={`Comparison window: ${windowLabel}. Cost row derived as revenue × (1 − gross margin %).`}
+        titleAdornment={
+          <PnlSectionInfo
+            title="Plan vs forecast vs actual"
+            whatItShows="Three-way comparison of contractual plan, current forecast, and actual delivered performance to date."
+            formula="Variance = Actual minus Planned. Gross margin variance in bps = (Actual pct minus Planned pct) times 10000."
+            howToRead="Focus on Gross Margin variance row. Red means actuals are worse than plan. Forecast column shows n/a because Forecast at Completion is not yet seeded; planned for v5.8."
+            thresholds="Gross margin variance: Green at or above zero. Amber zero to minus 200 bps. Red worse than minus 200 bps."
+          />
+        }
       />
       <div className="overflow-x-auto" data-testid="pfa-table">
         <table className="w-full text-sm">
           <thead className="border-b border-ice-100 text-left text-xs uppercase tracking-wide text-navy/60">
             <tr>
               <th className="py-2 pr-4 font-semibold">Row</th>
-              <th className="py-2 pr-4 font-semibold">Planned</th>
-              <th className="py-2 pr-4 font-semibold">Forecast</th>
+              <th className="py-2 pr-4 font-semibold">
+                Planned
+                <PnlSectionInfo
+                  title="Planned"
+                  whatItShows="Contractually agreed target at programme start. The benchmark."
+                  howToRead="Compare Actual against Planned to spot variance."
+                />
+              </th>
+              <th className="py-2 pr-4 font-semibold">
+                Forecast
+                <PnlSectionInfo
+                  title="Forecast"
+                  whatItShows="Forecast at Completion. Not yet seeded; the column shows n/a. Coming v5.8."
+                  howToRead="Once seeded, Forecast indicates where the programme is trending versus the original Plan."
+                />
+              </th>
               <th className="py-2 pr-4 font-semibold">Actual</th>
-              <th className="py-2 pr-4 font-semibold">Variance (actual − planned)</th>
+              <th className="py-2 pr-4 font-semibold">
+                Variance (actual − planned)
+                <PnlSectionInfo
+                  title="Variance (Actual minus Planned)"
+                  whatItShows="Difference between Actual and Planned for the same row."
+                  formula="Revenue rows in currency. Gross margin row in basis points."
+                  howToRead="Negative variance on Gross margin is a margin compression signal."
+                />
+              </th>
             </tr>
           </thead>
           <tbody>

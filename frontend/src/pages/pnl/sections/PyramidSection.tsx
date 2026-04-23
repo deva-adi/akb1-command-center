@@ -11,6 +11,7 @@ import {
   YAxis,
 } from "recharts";
 import { Card, CardHeader } from "@/components/ui/Card";
+import { PnlSectionInfo } from "@/components/PnlSectionInfo";
 import {
   fetchPnlDso,
   fetchPnlEvm,
@@ -128,6 +129,15 @@ export function PyramidSection() {
       <CardHeader
         title="Resource pyramid"
         subtitle="Tier distribution, earned value, and receivables. Each sub-card shows its own snapshot date since the three endpoints reference different months."
+        titleAdornment={
+          <PnlSectionInfo
+            title="Resource pyramid"
+            whatItShows="Staffing mix by seniority tier and cost-weighted delivery contribution. Sub-cards show Earned Value (CPI and SPI) and Days Sales Outstanding."
+            formula="Bar width = Tier Weight times Programme Revenue. CPI = EV divided by AC. SPI = EV divided by PV. DSO = (AR Balance divided by Billed Revenue) times 30."
+            howToRead="Healthy pyramid: Senior narrow, Mid wide, Junior widest. CPI below 0.9 means cost overrun. SPI below 0.9 means schedule slip. DSO above 60 days means payment risk."
+            thresholds="CPI and SPI: Green above 1.0, Amber 0.9 to 1.0, Red below 0.9. DSO: Green under 45 days, Amber 45 to 60, Red above 60."
+          />
+        }
       />
       <PyramidBlock programme={programme} searchParams={searchParams} />
       <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -299,6 +309,15 @@ function EvmSubCard({
       <div className="grid grid-cols-2 gap-4">
         <EvmMetric
           label="CPI"
+          labelAdornment={
+            <PnlSectionInfo
+              title="CPI (Cost Performance Index)"
+              whatItShows="Cost Performance Index. Above 1.0 means under budget. Below 0.9 means cost overrun."
+              formula="CPI = EV / AC"
+              howToRead="PHOENIX 0.87 means spending 1.15 dollars per 1 dollar of value delivered."
+              thresholds="Green at or above 1.0, Amber 0.9 to 1.0, Red below 0.9."
+            />
+          }
           value={formatRatio(e.cpi)}
           formula="CPI = EV / AC"
           palette={cpiPalette}
@@ -311,6 +330,15 @@ function EvmSubCard({
         />
         <EvmMetric
           label="SPI"
+          labelAdornment={
+            <PnlSectionInfo
+              title="SPI (Schedule Performance Index)"
+              whatItShows="Schedule Performance Index. Above 1.0 means ahead of schedule. Below 0.9 means behind schedule."
+              formula="SPI = EV / PV"
+              howToRead="PHOENIX 0.84 means 84 percent of planned work completed on time."
+              thresholds="Green at or above 1.0, Amber 0.9 to 1.0, Red below 0.9."
+            />
+          }
           value={formatRatio(e.spi)}
           formula="SPI = EV / PV"
           palette={spiPal}
@@ -332,6 +360,7 @@ function EvmSubCard({
 
 function EvmMetric({
   label,
+  labelAdornment,
   value,
   formula,
   palette,
@@ -341,6 +370,7 @@ function EvmMetric({
   testId,
 }: {
   label: string;
+  labelAdornment?: React.ReactNode;
   value: string;
   formula: string;
   palette: Palette;
@@ -354,6 +384,7 @@ function EvmMetric({
       <div className="flex items-baseline justify-between">
         <span className="text-xs uppercase tracking-wide text-navy/60">
           {label}
+          {labelAdornment}
         </span>
         <span
           className={cn(
@@ -456,6 +487,13 @@ function DsoSubCard({
         <div className="flex items-baseline justify-between">
           <span className="text-xs uppercase tracking-wide text-navy/60">
             DSO days
+            <PnlSectionInfo
+              title="DSO (Days Sales Outstanding)"
+              whatItShows="Days Sales Outstanding. The average number of days between invoicing and payment receipt."
+              formula="DSO = (AR Balance / Billed Revenue) × 30"
+              howToRead="PHOENIX 6.0 days is GREEN. Client pays within one week of invoice. Industry average 45 to 60 days."
+              thresholds="Green under 45 days, Amber 45 to 60, Red above 60."
+            />
           </span>
           <span
             className={cn(

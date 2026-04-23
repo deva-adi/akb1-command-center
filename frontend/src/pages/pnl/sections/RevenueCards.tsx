@@ -45,10 +45,10 @@ type CardSpec = {
 
 const CARDS: CardSpec[] = [
   { key: "booked", label: "Booked revenue", metricId: "revenue", positiveIsGood: true },
-  { key: "billed", label: "Billed revenue", positiveIsGood: true },
-  { key: "collected", label: "Collected revenue", positiveIsGood: true },
-  { key: "unbilled_wip", label: "Unbilled WIP", positiveIsGood: false },
-  { key: "ar", label: "AR balance", positiveIsGood: false },
+  { key: "billed", label: "Billed revenue", metricId: "billed_revenue", positiveIsGood: true },
+  { key: "collected", label: "Collected revenue", metricId: "collected_revenue", positiveIsGood: true },
+  { key: "unbilled_wip", label: "Unbilled WIP", metricId: "unbilled_wip", positiveIsGood: false },
+  { key: "ar", label: "AR balance", metricId: "ar_balance", positiveIsGood: false },
 ];
 
 function priorPeriodFilters(currentSnapshot: string | null): PnlFilters | null {

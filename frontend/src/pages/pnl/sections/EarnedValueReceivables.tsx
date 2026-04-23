@@ -8,6 +8,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { Card, CardHeader } from "@/components/ui/Card";
+import { PnlSectionInfo } from "@/components/PnlSectionInfo";
 import {
   fetchPnlDso,
   fetchPnlEvm,
@@ -100,6 +101,14 @@ export function EarnedValueReceivables() {
       <CardHeader
         title="Earned Value and Receivables"
         subtitle="Cost and schedule indices on the left with a six-month CPI and SPI trend. DSO days and the receivables stack on the right. Each sub-card carries its own snapshot date."
+        titleAdornment={
+          <PnlSectionInfo
+            title="Earned Value and Receivables"
+            whatItShows="Standalone deep-dive on two financial health dimensions: delivery cost efficiency (EVM) and cash flow speed (receivables)."
+            formula="CPI = EV divided by AC. SPI = EV divided by PV. DSO = (AR Balance divided by Billed Revenue) times 30."
+            howToRead="CPI below 1.0 means you are spending more than the value delivered. DSO above 60 means your client is slow to pay. Both red simultaneously means programme in financial distress on two dimensions."
+          />
+        }
       />
       <div
         className="grid grid-cols-1 gap-4 md:grid-cols-2"
@@ -194,12 +203,30 @@ function EarnedValueCard({
       <div className="grid grid-cols-2 gap-4">
         <RatioBlock
           label="CPI"
+          labelAdornment={
+            <PnlSectionInfo
+              title="CPI (Cost Performance Index)"
+              whatItShows="Cost Performance Index. Above 1.0 means under budget. Below 0.9 means cost overrun."
+              formula="CPI = EV / AC"
+              howToRead="PHOENIX 0.87 means spending 1.15 dollars per 1 dollar of value delivered."
+              thresholds="Green at or above 1.0, Amber 0.9 to 1.0, Red below 0.9."
+            />
+          }
           value={formatRatio(e.cpi)}
           palette={cpiPal}
           testId="evr-cpi"
         />
         <RatioBlock
           label="SPI"
+          labelAdornment={
+            <PnlSectionInfo
+              title="SPI (Schedule Performance Index)"
+              whatItShows="Schedule Performance Index. Above 1.0 means ahead of schedule. Below 0.9 means behind schedule."
+              formula="SPI = EV / PV"
+              howToRead="PHOENIX 0.84 means 84 percent of planned work completed on time."
+              thresholds="Green at or above 1.0, Amber 0.9 to 1.0, Red below 0.9."
+            />
+          }
           value={formatRatio(e.spi)}
           palette={spiPal}
           testId="evr-spi"
@@ -323,6 +350,13 @@ function ReceivablesCard({
           data-testid="evr-dso-days"
         >
           {formatDsoDays(d.dso_days)}
+          <PnlSectionInfo
+            title="DSO (Days Sales Outstanding)"
+            whatItShows="Days Sales Outstanding. The average number of days between invoicing and payment receipt."
+            formula="DSO = (AR Balance / Billed Revenue) × 30"
+            howToRead="PHOENIX 6.0 days is GREEN. Client pays within one week of invoice. Industry average 45 to 60 days."
+            thresholds="Green under 45 days, Amber 45 to 60, Red above 60."
+          />
         </div>
         <span
           className={cn(
@@ -366,11 +400,13 @@ function ReceivablesCard({
 
 function RatioBlock({
   label,
+  labelAdornment,
   value,
   palette,
   testId,
 }: {
   label: string;
+  labelAdornment?: React.ReactNode;
   value: string;
   palette: Palette;
   testId: string;
@@ -380,6 +416,7 @@ function RatioBlock({
       <div className="flex items-baseline justify-between">
         <span className="text-xs uppercase tracking-wide text-navy/60">
           {label}
+          {labelAdornment}
         </span>
         <span
           className={cn(

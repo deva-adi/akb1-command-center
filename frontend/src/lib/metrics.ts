@@ -399,6 +399,46 @@ export const MARGIN_METRICS: Record<string, MetricDef> = {
       "Compare against the revenue plan baseline to spot slippage. Late milestones in delivery directly delay revenue recognition and create cash-flow pressure on the account team.",
     unit: "currency",
   },
+  billed_revenue: {
+    id: "billed_revenue",
+    label: "Billed revenue",
+    formula: "SUM(invoice_amount) for all invoices raised in period",
+    description:
+      "Money you have formally requested from the client. The gap between Booked and Billed is your billing backlog.",
+    interpretation:
+      "Persistent Booked > Billed gap means slow invoicing cadence. Revenue is earned but not yet requested. Fix: shorten billing cycle.",
+    unit: "currency",
+  },
+  collected_revenue: {
+    id: "collected_revenue",
+    label: "Collected revenue",
+    formula: "SUM(payment_received) in period",
+    description:
+      "Cash in the bank. The only number with zero counterparty risk.",
+    interpretation:
+      "Gap between Billed and Collected is your collection exposure. High gap with rising AR Balance signals client payment delays. Escalate commercially.",
+    unit: "currency",
+  },
+  unbilled_wip: {
+    id: "unbilled_wip",
+    label: "Unbilled WIP",
+    formula: "Delivered milestone value minus invoices raised for those milestones",
+    description:
+      "Work done, money not yet requested. Pre-invoice exposure.",
+    interpretation:
+      "Above 15 percent of monthly Booked Revenue means a billing cadence problem. You are financing the client. Review milestone acceptance and invoice triggers.",
+    unit: "currency",
+  },
+  ar_balance: {
+    id: "ar_balance",
+    label: "AR balance",
+    formula: "SUM(open invoice balances). Raised but not yet paid.",
+    description:
+      "Outstanding receivables. Client owes you this money.",
+    interpretation:
+      "Monitor alongside DSO Days (Pyramid section). Green under 45 days equivalent. Red above 60 days.",
+    unit: "currency",
+  },
 };
 
 // ─── Customer Intelligence ─────────────────────────────────────────────────
