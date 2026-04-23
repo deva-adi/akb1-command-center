@@ -7,4 +7,4 @@ The M8 release commit drops the ``-dev`` suffix; no other file should
 carry a hardcoded version number.
 """
 
-__version__ = "5.7.0-dev"
+__version__ = "5.7.0"
